@@ -1,0 +1,46 @@
+{
+  "name": "@usenotra/mcp",
+  "version": "1.0.1",
+  "description": "MCP server for the Notra API",
+  "mcpName": "io.github.usenotra/notra",
+  "type": "module",
+  "bin": {
+    "notra-mcp": "build/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod 755 build/index.js",
+    "start": "node build/index.js",
+    "start:http": "node build/http.js",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "build"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usenotra/notra-mcp.git"
+  },
+  "keywords": [
+    "mcp",
+    "notra",
+    "ai",
+    "content"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/usenotra/notra-mcp/issues"
+  },
+  "homepage": "https://github.com/usenotra/notra-mcp#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.28.0",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2"
+  }
+}
