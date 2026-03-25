@@ -1,15 +1,13 @@
 import "dotenv/config";
-import express from "express";
 import { randomUUID } from "node:crypto";
+import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { createServer } from "./server.js";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-const app = express();
-app.use(express.json());
+const app = createMcpExpressApp({ host: "0.0.0.0" });
 
-const sessions = new Map<string, { server: McpServer; transport: StreamableHTTPServerTransport }>();
+const transports: Record<string, StreamableHTTPServerTransport> = {};
 
 app.get("/.well-known/oauth-authorization-server", (_req, res) => {
   res.status(404).end();
@@ -26,45 +24,39 @@ app.post("/register", (_req, res) => {
 app.post("/mcp", async (req, res) => {
   try {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
+    let transport: StreamableHTTPServerTransport;
 
-    if (sessionId) {
-      const session = sessions.get(sessionId);
-      if (session) {
-        await session.transport.handleRequest(req, res, req.body);
-        return;
-      }
-      res.status(404).json({
-        jsonrpc: "2.0",
-        error: { code: -32000, message: "Session not found" },
-        id: null,
-      });
+    if (sessionId && transports[sessionId]) {
+      transport = transports[sessionId];
+    } else if (!sessionId && isInitializeRequest(req.body)) {
+      const apiKey = req.headers["authorization"]?.replace("Bearer ", "") || "";
+      const server = createServer(apiKey);
+
+      transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: () => randomUUID(),
+        onsessioninitialized: (id: string) => {
+          transports[id] = transport;
+        },
+      } as ConstructorParameters<typeof StreamableHTTPServerTransport>[0]);
+
+      transport.onclose = () => {
+        const sid = transport.sessionId;
+        if (sid && transports[sid]) {
+          delete transports[sid];
+        }
+      };
+
+      await server.connect(transport);
+      await transport.handleRequest(req, res, req.body);
       return;
-    }
-
-    if (!isInitializeRequest(req.body)) {
+    } else {
       res.status(400).json({
         jsonrpc: "2.0",
-        error: { code: -32600, message: "Bad request: expected initialize" },
+        error: { code: -32000, message: "Bad Request: No valid session ID provided" },
         id: null,
       });
       return;
     }
-
-    const apiKey = req.headers["authorization"]?.replace("Bearer ", "") || "";
-
-    const transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: () => randomUUID(),
-    });
-
-    const server = createServer(apiKey);
-    await server.connect(transport);
-
-    const newSessionId = transport.sessionId!;
-    sessions.set(newSessionId, { server, transport });
-
-    transport.onclose = () => {
-      sessions.delete(newSessionId);
-    };
 
     await transport.handleRequest(req, res, req.body);
   } catch (error) {
@@ -81,37 +73,27 @@ app.post("/mcp", async (req, res) => {
 
 app.get("/mcp", async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
-  const session = sessionId ? sessions.get(sessionId) : undefined;
-
-  if (!session) {
-    res.writeHead(405).end(JSON.stringify({
-      jsonrpc: "2.0",
-      error: { code: -32000, message: "Method not allowed." },
-      id: null,
-    }));
+  if (!sessionId || !transports[sessionId]) {
+    res.status(400).send("Invalid or missing session ID");
     return;
   }
-
-  await session.transport.handleRequest(req, res);
+  await transports[sessionId].handleRequest(req, res);
 });
 
 app.delete("/mcp", async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
-  const session = sessionId ? sessions.get(sessionId) : undefined;
-
-  if (!session) {
-    res.status(404).json({
-      jsonrpc: "2.0",
-      error: { code: -32000, message: "Session not found" },
-      id: null,
-    });
+  if (!sessionId || !transports[sessionId]) {
+    res.status(400).send("Invalid or missing session ID");
     return;
   }
-
-  await session.transport.close();
-  await session.server.close();
-  sessions.delete(sessionId!);
-  res.status(200).end();
+  try {
+    await transports[sessionId].handleRequest(req, res);
+  } catch (error) {
+    console.error("Error handling session termination:", error);
+    if (!res.headersSent) {
+      res.status(500).send("Error processing session termination");
+    }
+  }
 });
 
 app.get("/health", (_req, res) => {
