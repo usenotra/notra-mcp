@@ -10,6 +10,18 @@ app.use(express.json());
 
 const sessions = new Map<string, { server: ReturnType<typeof createServer>; transport: StreamableHTTPServerTransport }>();
 
+app.get("/.well-known/oauth-authorization-server", (_req, res) => {
+  res.status(404).end();
+});
+
+app.get("/.well-known/oauth-protected-resource", (_req, res) => {
+  res.status(404).end();
+});
+
+app.post("/register", (_req, res) => {
+  res.status(404).end();
+});
+
 app.post("/mcp", async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
@@ -68,11 +80,11 @@ app.get("/mcp", async (req, res) => {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
   if (!sessionId || !sessions.has(sessionId)) {
-    res.status(400).json({
+    res.writeHead(405).end(JSON.stringify({
       jsonrpc: "2.0",
-      error: { code: -32000, message: "Invalid or missing session ID" },
+      error: { code: -32000, message: "Method not allowed. Use POST to initialize a session first." },
       id: null,
-    });
+    }));
     return;
   }
 
