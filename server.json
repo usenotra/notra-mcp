@@ -7,7 +7,8 @@
     "url": "https://github.com/usenotra/notra-mcp",
     "source": "github"
   },
-  "version": "1.0.1",
+  "version": "1.0.2",
+  "websiteUrl": "https://www.usenotra.com",
   "remotes": [
     {
       "type": "streamable-http",

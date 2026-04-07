@@ -26,7 +26,7 @@ export function createServer(apiKey: string): McpServer {
 
   const server = new McpServer({
     name: "notra",
-    version: "1.0.1",
+    version: "1.0.2",
   });
 
   server.registerTool(
