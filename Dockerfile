@@ -1,16 +1,16 @@
-FROM oven/bun:1 AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
-COPY package.json bun.lock ./
-RUN bun install
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY tsconfig.json ./
 COPY src ./src
-RUN bun run build
+RUN npm run build
 
-FROM oven/bun:1
+FROM node:22-slim
 WORKDIR /app
-COPY package.json bun.lock ./
-RUN bun install --production
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 COPY --from=builder /app/build ./build
 ENV PORT=3000
 EXPOSE 3000
-CMD ["bun", "build/http.js"]
+CMD ["node", "build/http.js"]
