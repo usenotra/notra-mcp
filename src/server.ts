@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod";
 import { NotraClient } from "./notra-client.js";
+import { brandIdentityIdFilterSchema, contentTypeFilterSchema, statusFilterSchema } from "./post-filters.js";
 
 function textResult<T>(data: T) {
   return {
@@ -26,28 +27,20 @@ export function createServer(apiKey: string): McpServer {
 
   const server = new McpServer({
     name: "notra",
-    version: "1.0.2",
+    version: "1.0.3",
   });
 
   server.registerTool(
     "list_posts",
     {
-      description: "List posts from Notra with optional filters for sorting, pagination, status, and content type",
+      description: "List posts from Notra with optional filters for sorting, pagination, status, content type, and brand identity",
       inputSchema: {
         sort: z.enum(["asc", "desc"]).optional().describe("Sort by creation date"),
         limit: z.number().int().min(1).max(100).optional().describe("Items per page (1-100, default 10)"),
         page: z.number().int().min(1).optional().describe("Page number (default 1)"),
-        status: z
-          .union([z.enum(["draft", "published"]), z.array(z.enum(["draft", "published"]))])
-          .optional()
-          .describe("Filter by status: draft or published"),
-        contentType: z
-          .union([
-            z.enum(["changelog", "linkedin_post", "twitter_post", "blog_post"]),
-            z.array(z.enum(["changelog", "linkedin_post", "twitter_post", "blog_post"])),
-          ])
-          .optional()
-          .describe("Filter by content type"),
+        status: statusFilterSchema,
+        contentType: contentTypeFilterSchema,
+        brandIdentityId: brandIdentityIdFilterSchema,
       },
     },
     async (params) => {
@@ -58,6 +51,7 @@ export function createServer(apiKey: string): McpServer {
           page: params.page,
           status: params.status,
           contentType: params.contentType,
+          brandIdentityId: params.brandIdentityId,
         })
       );
     }

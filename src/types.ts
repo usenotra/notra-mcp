@@ -51,8 +51,11 @@ export interface PostDeleteResponse {
   organization: Organization;
 }
 
-export type PostStatus = "draft" | "published";
-export type ContentType = "changelog" | "linkedin_post" | "twitter_post" | "blog_post";
+export const POST_STATUS_VALUES = ["draft", "published"] as const;
+export const CONTENT_TYPE_VALUES = ["changelog", "linkedin_post", "twitter_post", "blog_post"] as const;
+
+export type PostStatus = (typeof POST_STATUS_VALUES)[number];
+export type ContentType = (typeof CONTENT_TYPE_VALUES)[number];
 export type LookbackWindow = "current_day" | "yesterday" | "last_7_days" | "last_14_days" | "last_30_days";
 export type ToneProfile = "Conversational" | "Professional" | "Casual" | "Formal";
 
@@ -242,8 +245,9 @@ export interface ListPostsParams {
   sort?: "asc" | "desc";
   limit?: number;
   page?: number;
-  status?: PostStatus | PostStatus[];
-  contentType?: ContentType | ContentType[];
+  status?: PostStatus[];
+  contentType?: ContentType[];
+  brandIdentityId?: string[];
 }
 
 export interface ApiErrorResponse {

@@ -21,6 +21,7 @@ import type {
 } from "./types.js";
 
 const NOTRA_API_BASE = "https://api.usenotra.com";
+const COMMA_SEPARATED_QUERY_PARAMS = new Set(["status", "contentType", "brandIdentityId"]);
 
 interface RequestOptions<B = Record<string, string | number | boolean | null | undefined>> {
   params?: Record<string, string | string[] | number | boolean | undefined>;
@@ -43,8 +44,13 @@ export class NotraClient {
       for (const [key, value] of Object.entries(options.params)) {
         if (value === undefined) continue;
         if (Array.isArray(value)) {
-          for (const v of value) {
-            url.searchParams.append(key, v);
+          if (COMMA_SEPARATED_QUERY_PARAMS.has(key)) {
+            url.searchParams.set(key, value.join(","));
+            continue;
+          }
+
+          for (const entry of value) {
+            url.searchParams.append(key, entry);
           }
         } else {
           url.searchParams.set(key, String(value));

@@ -38,7 +38,7 @@ Then set the `NOTRA_API_KEY` environment variable in your shell before launching
 
 | Tool | Description |
 |------|-------------|
-| `list_posts` | List posts with optional filters for sorting, pagination, status, and content type |
+| `list_posts` | List posts with optional filters for sorting, pagination, status, content type, and brand identity |
 | `get_post` | Get a single post by ID |
 | `update_post` | Update a post's title, markdown, or status |
 | `delete_post` | Delete a post |
