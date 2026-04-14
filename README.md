@@ -1,6 +1,6 @@
 # Notra MCP Server
 
-An MCP (Model Context Protocol) server that provides LLM clients with full access to the [Notra API](https://docs.usenotra.com) for managing posts, brand identities, and integrations.
+An MCP (Model Context Protocol) server that provides LLM clients with full access to the [Notra API](https://docs.usenotra.com) for managing posts, brand identities, integrations, and schedules.
 
 ## Setup
 
@@ -62,3 +62,13 @@ Then set the `NOTRA_API_KEY` environment variable in your shell before launching
 |------|-------------|
 | `list_integrations` | List all connected integrations (GitHub, Slack, Linear) |
 | `create_github_integration` | Connect a GitHub repository |
+| `delete_integration` | Delete a GitHub or Linear integration |
+
+### Schedules
+
+| Tool | Description |
+|------|-------------|
+| `list_schedules` | List scheduled content generation jobs |
+| `create_schedule` | Create a scheduled content generation job |
+| `update_schedule` | Update a scheduled content generation job |
+| `delete_schedule` | Delete a scheduled content generation job |

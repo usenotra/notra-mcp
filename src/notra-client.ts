@@ -11,17 +11,23 @@ import type {
   GeneratePostRequest,
   GeneratePostResponse,
   IntegrationsListResponse,
+  IntegrationDeleteResponse,
   ListPostsParams,
+  ListSchedulesParams,
   PostDeleteResponse,
   PostGenerationStatusResponse,
   PostListResponse,
   PostResponse,
+  ScheduleDeleteResponse,
+  ScheduleListResponse,
+  ScheduleResponse,
+  UpdateScheduleRequest,
   UpdateBrandIdentityRequest,
   UpdatePostRequest,
 } from "./types.js";
 
 const NOTRA_API_BASE = "https://api.usenotra.com";
-const COMMA_SEPARATED_QUERY_PARAMS = new Set(["status", "contentType", "brandIdentityId"]);
+const COMMA_SEPARATED_QUERY_PARAMS = new Set(["status", "contentType", "brandIdentityId", "repositoryIds"]);
 
 interface RequestOptions<B = Record<string, string | number | boolean | null | undefined>> {
   params?: Record<string, string | string[] | number | boolean | undefined>;
@@ -149,5 +155,27 @@ export class NotraClient {
 
   async createGithubIntegration(body: CreateGithubIntegrationRequest): Promise<CreateGithubIntegrationResponse> {
     return this.request<CreateGithubIntegrationResponse, CreateGithubIntegrationRequest>("POST", "/v1/integrations/github", { body });
+  }
+
+  async deleteIntegration(integrationId: string): Promise<IntegrationDeleteResponse> {
+    return this.request<IntegrationDeleteResponse>("DELETE", `/v1/integrations/${encodeURIComponent(integrationId)}`);
+  }
+
+  async listSchedules(params?: ListSchedulesParams): Promise<ScheduleListResponse> {
+    return this.request<ScheduleListResponse>("GET", "/v1/schedules", {
+      params: params as RequestOptions["params"],
+    });
+  }
+
+  async createSchedule(body: UpdateScheduleRequest): Promise<ScheduleResponse> {
+    return this.request<ScheduleResponse, UpdateScheduleRequest>("POST", "/v1/schedules", { body });
+  }
+
+  async updateSchedule(scheduleId: string, body: UpdateScheduleRequest): Promise<ScheduleResponse> {
+    return this.request<ScheduleResponse, UpdateScheduleRequest>("PATCH", `/v1/schedules/${encodeURIComponent(scheduleId)}`, { body });
+  }
+
+  async deleteSchedule(scheduleId: string): Promise<ScheduleDeleteResponse> {
+    return this.request<ScheduleDeleteResponse>("DELETE", `/v1/schedules/${encodeURIComponent(scheduleId)}`);
   }
 }

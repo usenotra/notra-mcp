@@ -16,11 +16,12 @@ export interface SourceMetadata {
 export interface Post {
   id: string;
   title: string;
+  slug: string | null;
   content: string;
   markdown: string;
-  recommendations: string[];
+  recommendations: string | null;
   contentType: "changelog" | "linkedin_post" | "twitter_post" | "blog_post";
-  sourceMetadata: SourceMetadata | null;
+  sourceMetadata?: SourceMetadata | null;
   status: "draft" | "published";
   createdAt: string;
   updatedAt: string;
@@ -72,6 +73,11 @@ export interface GeneratePostRequest {
   brandVoiceId?: string;
   brandIdentityId?: string | null;
   repositoryIds?: string[];
+  linearIntegrationIds?: string[];
+  integrations?: {
+    github?: string[];
+    linear?: string[];
+  };
   github?: {
     repositories: Array<{ owner: string; repo: string }>;
   };
@@ -79,12 +85,13 @@ export interface GeneratePostRequest {
     includePullRequests?: boolean;
     includeCommits?: boolean;
     includeReleases?: boolean;
-    includeLinearIssues?: boolean;
+    includeLinearData?: boolean;
   };
   selectedItems?: {
     commitShas?: string[];
     pullRequestNumbers?: Array<{ repositoryId: string; number: number }>;
     releaseTagNames?: Array<string | { repositoryId: string; tagName: string }>;
+    linearIssueIds?: Array<{ integrationId: string; issueId: string }>;
   };
 }
 
@@ -211,15 +218,24 @@ export interface BrandIdentityGenerationStatusResponse {
 export interface GithubIntegration {
   id: string;
   displayName: string;
-  owner: string;
-  repo: string;
-  defaultBranch: string;
+  owner: string | null;
+  repo: string | null;
+  defaultBranch: string | null;
+}
+
+export interface LinearIntegration {
+  id: string;
+  displayName: string;
+  linearOrganizationId: string;
+  linearOrganizationName: string | null;
+  linearTeamId: string | null;
+  linearTeamName: string | null;
 }
 
 export interface IntegrationsListResponse {
   github: GithubIntegration[];
-  slack: Array<Record<string, string>>;
-  linear: Array<Record<string, string>>;
+  slack: Array<Record<string, unknown>>;
+  linear: LinearIntegration[];
   organization: Organization;
 }
 
@@ -237,6 +253,7 @@ export interface CreateGithubIntegrationResponse {
 
 export interface UpdatePostRequest {
   title?: string;
+  slug?: string | null;
   markdown?: string;
   status?: PostStatus;
 }
@@ -248,6 +265,92 @@ export interface ListPostsParams {
   status?: PostStatus[];
   contentType?: ContentType[];
   brandIdentityId?: string[];
+}
+
+export interface DisabledAutomationRef {
+  id: string;
+  name: string;
+}
+
+export interface IntegrationDeleteResponse {
+  id: string;
+  organization: Organization;
+  disabledSchedules: DisabledAutomationRef[];
+  disabledEvents: DisabledAutomationRef[];
+}
+
+export type ScheduleFrequency = "daily" | "weekly" | "monthly";
+export type ScheduleSourceType = "cron";
+export type PublishDestination = "webflow" | "framer" | "custom";
+
+export interface ScheduleCronConfig {
+  frequency: ScheduleFrequency;
+  hour: number;
+  minute: number;
+  dayOfWeek?: number;
+  dayOfMonth?: number;
+}
+
+export interface Schedule {
+  id: string;
+  organizationId: string;
+  name: string;
+  sourceType: ScheduleSourceType;
+  sourceConfig: {
+    cron: ScheduleCronConfig;
+  };
+  targets: {
+    repositoryIds: string[];
+  };
+  outputType: ContentType;
+  outputConfig: {
+    publishDestination?: PublishDestination;
+    brandVoiceId?: string;
+  } | null;
+  enabled: boolean;
+  autoPublish: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lookbackWindow: LookbackWindow;
+}
+
+export interface ScheduleResponse {
+  schedule: Schedule;
+  organization: Organization;
+}
+
+export interface ScheduleListResponse {
+  schedules: Schedule[];
+  repositoryMap: Record<string, string>;
+  organization: Organization;
+}
+
+export interface ScheduleDeleteResponse {
+  id: string;
+  organization: Organization;
+}
+
+export interface UpdateScheduleRequest {
+  name: string;
+  sourceType: ScheduleSourceType;
+  sourceConfig: {
+    cron: ScheduleCronConfig;
+  };
+  targets: {
+    repositoryIds: string[];
+  };
+  outputType: ContentType;
+  outputConfig?: {
+    publishDestination?: PublishDestination;
+    brandVoiceId?: string;
+  };
+  enabled: boolean;
+  autoPublish?: boolean;
+  lookbackWindow?: LookbackWindow;
+}
+
+export interface ListSchedulesParams {
+  repositoryIds?: string[];
 }
 
 export interface ApiErrorResponse {
