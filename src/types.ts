@@ -358,3 +358,103 @@ export interface ApiErrorResponse {
   message?: string;
   error?: string;
 }
+
+export type ChatModel =
+  | "auto"
+  | "anthropic/claude-opus-4.7"
+  | "anthropic/claude-sonnet-4.6"
+  | "anthropic/claude-haiku-4.5"
+  | "openai/gpt-5.4"
+  | "openai/gpt-5.5"
+  | "moonshotai/kimi-k2.6";
+
+export type ThinkingLevel = "off" | "low" | "medium" | "high";
+export type ExternalChannelSource = "discord" | "slack" | "dashboard";
+
+export interface ExternalChannelId {
+  source: ExternalChannelSource;
+  id?: string;
+}
+
+export interface ChatSessionSummary {
+  chatId: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  pinnedAt: string | null;
+  externalChannelId?: ExternalChannelId | null;
+}
+
+export type ChatContext =
+  | {
+      type: "github-repo";
+      integrationId: string;
+      owner: string;
+      repo: string;
+    }
+  | {
+      type: "linear-team";
+      integrationId: string;
+      teamName?: string;
+    };
+
+export interface SendChatMessageRequest {
+  message: string;
+  model?: ChatModel;
+  enableThinking?: boolean;
+  thinkingLevel?: ThinkingLevel;
+  timezone?: string;
+  context?: ChatContext[];
+  externalChannelId?: ExternalChannelId | null;
+}
+
+export interface ChatStreamResponse {
+  chatId: string | null;
+  stream: string;
+}
+
+export interface GetChatsResponse {
+  chats: ChatSessionSummary[];
+}
+
+export interface GetChatResponse {
+  chat: ChatSessionSummary;
+  messages: unknown[];
+}
+
+export interface SkillSummary {
+  id: string;
+  name: string;
+  description: string;
+  isSystem: boolean;
+  updatedAt: string;
+}
+
+export interface Skill extends SkillSummary {
+  content: string;
+  createdAt: string;
+}
+
+export interface ListSkillsResponse {
+  skills: SkillSummary[];
+}
+
+export interface SkillResponse {
+  skill: Skill;
+}
+
+export interface CreateSkillRequest {
+  name: string;
+  description: string;
+  content: string;
+}
+
+export interface UpdateSkillRequest {
+  name?: string;
+  description?: string;
+  content?: string;
+}
+
+export interface DeleteSkillResponse {
+  success: true;
+}

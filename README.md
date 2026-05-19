@@ -72,3 +72,23 @@ Then set the `NOTRA_API_KEY` environment variable in your shell before launching
 | `create_schedule` | Create a scheduled content generation job |
 | `update_schedule` | Update a scheduled content generation job |
 | `delete_schedule` | Delete a scheduled content generation job |
+
+### Chats
+
+| Tool | Description |
+|------|-------------|
+| `list_chats` | List chat sessions |
+| `get_chat` | Get a single chat with messages |
+| `get_chat_by_external_channel` | Get a chat by Discord or Slack channel ID |
+| `create_chat` | Start a new chat and return the streamed reply |
+| `post_chat_message` | Post a message to an existing chat and return the streamed reply |
+
+### Skills
+
+| Tool | Description |
+|------|-------------|
+| `list_skills` | List reusable writing skills |
+| `get_skill` | Get a single skill by name |
+| `create_skill` | Create a reusable writing skill |
+| `update_skill` | Update a reusable writing skill |
+| `delete_skill` | Delete a reusable writing skill |

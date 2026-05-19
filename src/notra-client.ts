@@ -4,8 +4,14 @@ import type {
   BrandIdentityGenerationStatusResponse,
   BrandIdentityListResponse,
   BrandIdentityResponse,
+  ChatStreamResponse,
   CreateGithubIntegrationRequest,
   CreateGithubIntegrationResponse,
+  CreateSkillRequest,
+  DeleteSkillResponse,
+  ExternalChannelSource,
+  GetChatResponse,
+  GetChatsResponse,
   GenerateBrandIdentityRequest,
   GenerateBrandIdentityResponse,
   GeneratePostRequest,
@@ -21,9 +27,14 @@ import type {
   ScheduleDeleteResponse,
   ScheduleListResponse,
   ScheduleResponse,
+  SendChatMessageRequest,
+  ChatSessionSummary,
+  ListSkillsResponse,
+  SkillResponse,
   UpdateScheduleRequest,
   UpdateBrandIdentityRequest,
   UpdatePostRequest,
+  UpdateSkillRequest,
 } from "./types.js";
 
 const NOTRA_API_BASE = "https://api.usenotra.com";
@@ -97,6 +108,50 @@ export class NotraClient {
     }
 
     return data as T;
+  }
+
+  private async requestText<B = undefined>(method: string, path: string, options?: RequestOptions<B>): Promise<ChatStreamResponse> {
+    const url = new URL(`${this.baseUrl}${path}`);
+
+    if (options?.params) {
+      for (const [key, value] of Object.entries(options.params)) {
+        if (value === undefined) continue;
+        url.searchParams.set(key, String(value));
+      }
+    }
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${this.apiKey}`,
+      "Content-Type": "application/json",
+      Accept: "text/event-stream, application/json",
+    };
+
+    const fetchOptions: RequestInit = { method, headers };
+    if (options?.body && (method === "POST" || method === "PATCH" || method === "PUT")) {
+      fetchOptions.body = JSON.stringify(options.body);
+    }
+
+    const response = await fetch(url.toString(), fetchOptions);
+    const text = await response.text();
+
+    if (!response.ok) {
+      let errorBody: ApiErrorResponse | undefined;
+      try {
+        errorBody = JSON.parse(text) as ApiErrorResponse;
+      } catch {
+        errorBody = undefined;
+      }
+      const message =
+        typeof errorBody?.message === "string" ? errorBody.message :
+        typeof errorBody?.error === "string" ? errorBody.error :
+        text || `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(message);
+    }
+
+    return {
+      chatId: response.headers.get("x-chat-id"),
+      stream: text,
+    };
   }
 
   async listPosts(params?: ListPostsParams): Promise<PostListResponse> {
@@ -177,5 +232,47 @@ export class NotraClient {
 
   async deleteSchedule(scheduleId: string): Promise<ScheduleDeleteResponse> {
     return this.request<ScheduleDeleteResponse>("DELETE", `/v1/schedules/${encodeURIComponent(scheduleId)}`);
+  }
+
+  async listChats(): Promise<GetChatsResponse> {
+    return this.request<GetChatsResponse>("GET", "/v1/chats");
+  }
+
+  async createChat(body: SendChatMessageRequest): Promise<ChatStreamResponse> {
+    return this.requestText<SendChatMessageRequest>("POST", "/v1/chats", { body });
+  }
+
+  async getChatByExternalChannel(source: Exclude<ExternalChannelSource, "dashboard">, id: string): Promise<ChatSessionSummary> {
+    return this.request<ChatSessionSummary>("GET", "/v1/chats/by-external", {
+      params: { source, id },
+    });
+  }
+
+  async getChat(chatId: string): Promise<GetChatResponse> {
+    return this.request<GetChatResponse>("GET", `/v1/chats/${encodeURIComponent(chatId)}`);
+  }
+
+  async postChatMessage(chatId: string, body: SendChatMessageRequest): Promise<ChatStreamResponse> {
+    return this.requestText<SendChatMessageRequest>("POST", `/v1/chats/${encodeURIComponent(chatId)}`, { body });
+  }
+
+  async listSkills(): Promise<ListSkillsResponse> {
+    return this.request<ListSkillsResponse>("GET", "/v1/skills");
+  }
+
+  async createSkill(body: CreateSkillRequest): Promise<SkillResponse> {
+    return this.request<SkillResponse, CreateSkillRequest>("POST", "/v1/skills", { body });
+  }
+
+  async getSkill(name: string): Promise<SkillResponse> {
+    return this.request<SkillResponse>("GET", `/v1/skills/${encodeURIComponent(name)}`);
+  }
+
+  async updateSkill(name: string, body: UpdateSkillRequest): Promise<SkillResponse> {
+    return this.request<SkillResponse, UpdateSkillRequest>("PATCH", `/v1/skills/${encodeURIComponent(name)}`, { body });
+  }
+
+  async deleteSkill(name: string): Promise<DeleteSkillResponse> {
+    return this.request<DeleteSkillResponse>("DELETE", `/v1/skills/${encodeURIComponent(name)}`);
   }
 }

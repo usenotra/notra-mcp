@@ -2,6 +2,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod";
 import { NotraClient } from "./notra-client.js";
 import { brandIdentityIdFilterSchema, contentTypeFilterSchema, statusFilterSchema } from "./post-filters.js";
+import { registerChatTools } from "./tools/chat-tools.js";
+import { registerSkillTools } from "./tools/skill-tools.js";
+import { handleError } from "./utils/mcp.js";
 
 const scheduleCronConfigSchema = z.object({
   frequency: z.enum(["daily", "weekly", "monthly"]).describe("How often the schedule should run"),
@@ -32,25 +35,6 @@ const schedulePayloadSchema = {
     .optional()
     .describe("Time window for gathering data before generation (default: last_7_days)"),
 } as const;
-
-function textResult<T>(data: T) {
-  return {
-    content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
-  };
-}
-
-async function handleError<T>(fn: () => Promise<T>) {
-  try {
-    const data = await fn();
-    return textResult(data);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return {
-      isError: true as const,
-      content: [{ type: "text" as const, text: message }],
-    };
-  }
-}
 
 export function createServer(apiKey: string): McpServer {
   const client = new NotraClient(apiKey);
@@ -422,6 +406,9 @@ export function createServer(apiKey: string): McpServer {
       return handleError(() => client.deleteSchedule(scheduleId));
     }
   );
+
+  registerChatTools(server, client);
+  registerSkillTools(server, client);
 
   return server;
 }
