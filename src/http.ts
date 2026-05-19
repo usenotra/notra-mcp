@@ -1,13 +1,71 @@
 import "dotenv/config";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
+import type { Request } from "express";
 import { createServer } from "./server.js";
 
 const app = createMcpExpressApp({ host: "0.0.0.0" });
 
-const transports: Record<string, StreamableHTTPServerTransport> = {};
+const SESSION_TTL_MS = 30 * 60 * 1000;
+
+type Session = {
+  transport: StreamableHTTPServerTransport;
+  tokenDigest: Buffer;
+  lastSeen: number;
+};
+
+const sessions: Record<string, Session> = {};
+
+function parseBearerToken(authorization: string | string[] | undefined): string | undefined {
+  if (typeof authorization !== "string") {
+    return undefined;
+  }
+
+  const match = authorization.match(/^Bearer\s+(\S+)$/);
+  return match?.[1];
+}
+
+function digestToken(token: string): Buffer {
+  return createHash("sha256").update(token).digest();
+}
+
+function tokenMatches(token: string, expectedDigest: Buffer): boolean {
+  const actualDigest = digestToken(token);
+  return timingSafeEqual(actualDigest, expectedDigest);
+}
+
+function getAuthenticatedSession(req: Request) {
+  const sessionId = req.headers["mcp-session-id"] as string | undefined;
+  const token = parseBearerToken(req.headers["authorization"]);
+
+  if (!sessionId || !token) {
+    return undefined;
+  }
+
+  const session = sessions[sessionId];
+  if (!session || !tokenMatches(token, session.tokenDigest)) {
+    return undefined;
+  }
+
+  if (Date.now() - session.lastSeen > SESSION_TTL_MS) {
+    delete sessions[sessionId];
+    return undefined;
+  }
+
+  session.lastSeen = Date.now();
+  return session;
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [sessionId, session] of Object.entries(sessions)) {
+    if (now - session.lastSeen > SESSION_TTL_MS) {
+      delete sessions[sessionId];
+    }
+  }
+}, SESSION_TTL_MS).unref();
 
 app.get("/.well-known/oauth-authorization-server", (_req, res) => {
   res.status(404).end();
@@ -26,23 +84,42 @@ app.post("/mcp", async (req, res) => {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
     let transport: StreamableHTTPServerTransport;
 
-    if (sessionId && transports[sessionId]) {
-      transport = transports[sessionId];
+    if (sessionId) {
+      const session = getAuthenticatedSession(req);
+      if (!session) {
+        res.status(401).json({
+          jsonrpc: "2.0",
+          error: { code: -32001, message: "Unauthorized" },
+          id: null,
+        });
+        return;
+      }
+      transport = session.transport;
     } else if (!sessionId && isInitializeRequest(req.body)) {
-      const apiKey = req.headers["authorization"]?.replace("Bearer ", "") || "";
+      const apiKey = parseBearerToken(req.headers["authorization"]);
+      if (!apiKey) {
+        res.status(401).json({
+          jsonrpc: "2.0",
+          error: { code: -32001, message: "Unauthorized" },
+          id: null,
+        });
+        return;
+      }
+
+      const tokenDigest = digestToken(apiKey);
       const server = createServer(apiKey);
 
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
         onsessioninitialized: (id: string) => {
-          transports[id] = transport;
+          sessions[id] = { transport, tokenDigest, lastSeen: Date.now() };
         },
       } as ConstructorParameters<typeof StreamableHTTPServerTransport>[0]);
 
       transport.onclose = () => {
         const sid = transport.sessionId;
-        if (sid && transports[sid]) {
-          delete transports[sid];
+        if (sid && sessions[sid]) {
+          delete sessions[sid];
         }
       };
 
@@ -72,22 +149,22 @@ app.post("/mcp", async (req, res) => {
 });
 
 app.get("/mcp", async (req, res) => {
-  const sessionId = req.headers["mcp-session-id"] as string | undefined;
-  if (!sessionId || !transports[sessionId]) {
-    res.status(400).send("Invalid or missing session ID");
+  const session = getAuthenticatedSession(req);
+  if (!session) {
+    res.status(401).send("Unauthorized");
     return;
   }
-  await transports[sessionId].handleRequest(req, res);
+  await session.transport.handleRequest(req, res);
 });
 
 app.delete("/mcp", async (req, res) => {
-  const sessionId = req.headers["mcp-session-id"] as string | undefined;
-  if (!sessionId || !transports[sessionId]) {
-    res.status(400).send("Invalid or missing session ID");
+  const session = getAuthenticatedSession(req);
+  if (!session) {
+    res.status(401).send("Unauthorized");
     return;
   }
   try {
-    await transports[sessionId].handleRequest(req, res);
+    await session.transport.handleRequest(req, res);
   } catch (error) {
     console.error("Error handling session termination:", error);
     if (!res.headersSent) {
