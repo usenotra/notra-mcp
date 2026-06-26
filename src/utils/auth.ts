@@ -13,13 +13,24 @@ export class AuthError extends Error {
 }
 
 export function parseBearerToken(authorization: string | string[] | undefined): string | undefined {
-  const header = Array.isArray(authorization) ? authorization.find((value) => /^Bearer\s+/i.test(value.trim())) : authorization;
+  const headers = Array.isArray(authorization) ? authorization : authorization ? [authorization] : [];
+  const header = headers.find((value) => value.trimStart().slice(0, 7).toLowerCase() === "bearer ");
   if (typeof header !== "string") {
     return undefined;
   }
 
-  const match = header.trim().match(/^Bearer\s+(.+)$/i);
-  return match?.[1]?.trim();
+  const trimmed = header.trimStart();
+  let tokenStart = "Bearer".length;
+  while (tokenStart < trimmed.length) {
+    const char = trimmed[tokenStart];
+    if (char !== " " && char !== "\t") {
+      break;
+    }
+    tokenStart += 1;
+  }
+
+  const token = trimmed.slice(tokenStart).trim();
+  return token.length > 0 ? token : undefined;
 }
 
 function getRemoteJwks(jwksUrl: string): ReturnType<typeof createRemoteJWKSet> {
