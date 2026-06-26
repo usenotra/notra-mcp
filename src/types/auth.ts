@@ -6,6 +6,7 @@ export type OAuthAuthContext = {
   userId: string;
   organizationId: string;
   scopes: string[];
+  hasScopeClaim: boolean;
 };
 
 export type ApiKeyAuthContext = {
@@ -25,6 +26,7 @@ export type OAuthConfig = {
 export type OAuthProtectedResourceMetadata = {
   resource: string;
   authorization_servers: string[];
+  authorization_server_metadata_url: string;
   bearer_methods_supported: string[];
   scopes_supported: string[];
 };

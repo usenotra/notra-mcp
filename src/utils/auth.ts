@@ -13,12 +13,13 @@ export class AuthError extends Error {
 }
 
 export function parseBearerToken(authorization: string | string[] | undefined): string | undefined {
-  if (typeof authorization !== "string") {
+  const header = Array.isArray(authorization) ? authorization.find((value) => /^Bearer\s+/i.test(value.trim())) : authorization;
+  if (typeof header !== "string") {
     return undefined;
   }
 
-  const match = authorization.match(/^Bearer\s+(\S+)$/);
-  return match?.[1];
+  const match = header.trim().match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim();
 }
 
 function getRemoteJwks(jwksUrl: string): ReturnType<typeof createRemoteJWKSet> {
@@ -56,15 +57,18 @@ export function looksLikeJwt(token: string): boolean {
   return typeof header === "object" && header !== null && typeof payload === "object" && payload !== null;
 }
 
-function extractScopes(payload: JWTPayload): string[] {
+function extractScopes(payload: JWTPayload): { scopes: string[]; hasScopeClaim: boolean } {
   const rawScopes = payload.scope ?? payload.scp ?? payload.scopes;
   if (typeof rawScopes === "string") {
-    return rawScopes.split(/\s+/).filter(Boolean);
+    return { scopes: rawScopes.split(/\s+/).filter(Boolean), hasScopeClaim: true };
   }
   if (Array.isArray(rawScopes)) {
-    return rawScopes.filter((scope): scope is string => typeof scope === "string" && scope.length > 0);
+    return {
+      scopes: rawScopes.filter((scope): scope is string => typeof scope === "string" && scope.length > 0),
+      hasScopeClaim: true,
+    };
   }
-  return [];
+  return { scopes: [], hasScopeClaim: false };
 }
 
 function getOrganizationId(payload: JWTPayload): string | undefined {
@@ -92,12 +96,15 @@ export async function authenticateBearerToken(token: string, config: OAuthConfig
       throw new AuthError("OAuth token is missing organizationId");
     }
 
+    const { scopes, hasScopeClaim } = extractScopes(payload);
+
     return {
       kind: "oauth",
       token,
       userId: payload.sub,
       organizationId,
-      scopes: extractScopes(payload),
+      scopes,
+      hasScopeClaim,
     };
   } catch (error) {
     if (error instanceof AuthError) {

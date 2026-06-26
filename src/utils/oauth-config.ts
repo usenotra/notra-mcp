@@ -28,7 +28,8 @@ export function getOAuthConfig(): OAuthConfig {
 export function getProtectedResourceMetadata(config: OAuthConfig): OAuthProtectedResourceMetadata {
   return {
     resource: config.resource,
-    authorization_servers: [config.authorizationServerMetadataUrl],
+    authorization_servers: [config.issuer],
+    authorization_server_metadata_url: config.authorizationServerMetadataUrl,
     bearer_methods_supported: ["header"],
     scopes_supported: [...OAUTH_SCOPES],
   };

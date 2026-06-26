@@ -58,7 +58,7 @@ export class NotraClient {
   }
 
   private assertScope(method: string, path: string) {
-    if (!this.auth || this.auth.kind !== "oauth" || this.auth.scopes.length === 0) {
+    if (!this.auth || this.auth.kind !== "oauth") {
       return;
     }
 

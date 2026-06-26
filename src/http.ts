@@ -33,7 +33,7 @@ function tokenMatches(token: string, expectedDigest: Buffer): boolean {
   return timingSafeEqual(actualDigest, expectedDigest);
 }
 
-function getAuthenticatedSession(req: Request) {
+async function getAuthenticatedSession(req: Request) {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
   const token = parseBearerToken(req.headers["authorization"]);
 
@@ -51,21 +51,30 @@ function getAuthenticatedSession(req: Request) {
     return undefined;
   }
 
+  if (session.auth.kind === "oauth") {
+    try {
+      const nextAuth = await authenticateBearerToken(token, oauthConfig);
+      if (
+        nextAuth.kind !== "oauth" ||
+        nextAuth.userId !== session.auth.userId ||
+        nextAuth.organizationId !== session.auth.organizationId
+      ) {
+        delete sessions[sessionId];
+        return undefined;
+      }
+      session.auth = nextAuth;
+    } catch {
+      delete sessions[sessionId];
+      return undefined;
+    }
+  }
+
   session.lastSeen = Date.now();
   return session;
 }
 
 function getRequestOrigin(req: Request): string {
-  const forwardedProto = req.headers["x-forwarded-proto"];
-  const proto = typeof forwardedProto === "string" ? forwardedProto.split(",")[0]?.trim() : req.protocol;
-  const forwardedHost = req.headers["x-forwarded-host"];
-  const host = typeof forwardedHost === "string" ? forwardedHost.split(",")[0]?.trim() : req.headers.host;
-
-  if (!host) {
-    return oauthConfig.resource;
-  }
-
-  return `${proto || "https"}://${host}`;
+  return oauthConfig.resource;
 }
 
 function getProtectedResourceMetadataUrl(req: Request): string {
@@ -130,7 +139,7 @@ app.post("/mcp", async (req, res) => {
     let transport: StreamableHTTPServerTransport;
 
     if (sessionId) {
-      const session = getAuthenticatedSession(req);
+      const session = await getAuthenticatedSession(req);
       if (!session) {
         sendUnauthorizedJson(req, res);
         return;
@@ -195,7 +204,7 @@ app.post("/mcp", async (req, res) => {
 });
 
 app.get("/mcp", async (req, res) => {
-  const session = getAuthenticatedSession(req);
+  const session = await getAuthenticatedSession(req);
   if (!session) {
     sendUnauthorizedText(req, res);
     return;
@@ -204,7 +213,7 @@ app.get("/mcp", async (req, res) => {
 });
 
 app.delete("/mcp", async (req, res) => {
-  const session = getAuthenticatedSession(req);
+  const session = await getAuthenticatedSession(req);
   if (!session) {
     sendUnauthorizedText(req, res);
     return;
