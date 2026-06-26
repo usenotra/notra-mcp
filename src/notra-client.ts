@@ -36,6 +36,7 @@ import type {
   UpdatePostRequest,
   UpdateSkillRequest,
 } from "./types.js";
+import type { AuthContext } from "./types/auth.js";
 
 const NOTRA_API_BASE = "https://api.usenotra.com";
 const COMMA_SEPARATED_QUERY_PARAMS = new Set(["status", "contentType", "brandIdentityId", "repositoryIds"]);
@@ -46,15 +47,45 @@ interface RequestOptions<B = Record<string, string | number | boolean | null | u
 }
 
 export class NotraClient {
-  private apiKey: string;
+  private token: string;
   private baseUrl: string;
+  private auth?: AuthContext;
 
-  constructor(apiKey: string, baseUrl: string = NOTRA_API_BASE) {
-    this.apiKey = apiKey;
+  constructor(auth: string | AuthContext, baseUrl: string = NOTRA_API_BASE) {
+    this.token = typeof auth === "string" ? auth : auth.token;
     this.baseUrl = baseUrl;
+    this.auth = typeof auth === "string" ? undefined : auth;
+  }
+
+  private assertScope(method: string, path: string) {
+    if (!this.auth || this.auth.kind !== "oauth") {
+      return;
+    }
+
+    const domain = path.split("/")[2];
+    if (!domain) {
+      return;
+    }
+
+    const access = method === "GET" ? "read" : "write";
+    const requiredScope = `${domain}:${access}`;
+    const scopes = new Set(this.auth.scopes);
+
+    if (
+      scopes.has(requiredScope) ||
+      scopes.has(`${domain}:*`) ||
+      scopes.has("mcp") ||
+      scopes.has("mcp:*") ||
+      scopes.has("*")
+    ) {
+      return;
+    }
+
+    throw new Error(`OAuth token is missing required scope: ${requiredScope}`);
   }
 
   private async request<T, B = undefined>(method: string, path: string, options?: RequestOptions<B>): Promise<T> {
+    this.assertScope(method, path);
     const url = new URL(`${this.baseUrl}${path}`);
 
     if (options?.params) {
@@ -76,7 +107,7 @@ export class NotraClient {
     }
 
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.token}`,
       "Content-Type": "application/json",
       Accept: "application/json",
     };
@@ -111,6 +142,7 @@ export class NotraClient {
   }
 
   private async requestText<B = undefined>(method: string, path: string, options?: RequestOptions<B>): Promise<ChatStreamResponse> {
+    this.assertScope(method, path);
     const url = new URL(`${this.baseUrl}${path}`);
 
     if (options?.params) {
@@ -121,7 +153,7 @@ export class NotraClient {
     }
 
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.token}`,
       "Content-Type": "application/json",
       Accept: "text/event-stream, application/json",
     };
