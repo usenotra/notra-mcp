@@ -30,6 +30,9 @@ export function parseBearerToken(authorization: string | string[] | undefined): 
   }
 
   const token = trimmed.slice(tokenStart).trim();
+  if (token.includes(" ") || token.includes("\t")) {
+    return undefined;
+  }
   return token.length > 0 ? token : undefined;
 }
 
@@ -68,18 +71,15 @@ export function looksLikeJwt(token: string): boolean {
   return typeof header === "object" && header !== null && typeof payload === "object" && payload !== null;
 }
 
-function extractScopes(payload: JWTPayload): { scopes: string[]; hasScopeClaim: boolean } {
+function extractScopes(payload: JWTPayload): string[] {
   const rawScopes = payload.scope ?? payload.scp ?? payload.scopes;
   if (typeof rawScopes === "string") {
-    return { scopes: rawScopes.split(/\s+/).filter(Boolean), hasScopeClaim: true };
+    return rawScopes.split(/\s+/).filter(Boolean);
   }
   if (Array.isArray(rawScopes)) {
-    return {
-      scopes: rawScopes.filter((scope): scope is string => typeof scope === "string" && scope.length > 0),
-      hasScopeClaim: true,
-    };
+    return rawScopes.filter((scope): scope is string => typeof scope === "string" && scope.length > 0);
   }
-  return { scopes: [], hasScopeClaim: false };
+  return [];
 }
 
 function getOrganizationId(payload: JWTPayload): string | undefined {
@@ -107,15 +107,12 @@ export async function authenticateBearerToken(token: string, config: OAuthConfig
       throw new AuthError("OAuth token is missing organizationId");
     }
 
-    const { scopes, hasScopeClaim } = extractScopes(payload);
-
     return {
       kind: "oauth",
       token,
       userId: payload.sub,
       organizationId,
-      scopes,
-      hasScopeClaim,
+      scopes: extractScopes(payload),
     };
   } catch (error) {
     if (error instanceof AuthError) {

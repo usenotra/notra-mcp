@@ -6,7 +6,6 @@ export type OAuthAuthContext = {
   userId: string;
   organizationId: string;
   scopes: string[];
-  hasScopeClaim: boolean;
 };
 
 export type ApiKeyAuthContext = {
