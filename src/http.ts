@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
@@ -13,6 +13,7 @@ import { getOAuthConfig, getProtectedResourceMetadata } from "./utils/oauth-conf
 const app = createMcpExpressApp({ host: "0.0.0.0" });
 
 const SESSION_TTL_MS = 30 * 60 * 1000;
+const SESSION_TOKEN_DIGEST_KEY = randomBytes(32);
 const oauthConfig = getOAuthConfig();
 
 type Session = {
@@ -22,10 +23,10 @@ type Session = {
   lastSeen: number;
 };
 
-const sessions: Record<string, Session> = {};
+const sessions = new Map<string, Session>();
 
 function digestToken(token: string): Buffer {
-  return createHash("sha256").update(token).digest();
+  return createHmac("sha256", SESSION_TOKEN_DIGEST_KEY).update(token).digest();
 }
 
 function tokenMatches(token: string, expectedDigest: Buffer): boolean {
@@ -41,13 +42,13 @@ async function getAuthenticatedSession(req: Request) {
     return undefined;
   }
 
-  const session = sessions[sessionId];
+  const session = sessions.get(sessionId);
   if (!session || !tokenMatches(token, session.tokenDigest)) {
     return undefined;
   }
 
   if (Date.now() - session.lastSeen > SESSION_TTL_MS) {
-    delete sessions[sessionId];
+    sessions.delete(sessionId);
     return undefined;
   }
 
@@ -59,12 +60,12 @@ async function getAuthenticatedSession(req: Request) {
         nextAuth.userId !== session.auth.userId ||
         nextAuth.organizationId !== session.auth.organizationId
       ) {
-        delete sessions[sessionId];
+        sessions.delete(sessionId);
         return undefined;
       }
       session.auth = nextAuth;
     } catch {
-      delete sessions[sessionId];
+      sessions.delete(sessionId);
       return undefined;
     }
   }
@@ -114,9 +115,9 @@ function sendUnauthorizedText(req: Request, res: Response, description = "Unauth
 
 setInterval(() => {
   const now = Date.now();
-  for (const [sessionId, session] of Object.entries(sessions)) {
+  for (const [sessionId, session] of sessions.entries()) {
     if (now - session.lastSeen > SESSION_TTL_MS) {
-      delete sessions[sessionId];
+      sessions.delete(sessionId);
     }
   }
 }, SESSION_TTL_MS).unref();
@@ -167,14 +168,14 @@ app.post("/mcp", async (req, res) => {
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
         onsessioninitialized: (id: string) => {
-          sessions[id] = { transport, tokenDigest, auth, lastSeen: Date.now() };
+          sessions.set(id, { transport, tokenDigest, auth, lastSeen: Date.now() });
         },
       } as ConstructorParameters<typeof StreamableHTTPServerTransport>[0]);
 
       transport.onclose = () => {
         const sid = transport.sessionId;
-        if (sid && sessions[sid]) {
-          delete sessions[sid];
+        if (sid) {
+          sessions.delete(sid);
         }
       };
 
