@@ -4,6 +4,7 @@ import { NotraClient } from "./notra-client.js";
 import { brandIdentityIdFilterSchema, contentTypeFilterSchema, statusFilterSchema } from "./post-filters.js";
 import { registerChatTools } from "./tools/chat-tools.js";
 import { registerSkillTools } from "./tools/skill-tools.js";
+import type { AuthContext } from "./types/auth.js";
 import { handleError } from "./utils/mcp.js";
 
 const scheduleCronConfigSchema = z.object({
@@ -36,8 +37,8 @@ const schedulePayloadSchema = {
     .describe("Time window for gathering data before generation (default: last_7_days)"),
 } as const;
 
-export function createServer(apiKey: string): McpServer {
-  const client = new NotraClient(apiKey);
+export function createServer(auth: string | AuthContext): McpServer {
+  const client = new NotraClient(auth);
 
   const server = new McpServer({
     name: "notra",

@@ -16,7 +16,7 @@
       "headers": [
         {
           "name": "Authorization",
-          "description": "Bearer token for the Notra API",
+          "description": "Bearer Notra API key or OAuth access token",
           "isRequired": true,
           "isSecret": true
         }

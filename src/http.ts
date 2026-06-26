@@ -3,29 +3,26 @@ import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-import type { Request } from "express";
+import type { Request, Response } from "express";
+import { OAUTH_PROTECTED_RESOURCE_METADATA_PATH } from "./constants/oauth.js";
 import { createServer } from "./server.js";
+import type { AuthContext } from "./types/auth.js";
+import { authenticateBearerToken, parseBearerToken } from "./utils/auth.js";
+import { getOAuthConfig, getProtectedResourceMetadata } from "./utils/oauth-config.js";
 
 const app = createMcpExpressApp({ host: "0.0.0.0" });
 
 const SESSION_TTL_MS = 30 * 60 * 1000;
+const oauthConfig = getOAuthConfig();
 
 type Session = {
   transport: StreamableHTTPServerTransport;
   tokenDigest: Buffer;
+  auth: AuthContext;
   lastSeen: number;
 };
 
 const sessions: Record<string, Session> = {};
-
-function parseBearerToken(authorization: string | string[] | undefined): string | undefined {
-  if (typeof authorization !== "string") {
-    return undefined;
-  }
-
-  const match = authorization.match(/^Bearer\s+(\S+)$/);
-  return match?.[1];
-}
 
 function digestToken(token: string): Buffer {
   return createHash("sha256").update(token).digest();
@@ -58,6 +55,54 @@ function getAuthenticatedSession(req: Request) {
   return session;
 }
 
+function getRequestOrigin(req: Request): string {
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const proto = typeof forwardedProto === "string" ? forwardedProto.split(",")[0]?.trim() : req.protocol;
+  const forwardedHost = req.headers["x-forwarded-host"];
+  const host = typeof forwardedHost === "string" ? forwardedHost.split(",")[0]?.trim() : req.headers.host;
+
+  if (!host) {
+    return oauthConfig.resource;
+  }
+
+  return `${proto || "https"}://${host}`;
+}
+
+function getProtectedResourceMetadataUrl(req: Request): string {
+  return new URL(OAUTH_PROTECTED_RESOURCE_METADATA_PATH, getRequestOrigin(req)).toString();
+}
+
+function setBearerChallenge(req: Request, res: Response, error?: string, description?: string) {
+  const params = [
+    `resource_metadata="${getProtectedResourceMetadataUrl(req)}"`,
+    `resource="${oauthConfig.resource}"`,
+  ];
+
+  if (error) {
+    params.push(`error="${error}"`);
+  }
+
+  if (description) {
+    params.push(`error_description="${description.replace(/"/g, "'")}"`);
+  }
+
+  res.setHeader("WWW-Authenticate", `Bearer ${params.join(", ")}`);
+}
+
+function sendUnauthorizedJson(req: Request, res: Response, description = "Unauthorized") {
+  setBearerChallenge(req, res, "invalid_token", description);
+  res.status(401).json({
+    jsonrpc: "2.0",
+    error: { code: -32001, message: "Unauthorized" },
+    id: null,
+  });
+}
+
+function sendUnauthorizedText(req: Request, res: Response, description = "Unauthorized") {
+  setBearerChallenge(req, res, "invalid_token", description);
+  res.status(401).send("Unauthorized");
+}
+
 setInterval(() => {
   const now = Date.now();
   for (const [sessionId, session] of Object.entries(sessions)) {
@@ -72,7 +117,7 @@ app.get("/.well-known/oauth-authorization-server", (_req, res) => {
 });
 
 app.get("/.well-known/oauth-protected-resource", (_req, res) => {
-  res.status(404).end();
+  res.json(getProtectedResourceMetadata(oauthConfig));
 });
 
 app.post("/register", (_req, res) => {
@@ -87,32 +132,33 @@ app.post("/mcp", async (req, res) => {
     if (sessionId) {
       const session = getAuthenticatedSession(req);
       if (!session) {
-        res.status(401).json({
-          jsonrpc: "2.0",
-          error: { code: -32001, message: "Unauthorized" },
-          id: null,
-        });
+        sendUnauthorizedJson(req, res);
         return;
       }
       transport = session.transport;
     } else if (!sessionId && isInitializeRequest(req.body)) {
-      const apiKey = parseBearerToken(req.headers["authorization"]);
-      if (!apiKey) {
-        res.status(401).json({
-          jsonrpc: "2.0",
-          error: { code: -32001, message: "Unauthorized" },
-          id: null,
-        });
+      const token = parseBearerToken(req.headers["authorization"]);
+      if (!token) {
+        sendUnauthorizedJson(req, res, "Missing bearer token");
         return;
       }
 
-      const tokenDigest = digestToken(apiKey);
-      const server = createServer(apiKey);
+      let auth: AuthContext;
+      try {
+        auth = await authenticateBearerToken(token, oauthConfig);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Invalid bearer token";
+        sendUnauthorizedJson(req, res, message);
+        return;
+      }
+
+      const tokenDigest = digestToken(token);
+      const server = createServer(auth);
 
       transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
         onsessioninitialized: (id: string) => {
-          sessions[id] = { transport, tokenDigest, lastSeen: Date.now() };
+          sessions[id] = { transport, tokenDigest, auth, lastSeen: Date.now() };
         },
       } as ConstructorParameters<typeof StreamableHTTPServerTransport>[0]);
 
@@ -151,7 +197,7 @@ app.post("/mcp", async (req, res) => {
 app.get("/mcp", async (req, res) => {
   const session = getAuthenticatedSession(req);
   if (!session) {
-    res.status(401).send("Unauthorized");
+    sendUnauthorizedText(req, res);
     return;
   }
   await session.transport.handleRequest(req, res);
@@ -160,7 +206,7 @@ app.get("/mcp", async (req, res) => {
 app.delete("/mcp", async (req, res) => {
   const session = getAuthenticatedSession(req);
   if (!session) {
-    res.status(401).send("Unauthorized");
+    sendUnauthorizedText(req, res);
     return;
   }
   try {
