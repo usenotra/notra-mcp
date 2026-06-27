@@ -95,7 +95,7 @@ export async function authenticateBearerToken(token: string, config: OAuthConfig
   try {
     const { payload } = await jwtVerify(token, getRemoteJwks(config.jwksUrl), {
       issuer: config.issuer,
-      audience: config.resource,
+      audience: config.resourceAudiences,
     });
 
     if (!payload.sub) {

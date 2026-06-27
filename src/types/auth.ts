@@ -19,6 +19,7 @@ export type OAuthConfig = {
   issuer: string;
   jwksUrl: string;
   resource: string;
+  resourceAudiences: string[];
   authorizationServerMetadataUrl: string;
 };
 
