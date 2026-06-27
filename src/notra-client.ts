@@ -68,14 +68,17 @@ export class NotraClient {
     }
 
     const access = method === "GET" ? "read" : "write";
-    const requiredScope = `${domain}:${access}`;
+    const requiredScope = `${domain}.${access}`;
+    const fallbackScope = `api.${access}`;
     const scopes = new Set(this.auth.scopes);
 
     if (
       scopes.has(requiredScope) ||
-      scopes.has(`${domain}:*`) ||
+      scopes.has(fallbackScope) ||
+      scopes.has(`${domain}.*`) ||
+      scopes.has("api.*") ||
       scopes.has("mcp") ||
-      scopes.has("mcp:*") ||
+      scopes.has("mcp.*") ||
       scopes.has("*")
     ) {
       return;

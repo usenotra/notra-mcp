@@ -38,12 +38,12 @@ async function getAuthenticatedSession(req: Request) {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
   const token = parseBearerToken(req.headers["authorization"]);
 
-  if (!sessionId || !token) {
+  if (!sessionId) {
     return undefined;
   }
 
   const session = sessions.get(sessionId);
-  if (!session || !tokenMatches(token, session.tokenDigest)) {
+  if (!session) {
     return undefined;
   }
 
@@ -52,7 +52,11 @@ async function getAuthenticatedSession(req: Request) {
     return undefined;
   }
 
-  if (session.auth.kind === "oauth") {
+  if (!token && session.auth.kind !== "oauth") {
+    return undefined;
+  }
+
+  if (token && session.auth.kind === "oauth") {
     try {
       const nextAuth = await authenticateBearerToken(token, oauthConfig);
       if (
@@ -64,10 +68,13 @@ async function getAuthenticatedSession(req: Request) {
         return undefined;
       }
       session.auth = nextAuth;
+      session.tokenDigest = digestToken(token);
     } catch {
       sessions.delete(sessionId);
       return undefined;
     }
+  } else if (token && !tokenMatches(token, session.tokenDigest)) {
+    return undefined;
   }
 
   session.lastSeen = Date.now();
