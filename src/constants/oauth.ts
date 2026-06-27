@@ -7,16 +7,11 @@ export const OAUTH_PROTECTED_RESOURCE_METADATA_PATH = "/.well-known/oauth-protec
 export const OAUTH_JWKS_PATH = "/api/auth/jwks";
 
 export const OAUTH_SCOPES = [
-  "posts:read",
-  "posts:write",
-  "brand-identities:read",
-  "brand-identities:write",
-  "integrations:read",
-  "integrations:write",
-  "schedules:read",
-  "schedules:write",
-  "chats:read",
-  "chats:write",
-  "skills:read",
-  "skills:write",
+  "api.read",
+  "api.write",
+  "offline_access",
+  "posts.read",
+  "posts.write",
+  "skills.read",
+  "skills.write",
 ] as const;
