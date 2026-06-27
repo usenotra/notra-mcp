@@ -12,15 +12,27 @@ function buildIssuerUrl(path: string, issuer: string): string {
   return new URL(path, issuer).toString();
 }
 
+function buildResourceAudiences(resource: string): string[] {
+  const audiences = new Set([resource]);
+
+  if (!resource.endsWith("/mcp")) {
+    audiences.add(new URL("/mcp", resource).toString());
+  }
+
+  return [...audiences];
+}
+
 export function getOAuthConfig(): OAuthConfig {
   const issuer =
     process.env.NOTRA_OAUTH_ISSUER ??
     (process.env.NODE_ENV === "development" ? LOCAL_OAUTH_ISSUER : PRODUCTION_OAUTH_ISSUER);
+  const resource = process.env.NOTRA_MCP_RESOURCE ?? DEFAULT_MCP_RESOURCE;
 
   return {
     issuer,
     jwksUrl: process.env.NOTRA_OAUTH_JWKS_URL ?? buildIssuerUrl(OAUTH_JWKS_PATH, issuer),
-    resource: process.env.NOTRA_MCP_RESOURCE ?? DEFAULT_MCP_RESOURCE,
+    resource,
+    resourceAudiences: buildResourceAudiences(resource),
     authorizationServerMetadataUrl: buildIssuerUrl(OAUTH_AUTHORIZATION_SERVER_METADATA_PATH, issuer),
   };
 }
