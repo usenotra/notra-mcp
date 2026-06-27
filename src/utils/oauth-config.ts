@@ -18,7 +18,12 @@ function buildResourceAudiences(resource: string): string[] {
   if (resource.endsWith("/mcp")) {
     audiences.add(resource.slice(0, -4));
   } else {
-    audiences.add(new URL("/mcp", resource).toString());
+    try {
+      audiences.add(new URL("/mcp", resource).toString());
+    } catch {
+      // Non-URL resource indicators are valid OAuth values, but do not have a
+      // predictable MCP endpoint alias.
+    }
   }
 
   return [...audiences];

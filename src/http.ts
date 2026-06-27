@@ -52,6 +52,10 @@ async function getAuthenticatedSession(req: Request) {
     return undefined;
   }
 
+  if (!token && session.auth.kind !== "oauth") {
+    return undefined;
+  }
+
   if (token && session.auth.kind === "oauth") {
     try {
       const nextAuth = await authenticateBearerToken(token, oauthConfig);
