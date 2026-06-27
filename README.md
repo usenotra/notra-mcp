@@ -45,12 +45,14 @@ The metadata points clients to the Notra dashboard authorization server at `http
 For self-hosted HTTP deployments, OAuth validation can be configured with:
 
 ```bash
-NOTRA_OAUTH_ISSUER=https://app.usenotra.com
+NOTRA_OAUTH_ISSUER=https://app.usenotra.com/api/auth
 NOTRA_OAUTH_JWKS_URL=https://app.usenotra.com/api/auth/jwks
 NOTRA_MCP_RESOURCE=https://mcp.usenotra.com
 ```
 
-When `NODE_ENV=development`, the default issuer is `http://localhost:3000`; production defaults to `https://app.usenotra.com`.
+The issuer must match the `iss` claim in tokens minted by the authorization server (`https://app.usenotra.com/api/auth`); a mismatch causes every bearer token to be rejected.
+
+When `NODE_ENV=development`, the default issuer is `http://localhost:3000/api/auth`; production defaults to `https://app.usenotra.com/api/auth`.
 
 ## Tools
 
