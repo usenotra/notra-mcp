@@ -1,4 +1,4 @@
-import { createRemoteJWKSet, errors as joseErrors, jwtVerify, type JWTPayload } from "jose";
+import { createRemoteJWKSet, decodeJwt, errors as joseErrors, jwtVerify, type JWTPayload } from "jose";
 import type { AuthContext, OAuthConfig } from "../types/auth.js";
 
 const remoteJwksByUrl = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
@@ -89,6 +89,24 @@ function getOrganizationId(payload: JWTPayload): string | undefined {
 
 export async function authenticateBearerToken(token: string, config: OAuthConfig): Promise<AuthContext> {
   if (!looksLikeJwt(token)) {
+    return { kind: "apiKey", token };
+  }
+
+  // Notra API keys are themselves JWTs, but they are not issued by our OAuth
+  // authorization server (they carry no `iss` and are signed by a different key).
+  // Only tokens whose `iss` matches our configured issuer are treated as OAuth
+  // access tokens and cryptographically verified here; anything else is forwarded
+  // to the Notra API as an API key, which performs its own authentication.
+  // The `iss` read here is unverified and used solely for routing — OAuth tokens
+  // are still fully verified below, and API keys are validated downstream.
+  let unverifiedIssuer: string | undefined;
+  try {
+    unverifiedIssuer = decodeJwt(token).iss;
+  } catch {
+    unverifiedIssuer = undefined;
+  }
+
+  if (unverifiedIssuer !== config.issuer) {
     return { kind: "apiKey", token };
   }
 
