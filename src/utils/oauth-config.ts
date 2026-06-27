@@ -15,7 +15,9 @@ function buildIssuerUrl(path: string, issuer: string): string {
 function buildResourceAudiences(resource: string): string[] {
   const audiences = new Set([resource]);
 
-  if (!resource.endsWith("/mcp")) {
+  if (resource.endsWith("/mcp")) {
+    audiences.add(resource.slice(0, -4));
+  } else {
     audiences.add(new URL("/mcp", resource).toString());
   }
 
