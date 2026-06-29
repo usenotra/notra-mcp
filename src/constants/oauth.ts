@@ -12,8 +12,6 @@ export const OAUTH_JWKS_PATH = "/api/auth/jwks";
 
 export const OAUTH_SCOPES = [
   "offline_access",
-  "api.read",
-  "api.write",
   "posts.read",
   "posts.write",
   "brand-identities.read",
