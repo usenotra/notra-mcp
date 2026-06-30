@@ -131,11 +131,11 @@ export function createServer(auth: string | AuthContext): McpServer {
           .describe("Time window for gathering data (default: last_7_days)"),
         brandVoiceId: z.string().min(1).optional().describe("Brand voice ID to use for generation"),
         brandIdentityId: z.string().min(1).optional().nullable().describe("Brand identity ID to use"),
-        repositoryIds: z.array(z.string().min(1)).optional().describe("Repository IDs to include. Deprecated; prefer integrations.github."),
+        repositoryIds: z.array(z.string().min(1)).optional().describe("Repository IDs to include. Deprecated; prefer integrations.github IDs from list_integrations."),
         linearIntegrationIds: z.array(z.string().min(1)).optional().describe("Linear integration IDs to include. Deprecated; prefer integrations.linear."),
         integrations: z
           .object({
-            github: z.array(z.string().min(1)).min(1).optional().describe("GitHub integration IDs to include"),
+            github: z.array(z.string().min(1)).min(1).optional().describe("Connected GitHub integration IDs from list_integrations to include"),
             linear: z.array(z.string().min(1)).min(1).optional().describe("Linear integration IDs to include"),
           })
           .optional()
@@ -152,7 +152,7 @@ export function createServer(auth: string | AuthContext): McpServer {
               .min(1),
           })
           .optional()
-          .describe("GitHub repositories to analyze"),
+          .describe("Connected GitHub repositories to analyze. Use owner/repo values returned by list_integrations."),
         dataPoints: z
           .object({
             includePullRequests: z.boolean().optional().describe("Include pull requests (default true)"),
