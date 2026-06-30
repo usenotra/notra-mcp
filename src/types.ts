@@ -20,7 +20,7 @@ export interface Post {
   content: string;
   markdown: string;
   recommendations: string | null;
-  contentType: "changelog" | "linkedin_post" | "twitter_post" | "blog_post";
+  contentType: ContentType;
   sourceMetadata?: SourceMetadata | null;
   status: "draft" | "published";
   createdAt: string;
@@ -53,10 +53,12 @@ export interface PostDeleteResponse {
 }
 
 export const POST_STATUS_VALUES = ["draft", "published"] as const;
-export const CONTENT_TYPE_VALUES = ["changelog", "linkedin_post", "twitter_post", "blog_post"] as const;
+export const CONTENT_TYPE_VALUES = ["changelog", "linkedin_post", "twitter_post", "blog_post", "investor_update", "image"] as const;
+export const GENERATABLE_CONTENT_TYPE_VALUES = ["changelog", "blog_post", "linkedin_post", "twitter_post", "image"] as const;
 
 export type PostStatus = (typeof POST_STATUS_VALUES)[number];
 export type ContentType = (typeof CONTENT_TYPE_VALUES)[number];
+export type GeneratableContentType = (typeof GENERATABLE_CONTENT_TYPE_VALUES)[number];
 export type LookbackWindow = "current_day" | "yesterday" | "last_7_days" | "last_14_days" | "last_30_days";
 export type ToneProfile = "Conversational" | "Professional" | "Casual" | "Formal";
 
@@ -68,7 +70,7 @@ export type Language =
   | "Vietnamese" | "Indonesian" | "Ukrainian" | "Hebrew";
 
 export interface GeneratePostRequest {
-  contentType: ContentType;
+  contentType: GeneratableContentType;
   lookbackWindow?: LookbackWindow;
   brandVoiceId?: string;
   brandIdentityId?: string | null;
@@ -95,13 +97,13 @@ export interface GeneratePostRequest {
   };
 }
 
-export type JobStatus = "queued" | "running" | "completed" | "failed";
+export type JobStatus = "queued" | "running" | "completed" | "failed" | "skipped";
 
 export interface PostGenerationJob {
   id: string;
   organizationId: string;
   status: JobStatus;
-  contentType: ContentType;
+  contentType: GeneratableContentType;
   lookbackWindow: LookbackWindow;
   repositoryIds: string[];
   brandVoiceId: string | null;
@@ -116,7 +118,7 @@ export interface PostGenerationJob {
 
 export type PostGenerationEventType =
   | "queued" | "workflow_triggered" | "running" | "fetching_repositories"
-  | "generating_content" | "post_created" | "completed" | "failed";
+  | "generating_content" | "post_created" | "completed" | "failed" | "skipped";
 
 export interface PostGenerationEvent {
   id: string;
@@ -302,7 +304,7 @@ export interface Schedule {
   targets: {
     repositoryIds: string[];
   };
-  outputType: ContentType;
+  outputType: GeneratableContentType;
   outputConfig: {
     publishDestination?: PublishDestination;
     brandVoiceId?: string;
@@ -339,7 +341,7 @@ export interface UpdateScheduleRequest {
   targets: {
     repositoryIds: string[];
   };
-  outputType: ContentType;
+  outputType: GeneratableContentType;
   outputConfig?: {
     publishDestination?: PublishDestination;
     brandVoiceId?: string;
@@ -361,12 +363,11 @@ export interface ApiErrorResponse {
 
 export type ChatModel =
   | "auto"
-  | "anthropic/claude-opus-4.7"
+  | "anthropic/claude-opus-4.8"
   | "anthropic/claude-sonnet-4.6"
   | "anthropic/claude-haiku-4.5"
   | "openai/gpt-5.4"
-  | "openai/gpt-5.5"
-  | "moonshotai/kimi-k2.6";
+  | "openai/gpt-5.5";
 
 export type ThinkingLevel = "off" | "low" | "medium" | "high";
 export type ExternalChannelSource = "discord" | "slack" | "dashboard";

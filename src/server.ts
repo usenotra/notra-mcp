@@ -4,6 +4,7 @@ import { NotraClient } from "./notra-client.js";
 import { brandIdentityIdFilterSchema, contentTypeFilterSchema, statusFilterSchema } from "./post-filters.js";
 import { registerChatTools } from "./tools/chat-tools.js";
 import { registerSkillTools } from "./tools/skill-tools.js";
+import { GENERATABLE_CONTENT_TYPE_VALUES } from "./types.js";
 import type { AuthContext } from "./types/auth.js";
 import { handleError } from "./utils/mcp.js";
 
@@ -24,7 +25,7 @@ const schedulePayloadSchema = {
   targets: z.object({
     repositoryIds: z.array(z.string().min(1)).min(1).describe("Repository IDs to include in the scheduled generation"),
   }).describe("Repositories the schedule should target"),
-  outputType: z.enum(["changelog", "blog_post", "linkedin_post", "twitter_post"]).describe("Type of content to generate"),
+  outputType: z.enum(GENERATABLE_CONTENT_TYPE_VALUES).describe("Type of content to generate"),
   outputConfig: z.object({
     publishDestination: z.enum(["webflow", "framer", "custom"]).optional().describe("Where generated content should be published"),
     brandVoiceId: z.string().min(1).optional().describe("Brand voice ID to use for scheduled output"),
@@ -93,7 +94,7 @@ export function createServer(auth: string | AuthContext): McpServer {
         postId: z.string().min(1).describe("The post ID to update"),
         title: z.string().min(1).max(120).optional().describe("New title (1-120 characters)"),
         slug: z.string().min(1).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional().nullable().describe("New URL slug (lowercase kebab-case)"),
-        markdown: z.string().min(1).optional().describe("New markdown content"),
+        markdown: z.string().min(1).max(100000).optional().describe("New markdown content"),
         status: z.enum(["draft", "published"]).optional().describe("Set status to draft or published"),
       },
     },
@@ -122,7 +123,7 @@ export function createServer(auth: string | AuthContext): McpServer {
         "Queue an async post generation job. Notra will analyze your GitHub activity and generate content. Use get_post_generation_status to poll for completion.",
       inputSchema: {
         contentType: z
-          .enum(["changelog", "blog_post", "linkedin_post", "twitter_post"])
+          .enum(GENERATABLE_CONTENT_TYPE_VALUES)
           .describe("Type of content to generate"),
         lookbackWindow: z
           .enum(["current_day", "yesterday", "last_7_days", "last_14_days", "last_30_days"])
@@ -144,8 +145,8 @@ export function createServer(auth: string | AuthContext): McpServer {
             repositories: z
               .array(
                 z.object({
-                  owner: z.string().describe("GitHub repository owner"),
-                  repo: z.string().describe("GitHub repository name"),
+                  owner: z.string().min(1).describe("GitHub repository owner"),
+                  repo: z.string().min(1).describe("GitHub repository name"),
                 })
               )
               .min(1),
@@ -241,16 +242,16 @@ export function createServer(auth: string | AuthContext): McpServer {
         brandIdentityId: z.string().min(1).describe("The brand identity ID to update"),
         name: z.string().min(1).max(120).optional().describe("Brand identity name (1-120 characters)"),
         websiteUrl: z.string().min(1).optional().describe("Website URL"),
-        companyName: z.string().min(1).optional().nullable().describe("Company name"),
-        companyDescription: z.string().min(10).optional().nullable().describe("Company description (min 10 chars)"),
+        companyName: z.string().min(1).max(200).optional().nullable().describe("Company name"),
+        companyDescription: z.string().min(10).max(4000).optional().nullable().describe("Company description (min 10 chars)"),
         toneProfile: z
           .enum(["Conversational", "Professional", "Casual", "Formal"])
           .optional()
           .nullable()
           .describe("Tone profile preset"),
-        customTone: z.string().optional().nullable().describe("Custom tone description"),
-        customInstructions: z.string().optional().nullable().describe("Custom instructions for content generation"),
-        audience: z.string().min(10).optional().nullable().describe("Target audience description (min 10 chars)"),
+        customTone: z.string().max(1000).optional().nullable().describe("Custom tone description"),
+        customInstructions: z.string().max(4000).optional().nullable().describe("Custom instructions for content generation"),
+        audience: z.string().min(10).max(1000).optional().nullable().describe("Target audience description (min 10 chars)"),
         language: z
           .enum([
             "English", "Spanish", "French", "German", "Portuguese", "Dutch",
