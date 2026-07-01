@@ -44,4 +44,17 @@ describe("generate_post input schema", () => {
     expect(result.isError).toBe(true);
     expect(JSON.stringify(result.content)).toContain("pullRequestNumbers");
   });
+
+  it("rejects empty repository IDs in selectedItems pull requests", async () => {
+    const result = await client.callTool({
+      name: "generate_post",
+      arguments: {
+        contentType: "changelog",
+        selectedItems: { pullRequestNumbers: [{ repositoryId: "", number: 1 }] },
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(JSON.stringify(result.content)).toContain("pullRequestNumbers");
+  });
 });
