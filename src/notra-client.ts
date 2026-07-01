@@ -37,6 +37,7 @@ import type {
   UpdateSkillRequest,
 } from "./types.js";
 import type { AuthContext } from "./types/auth.js";
+import { parseChatStream } from "./utils/chat-stream.js";
 
 const NOTRA_API_BASE = "https://api.usenotra.com";
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
@@ -204,9 +205,10 @@ export class NotraClient {
       throw new Error(message);
     }
 
+    const parsed = parseChatStream(text);
     return {
-      chatId: response.headers.get("x-chat-id"),
-      stream: text,
+      chatId: parsed.chatId ?? response.headers.get("x-chat-id"),
+      text: parsed.text,
     };
   }
 

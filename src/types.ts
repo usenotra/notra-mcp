@@ -454,7 +454,7 @@ export interface SendChatMessageRequest {
 
 export interface ChatStreamResponse {
   chatId: string | null;
-  stream: string;
+  text: string;
 }
 
 export interface GetChatsResponse {

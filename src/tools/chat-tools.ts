@@ -87,7 +87,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
   server.registerTool(
     "create_chat",
     {
-      description: "Start a new chat and return the streamed response as text with the chat ID when available",
+      description: "Start a new chat and return the assistant's reply text with the chat ID when available",
       inputSchema: sendChatMessageSchema,
     },
     async (params) => {
@@ -98,7 +98,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
   server.registerTool(
     "post_chat_message",
     {
-      description: "Post a message to an existing chat and return the streamed response as text",
+      description: "Post a message to an existing chat and return the assistant's reply text",
       inputSchema: {
         chatId: z.string().min(1).describe("The chat ID to send a message to"),
         ...sendChatMessageSchema,
