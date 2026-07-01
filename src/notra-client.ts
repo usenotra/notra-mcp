@@ -39,10 +39,13 @@ import type {
 import type { AuthContext } from "./types/auth.js";
 
 const NOTRA_API_BASE = "https://api.usenotra.com";
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+const DEFAULT_STREAM_TIMEOUT_MS = 180_000;
 
 interface RequestOptions<B = Record<string, string | number | boolean | null | undefined>> {
   params?: Record<string, string | string[] | number | boolean | undefined>;
   body?: B;
+  timeoutMs?: number;
 }
 
 export class NotraClient {
@@ -107,12 +110,21 @@ export class NotraClient {
       Accept: "application/json",
     };
 
-    const fetchOptions: RequestInit = { method, headers };
+    const timeoutMs = options?.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+    const fetchOptions: RequestInit = { method, headers, signal: AbortSignal.timeout(timeoutMs) };
     if (options?.body && (method === "POST" || method === "PATCH" || method === "PUT")) {
       fetchOptions.body = JSON.stringify(options.body);
     }
 
-    const response = await fetch(url.toString(), fetchOptions);
+    let response: Response;
+    try {
+      response = await fetch(url.toString(), fetchOptions);
+    } catch (error) {
+      if (error instanceof Error && error.name === "TimeoutError") {
+        throw new Error(`Notra API request timed out after ${timeoutMs / 1000}s`);
+      }
+      throw error;
+    }
 
     let data: T | ApiErrorResponse;
     try {
@@ -159,12 +171,21 @@ export class NotraClient {
       Accept: "text/event-stream, application/json",
     };
 
-    const fetchOptions: RequestInit = { method, headers };
+    const timeoutMs = options?.timeoutMs ?? DEFAULT_STREAM_TIMEOUT_MS;
+    const fetchOptions: RequestInit = { method, headers, signal: AbortSignal.timeout(timeoutMs) };
     if (options?.body && (method === "POST" || method === "PATCH" || method === "PUT")) {
       fetchOptions.body = JSON.stringify(options.body);
     }
 
-    const response = await fetch(url.toString(), fetchOptions);
+    let response: Response;
+    try {
+      response = await fetch(url.toString(), fetchOptions);
+    } catch (error) {
+      if (error instanceof Error && error.name === "TimeoutError") {
+        throw new Error(`Notra API request timed out after ${timeoutMs / 1000}s`);
+      }
+      throw error;
+    }
     const text = await response.text();
 
     if (!response.ok) {
@@ -196,7 +217,11 @@ export class NotraClient {
   }
 
   async getPost(postId: string): Promise<PostResponse> {
-    return this.request<PostResponse>("GET", `/v1/posts/${encodeURIComponent(postId)}`);
+    const data = await this.request<PostResponse>("GET", `/v1/posts/${encodeURIComponent(postId)}`);
+    if (!data.post) {
+      throw new Error(`Post not found: ${postId}`);
+    }
+    return data;
   }
 
   async updatePost(postId: string, body: UpdatePostRequest): Promise<PostResponse> {
@@ -220,7 +245,14 @@ export class NotraClient {
   }
 
   async getBrandIdentity(brandIdentityId: string): Promise<BrandIdentityResponse> {
-    return this.request<BrandIdentityResponse>("GET", `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`);
+    const data = await this.request<BrandIdentityResponse>(
+      "GET",
+      `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`,
+    );
+    if (!data.brandIdentity) {
+      throw new Error(`Brand identity not found: ${brandIdentityId}`);
+    }
+    return data;
   }
 
   async updateBrandIdentity(brandIdentityId: string, body: UpdateBrandIdentityRequest): Promise<BrandIdentityResponse> {

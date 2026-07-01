@@ -65,6 +65,39 @@ describe("NotraClient query serialization", () => {
   });
 });
 
+describe("NotraClient not-found handling", () => {
+  it("rejects when getPost returns a null post", async () => {
+    stubFetch(new Response(JSON.stringify({ post: null, organization: {} }), { status: 200 }));
+    const client = new NotraClient("test-token");
+
+    await expect(client.getPost("missing")).rejects.toThrow("Post not found");
+  });
+
+  it("rejects when getBrandIdentity returns a null brand identity", async () => {
+    stubFetch(new Response(JSON.stringify({ brandIdentity: null }), { status: 200 }));
+    const client = new NotraClient("test-token");
+
+    await expect(client.getBrandIdentity("missing")).rejects.toThrow("Brand identity not found");
+  });
+
+  it("resolves when getPost returns a post", async () => {
+    stubFetch(new Response(JSON.stringify({ post: { id: "p1" } }), { status: 200 }));
+    const client = new NotraClient("test-token");
+
+    await expect(client.getPost("p1")).resolves.toEqual({ post: { id: "p1" } });
+  });
+});
+
+describe("NotraClient timeouts", () => {
+  it("maps a fetch timeout abort to a readable error", async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new DOMException("The operation timed out.", "TimeoutError"));
+    vi.stubGlobal("fetch", fetchMock);
+    const client = new NotraClient("test-token");
+
+    await expect(client.listPosts()).rejects.toThrow("timed out");
+  });
+});
+
 describe("NotraClient error mapping", () => {
   it("rejects with the API-provided message on a non-ok JSON response", async () => {
     stubFetch(new Response(JSON.stringify({ message: "Nope" }), { status: 400 }));
