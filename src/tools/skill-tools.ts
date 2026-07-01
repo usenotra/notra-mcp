@@ -25,7 +25,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     },
     async () => {
       return handleError(() => client.listSkills());
-    }
+    },
   );
 
   server.registerTool(
@@ -38,7 +38,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     },
     async ({ name }) => {
       return handleError(() => client.getSkill(name));
-    }
+    },
   );
 
   server.registerTool(
@@ -49,7 +49,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     },
     async (params) => {
       return handleError(() => client.createSkill(params));
-    }
+    },
   );
 
   server.registerTool(
@@ -65,7 +65,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     },
     async ({ currentName, ...body }) => {
       return handleError(() => client.updateSkill(currentName, body));
-    }
+    },
   );
 
   server.registerTool(
@@ -78,6 +78,6 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     },
     async ({ name }) => {
       return handleError(() => client.deleteSkill(name));
-    }
+    },
   );
 }

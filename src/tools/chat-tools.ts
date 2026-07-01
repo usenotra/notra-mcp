@@ -25,7 +25,7 @@ const chatContextSchema = z.array(
       integrationId: z.string().describe("Linear integration ID"),
       teamName: z.string().optional().describe("Optional Linear team name"),
     }),
-  ])
+  ]),
 );
 
 const externalChannelIdSchema = z
@@ -54,7 +54,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     },
     async () => {
       return handleError(() => client.listChats());
-    }
+    },
   );
 
   server.registerTool(
@@ -67,7 +67,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     },
     async ({ chatId }) => {
       return handleError(() => client.getChat(chatId));
-    }
+    },
   );
 
   server.registerTool(
@@ -81,7 +81,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     },
     async ({ source, id }) => {
       return handleError(() => client.getChatByExternalChannel(source, id));
-    }
+    },
   );
 
   server.registerTool(
@@ -92,7 +92,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     },
     async (params) => {
       return handleError(() => client.createChat(params));
-    }
+    },
   );
 
   server.registerTool(
@@ -106,6 +106,6 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     },
     async ({ chatId, ...body }) => {
       return handleError(() => client.postChatMessage(chatId, body));
-    }
+    },
   );
 }

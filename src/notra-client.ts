@@ -135,16 +135,22 @@ export class NotraClient {
     if (!response.ok) {
       const errorBody = data as ApiErrorResponse;
       const message =
-        typeof errorBody?.message === "string" ? errorBody.message :
-        typeof errorBody?.error === "string" ? errorBody.error :
-        `HTTP ${response.status}: ${response.statusText}`;
+        typeof errorBody?.message === "string"
+          ? errorBody.message
+          : typeof errorBody?.error === "string"
+            ? errorBody.error
+            : `HTTP ${response.status}: ${response.statusText}`;
       throw new Error(message);
     }
 
     return data as T;
   }
 
-  private async requestText<B = undefined>(method: string, path: string, options?: RequestOptions<B>): Promise<ChatStreamResponse> {
+  private async requestText<B = undefined>(
+    method: string,
+    path: string,
+    options?: RequestOptions<B>,
+  ): Promise<ChatStreamResponse> {
     this.assertScope(method, path);
     const url = new URL(`${this.baseUrl}${path}`);
 
@@ -177,9 +183,11 @@ export class NotraClient {
         errorBody = undefined;
       }
       const message =
-        typeof errorBody?.message === "string" ? errorBody.message :
-        typeof errorBody?.error === "string" ? errorBody.error :
-        text || `HTTP ${response.status}: ${response.statusText}`;
+        typeof errorBody?.message === "string"
+          ? errorBody.message
+          : typeof errorBody?.error === "string"
+            ? errorBody.error
+            : text || `HTTP ${response.status}: ${response.statusText}`;
       throw new Error(message);
     }
 
@@ -224,19 +232,33 @@ export class NotraClient {
   }
 
   async updateBrandIdentity(brandIdentityId: string, body: UpdateBrandIdentityRequest): Promise<BrandIdentityResponse> {
-    return this.request<BrandIdentityResponse, UpdateBrandIdentityRequest>("PATCH", `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`, { body });
+    return this.request<BrandIdentityResponse, UpdateBrandIdentityRequest>(
+      "PATCH",
+      `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`,
+      { body },
+    );
   }
 
   async deleteBrandIdentity(brandIdentityId: string): Promise<BrandIdentityDeleteResponse> {
-    return this.request<BrandIdentityDeleteResponse>("DELETE", `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`);
+    return this.request<BrandIdentityDeleteResponse>(
+      "DELETE",
+      `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`,
+    );
   }
 
   async generateBrandIdentity(body: GenerateBrandIdentityRequest): Promise<GenerateBrandIdentityResponse> {
-    return this.request<GenerateBrandIdentityResponse, GenerateBrandIdentityRequest>("POST", "/v1/brand-identities/generate", { body });
+    return this.request<GenerateBrandIdentityResponse, GenerateBrandIdentityRequest>(
+      "POST",
+      "/v1/brand-identities/generate",
+      { body },
+    );
   }
 
   async getBrandIdentityGenerationStatus(jobId: string): Promise<BrandIdentityGenerationStatusResponse> {
-    return this.request<BrandIdentityGenerationStatusResponse>("GET", `/v1/brand-identities/generate/${encodeURIComponent(jobId)}`);
+    return this.request<BrandIdentityGenerationStatusResponse>(
+      "GET",
+      `/v1/brand-identities/generate/${encodeURIComponent(jobId)}`,
+    );
   }
 
   async listIntegrations(): Promise<IntegrationsListResponse> {
@@ -244,7 +266,11 @@ export class NotraClient {
   }
 
   async createGithubIntegration(body: CreateGithubIntegrationRequest): Promise<CreateGithubIntegrationResponse> {
-    return this.request<CreateGithubIntegrationResponse, CreateGithubIntegrationRequest>("POST", "/v1/integrations/github", { body });
+    return this.request<CreateGithubIntegrationResponse, CreateGithubIntegrationRequest>(
+      "POST",
+      "/v1/integrations/github",
+      { body },
+    );
   }
 
   async deleteIntegration(integrationId: string): Promise<IntegrationDeleteResponse> {
@@ -262,7 +288,11 @@ export class NotraClient {
   }
 
   async updateSchedule(scheduleId: string, body: UpdateScheduleRequest): Promise<ScheduleResponse> {
-    return this.request<ScheduleResponse, UpdateScheduleRequest>("PATCH", `/v1/schedules/${encodeURIComponent(scheduleId)}`, { body });
+    return this.request<ScheduleResponse, UpdateScheduleRequest>(
+      "PATCH",
+      `/v1/schedules/${encodeURIComponent(scheduleId)}`,
+      { body },
+    );
   }
 
   async deleteSchedule(scheduleId: string): Promise<ScheduleDeleteResponse> {
@@ -277,7 +307,10 @@ export class NotraClient {
     return this.requestText<SendChatMessageRequest>("POST", "/v1/chats", { body });
   }
 
-  async getChatByExternalChannel(source: Exclude<ExternalChannelSource, "dashboard">, id: string): Promise<ChatSessionSummary> {
+  async getChatByExternalChannel(
+    source: Exclude<ExternalChannelSource, "dashboard">,
+    id: string,
+  ): Promise<ChatSessionSummary> {
     return this.request<ChatSessionSummary>("GET", "/v1/chats/by-external", {
       params: { source, id },
     });

@@ -12,24 +12,43 @@ const scheduleCronConfigSchema = z.object({
   frequency: z.enum(["daily", "weekly", "monthly"]).describe("How often the schedule should run"),
   hour: z.number().int().min(0).max(23).describe("UTC hour to run at (0-23)"),
   minute: z.number().int().min(0).max(59).describe("UTC minute to run at (0-59)"),
-  dayOfWeek: z.number().int().min(0).max(6).optional().describe("UTC weekday for weekly schedules (0=Sunday, 6=Saturday)"),
+  dayOfWeek: z
+    .number()
+    .int()
+    .min(0)
+    .max(6)
+    .optional()
+    .describe("UTC weekday for weekly schedules (0=Sunday, 6=Saturday)"),
   dayOfMonth: z.number().int().min(1).max(31).optional().describe("UTC day of month for monthly schedules (1-31)"),
 });
 
 const schedulePayloadSchema = {
   name: z.string().min(1).max(120).describe("Schedule name (1-120 characters)"),
   sourceType: z.literal("cron").describe("Schedule trigger type"),
-  sourceConfig: z.object({
-    cron: scheduleCronConfigSchema,
-  }).describe("Cron trigger configuration"),
-  targets: z.object({
-    repositoryIds: z.array(z.string().min(1)).min(1).describe("Repository IDs to include in the scheduled generation"),
-  }).describe("Repositories the schedule should target"),
+  sourceConfig: z
+    .object({
+      cron: scheduleCronConfigSchema,
+    })
+    .describe("Cron trigger configuration"),
+  targets: z
+    .object({
+      repositoryIds: z
+        .array(z.string().min(1))
+        .min(1)
+        .describe("Repository IDs to include in the scheduled generation"),
+    })
+    .describe("Repositories the schedule should target"),
   outputType: z.enum(GENERATABLE_CONTENT_TYPE_VALUES).describe("Type of content to generate"),
-  outputConfig: z.object({
-    publishDestination: z.enum(["webflow", "framer", "custom"]).optional().describe("Where generated content should be published"),
-    brandVoiceId: z.string().min(1).optional().describe("Brand voice ID to use for scheduled output"),
-  }).optional().describe("Optional publishing and voice settings"),
+  outputConfig: z
+    .object({
+      publishDestination: z
+        .enum(["webflow", "framer", "custom"])
+        .optional()
+        .describe("Where generated content should be published"),
+      brandVoiceId: z.string().min(1).optional().describe("Brand voice ID to use for scheduled output"),
+    })
+    .optional()
+    .describe("Optional publishing and voice settings"),
   enabled: z.boolean().describe("Whether the schedule is active"),
   autoPublish: z.boolean().optional().describe("Whether to auto-publish generated content (default false)"),
   lookbackWindow: z
@@ -49,7 +68,8 @@ export function createServer(auth: string | AuthContext): McpServer {
   server.registerTool(
     "list_posts",
     {
-      description: "List posts from Notra with optional filters for sorting, pagination, status, content type, and brand identity",
+      description:
+        "List posts from Notra with optional filters for sorting, pagination, status, content type, and brand identity",
       inputSchema: {
         sort: z.enum(["asc", "desc"]).optional().describe("Sort by creation date"),
         limit: z.number().int().min(1).max(100).optional().describe("Items per page (1-100, default 10)"),
@@ -68,9 +88,9 @@ export function createServer(auth: string | AuthContext): McpServer {
           status: params.status,
           contentType: params.contentType,
           brandIdentityId: params.brandIdentityId,
-        })
+        }),
       );
-    }
+    },
   );
 
   server.registerTool(
@@ -83,7 +103,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async ({ postId }) => {
       return handleError(() => client.getPost(postId));
-    }
+    },
   );
 
   server.registerTool(
@@ -93,14 +113,21 @@ export function createServer(auth: string | AuthContext): McpServer {
       inputSchema: {
         postId: z.string().min(1).describe("The post ID to update"),
         title: z.string().min(1).max(120).optional().describe("New title (1-120 characters)"),
-        slug: z.string().min(1).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional().nullable().describe("New URL slug (lowercase kebab-case)"),
+        slug: z
+          .string()
+          .min(1)
+          .max(160)
+          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+          .optional()
+          .nullable()
+          .describe("New URL slug (lowercase kebab-case)"),
         markdown: z.string().min(1).max(100000).optional().describe("New markdown content"),
         status: z.enum(["draft", "published"]).optional().describe("Set status to draft or published"),
       },
     },
     async ({ postId, ...body }) => {
       return handleError(() => client.updatePost(postId, body));
-    }
+    },
   );
 
   server.registerTool(
@@ -113,7 +140,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async ({ postId }) => {
       return handleError(() => client.deletePost(postId));
-    }
+    },
   );
 
   server.registerTool(
@@ -122,20 +149,28 @@ export function createServer(auth: string | AuthContext): McpServer {
       description:
         "Queue an async post generation job. Notra will analyze your GitHub activity and generate content. Use get_post_generation_status to poll for completion.",
       inputSchema: {
-        contentType: z
-          .enum(GENERATABLE_CONTENT_TYPE_VALUES)
-          .describe("Type of content to generate"),
+        contentType: z.enum(GENERATABLE_CONTENT_TYPE_VALUES).describe("Type of content to generate"),
         lookbackWindow: z
           .enum(["current_day", "yesterday", "last_7_days", "last_14_days", "last_30_days"])
           .optional()
           .describe("Time window for gathering data (default: last_7_days)"),
         brandVoiceId: z.string().min(1).optional().describe("Brand voice ID to use for generation"),
         brandIdentityId: z.string().min(1).optional().nullable().describe("Brand identity ID to use"),
-        repositoryIds: z.array(z.string().min(1)).optional().describe("Repository IDs to include. Deprecated; prefer integrations.github IDs from list_integrations."),
-        linearIntegrationIds: z.array(z.string().min(1)).optional().describe("Linear integration IDs to include. Deprecated; prefer integrations.linear."),
+        repositoryIds: z
+          .array(z.string().min(1))
+          .optional()
+          .describe("Repository IDs to include. Deprecated; prefer integrations.github IDs from list_integrations."),
+        linearIntegrationIds: z
+          .array(z.string().min(1))
+          .optional()
+          .describe("Linear integration IDs to include. Deprecated; prefer integrations.linear."),
         integrations: z
           .object({
-            github: z.array(z.string().min(1)).min(1).optional().describe("Connected GitHub integration IDs from list_integrations to include"),
+            github: z
+              .array(z.string().min(1))
+              .min(1)
+              .optional()
+              .describe("Connected GitHub integration IDs from list_integrations to include"),
             linear: z.array(z.string().min(1)).min(1).optional().describe("Linear integration IDs to include"),
           })
           .optional()
@@ -147,7 +182,7 @@ export function createServer(auth: string | AuthContext): McpServer {
                 z.object({
                   owner: z.string().min(1).describe("GitHub repository owner"),
                   repo: z.string().min(1).describe("GitHub repository name"),
-                })
+                }),
               )
               .min(1),
           })
@@ -170,7 +205,7 @@ export function createServer(auth: string | AuthContext): McpServer {
                 z.object({
                   repositoryId: z.string(),
                   number: z.number(),
-                })
+                }),
               )
               .optional()
               .describe("Specific pull requests to include"),
@@ -183,7 +218,7 @@ export function createServer(auth: string | AuthContext): McpServer {
                 z.object({
                   integrationId: z.string().min(1),
                   issueId: z.string().min(1),
-                })
+                }),
               )
               .optional()
               .describe("Specific Linear issues to include"),
@@ -194,7 +229,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async (params) => {
       return handleError(() => client.generatePost(params));
-    }
+    },
   );
 
   server.registerTool(
@@ -207,7 +242,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async ({ jobId }) => {
       return handleError(() => client.getPostGenerationStatus(jobId));
-    }
+    },
   );
 
   server.registerTool(
@@ -218,7 +253,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async () => {
       return handleError(() => client.listBrandIdentities());
-    }
+    },
   );
 
   server.registerTool(
@@ -231,7 +266,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async ({ brandIdentityId }) => {
       return handleError(() => client.getBrandIdentity(brandIdentityId));
-    }
+    },
   );
 
   server.registerTool(
@@ -243,22 +278,62 @@ export function createServer(auth: string | AuthContext): McpServer {
         name: z.string().min(1).max(120).optional().describe("Brand identity name (1-120 characters)"),
         websiteUrl: z.string().min(1).optional().describe("Website URL"),
         companyName: z.string().min(1).max(200).optional().nullable().describe("Company name"),
-        companyDescription: z.string().min(10).max(4000).optional().nullable().describe("Company description (min 10 chars)"),
+        companyDescription: z
+          .string()
+          .min(10)
+          .max(4000)
+          .optional()
+          .nullable()
+          .describe("Company description (min 10 chars)"),
         toneProfile: z
           .enum(["Conversational", "Professional", "Casual", "Formal"])
           .optional()
           .nullable()
           .describe("Tone profile preset"),
         customTone: z.string().max(1000).optional().nullable().describe("Custom tone description"),
-        customInstructions: z.string().max(4000).optional().nullable().describe("Custom instructions for content generation"),
-        audience: z.string().min(10).max(1000).optional().nullable().describe("Target audience description (min 10 chars)"),
+        customInstructions: z
+          .string()
+          .max(4000)
+          .optional()
+          .nullable()
+          .describe("Custom instructions for content generation"),
+        audience: z
+          .string()
+          .min(10)
+          .max(1000)
+          .optional()
+          .nullable()
+          .describe("Target audience description (min 10 chars)"),
         language: z
           .enum([
-            "English", "Spanish", "French", "German", "Portuguese", "Dutch",
-            "Italian", "Japanese", "Korean", "Chinese", "Arabic", "Hindi",
-            "Russian", "Turkish", "Polish", "Swedish", "Danish", "Norwegian",
-            "Finnish", "Czech", "Romanian", "Hungarian", "Greek", "Thai",
-            "Vietnamese", "Indonesian", "Ukrainian", "Hebrew",
+            "English",
+            "Spanish",
+            "French",
+            "German",
+            "Portuguese",
+            "Dutch",
+            "Italian",
+            "Japanese",
+            "Korean",
+            "Chinese",
+            "Arabic",
+            "Hindi",
+            "Russian",
+            "Turkish",
+            "Polish",
+            "Swedish",
+            "Danish",
+            "Norwegian",
+            "Finnish",
+            "Czech",
+            "Romanian",
+            "Hungarian",
+            "Greek",
+            "Thai",
+            "Vietnamese",
+            "Indonesian",
+            "Ukrainian",
+            "Hebrew",
           ])
           .optional()
           .nullable()
@@ -268,7 +343,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async ({ brandIdentityId, ...body }) => {
       return handleError(() => client.updateBrandIdentity(brandIdentityId, body));
-    }
+    },
   );
 
   server.registerTool(
@@ -281,7 +356,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async ({ brandIdentityId }) => {
       return handleError(() => client.deleteBrandIdentity(brandIdentityId));
-    }
+    },
   );
 
   server.registerTool(
@@ -296,7 +371,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async (params) => {
       return handleError(() => client.generateBrandIdentity(params));
-    }
+    },
   );
 
   server.registerTool(
@@ -309,7 +384,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async ({ jobId }) => {
       return handleError(() => client.getBrandIdentityGenerationStatus(jobId));
-    }
+    },
   );
 
   server.registerTool(
@@ -320,7 +395,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async () => {
       return handleError(() => client.listIntegrations());
-    }
+    },
   );
 
   server.registerTool(
@@ -342,20 +417,21 @@ export function createServer(auth: string | AuthContext): McpServer {
       if (params.branch) body.branch = params.branch;
       if (params.token) body.token = params.token;
       return handleError(() => client.createGithubIntegration(body));
-    }
+    },
   );
 
   server.registerTool(
     "delete_integration",
     {
-      description: "Delete a GitHub or Linear integration. Returns any schedules or events that were disabled as a result.",
+      description:
+        "Delete a GitHub or Linear integration. Returns any schedules or events that were disabled as a result.",
       inputSchema: {
         integrationId: z.string().min(1).describe("The integration ID to delete"),
       },
     },
     async ({ integrationId }) => {
       return handleError(() => client.deleteIntegration(integrationId));
-    }
+    },
   );
 
   server.registerTool(
@@ -363,12 +439,15 @@ export function createServer(auth: string | AuthContext): McpServer {
     {
       description: "List scheduled content generation jobs, optionally filtered by repository IDs",
       inputSchema: {
-        repositoryIds: z.array(z.string().min(1)).optional().describe("Only return schedules targeting these repository IDs"),
+        repositoryIds: z
+          .array(z.string().min(1))
+          .optional()
+          .describe("Only return schedules targeting these repository IDs"),
       },
     },
     async ({ repositoryIds }) => {
       return handleError(() => client.listSchedules({ repositoryIds }));
-    }
+    },
   );
 
   server.registerTool(
@@ -379,7 +458,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async (params) => {
       return handleError(() => client.createSchedule(params));
-    }
+    },
   );
 
   server.registerTool(
@@ -393,7 +472,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async ({ scheduleId, ...body }) => {
       return handleError(() => client.updateSchedule(scheduleId, body));
-    }
+    },
   );
 
   server.registerTool(
@@ -406,7 +485,7 @@ export function createServer(auth: string | AuthContext): McpServer {
     },
     async ({ scheduleId }) => {
       return handleError(() => client.deleteSchedule(scheduleId));
-    }
+    },
   );
 
   registerChatTools(server, client);

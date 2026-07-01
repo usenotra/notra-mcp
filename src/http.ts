@@ -90,10 +90,7 @@ function getProtectedResourceMetadataUrl(req: Request): string {
 }
 
 function setBearerChallenge(req: Request, res: Response, error?: string, description?: string) {
-  const params = [
-    `resource_metadata="${getProtectedResourceMetadataUrl(req)}"`,
-    `resource="${oauthConfig.resource}"`,
-  ];
+  const params = [`resource_metadata="${getProtectedResourceMetadataUrl(req)}"`, `resource="${oauthConfig.resource}"`];
 
   if (error) {
     params.push(`error="${error}"`);
