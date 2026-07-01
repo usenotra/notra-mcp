@@ -11,7 +11,11 @@
     "build": "tsc && chmod 755 build/index.js",
     "start": "node build/index.js",
     "start:http": "node build/http.js",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "files": [
     "build"
@@ -26,7 +30,7 @@
     "ai",
     "content"
   ],
-  "author": "",
+  "author": "Notra",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/usenotra/notra-mcp/issues"
@@ -42,6 +46,8 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.0",
-    "typescript": "^6.0.2"
+    "prettier": "^3.9.4",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.9"
   }
 }

@@ -35,15 +35,30 @@ import type {
   UpdateBrandIdentityRequest,
   UpdatePostRequest,
   UpdateSkillRequest,
-} from "./types.js";
+} from "./types/api.js";
 import type { AuthContext } from "./types/auth.js";
+import { parseChatStream } from "./utils/chat-stream.js";
 
 const NOTRA_API_BASE = "https://api.usenotra.com";
-const COMMA_SEPARATED_QUERY_PARAMS = new Set(["brandIdentityId", "repositoryIds"]);
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+const DEFAULT_STREAM_TIMEOUT_MS = 180_000;
 
 interface RequestOptions<B = Record<string, string | number | boolean | null | undefined>> {
   params?: Record<string, string | string[] | number | boolean | undefined>;
   body?: B;
+  timeoutMs?: number;
+}
+
+/**
+ * Maps an `AbortSignal.timeout` abort (which can fire during the fetch call or
+ * while reading the response body) to a readable error; returns undefined for
+ * any other error so callers can fall through to their own handling.
+ */
+function asTimeoutError(error: unknown, timeoutMs: number): Error | undefined {
+  if (error instanceof Error && error.name === "TimeoutError") {
+    return new Error(`Notra API request timed out after ${timeoutMs / 1000}s`);
+  }
+  return undefined;
 }
 
 export class NotraClient {
@@ -95,14 +110,7 @@ export class NotraClient {
       for (const [key, value] of Object.entries(options.params)) {
         if (value === undefined) continue;
         if (Array.isArray(value)) {
-          if (COMMA_SEPARATED_QUERY_PARAMS.has(key)) {
-            url.searchParams.set(key, value.join(","));
-            continue;
-          }
-
-          for (const entry of value) {
-            url.searchParams.append(key, entry);
-          }
+          url.searchParams.set(key, value.join(","));
         } else {
           url.searchParams.set(key, String(value));
         }
@@ -115,17 +123,27 @@ export class NotraClient {
       Accept: "application/json",
     };
 
-    const fetchOptions: RequestInit = { method, headers };
+    const timeoutMs = options?.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+    const fetchOptions: RequestInit = { method, headers, signal: AbortSignal.timeout(timeoutMs) };
     if (options?.body && (method === "POST" || method === "PATCH" || method === "PUT")) {
       fetchOptions.body = JSON.stringify(options.body);
     }
 
-    const response = await fetch(url.toString(), fetchOptions);
+    let response: Response;
+    try {
+      response = await fetch(url.toString(), fetchOptions);
+    } catch (error) {
+      throw asTimeoutError(error, timeoutMs) ?? error;
+    }
 
     let data: T | ApiErrorResponse;
     try {
       data = await response.json();
-    } catch {
+    } catch (error) {
+      const timeout = asTimeoutError(error, timeoutMs);
+      if (timeout) {
+        throw timeout;
+      }
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -135,16 +153,22 @@ export class NotraClient {
     if (!response.ok) {
       const errorBody = data as ApiErrorResponse;
       const message =
-        typeof errorBody?.message === "string" ? errorBody.message :
-        typeof errorBody?.error === "string" ? errorBody.error :
-        `HTTP ${response.status}: ${response.statusText}`;
+        typeof errorBody?.message === "string"
+          ? errorBody.message
+          : typeof errorBody?.error === "string"
+            ? errorBody.error
+            : `HTTP ${response.status}: ${response.statusText}`;
       throw new Error(message);
     }
 
     return data as T;
   }
 
-  private async requestText<B = undefined>(method: string, path: string, options?: RequestOptions<B>): Promise<ChatStreamResponse> {
+  private async requestText<B = undefined>(
+    method: string,
+    path: string,
+    options?: RequestOptions<B>,
+  ): Promise<ChatStreamResponse> {
     this.assertScope(method, path);
     const url = new URL(`${this.baseUrl}${path}`);
 
@@ -161,13 +185,25 @@ export class NotraClient {
       Accept: "text/event-stream, application/json",
     };
 
-    const fetchOptions: RequestInit = { method, headers };
+    const timeoutMs = options?.timeoutMs ?? DEFAULT_STREAM_TIMEOUT_MS;
+    const fetchOptions: RequestInit = { method, headers, signal: AbortSignal.timeout(timeoutMs) };
     if (options?.body && (method === "POST" || method === "PATCH" || method === "PUT")) {
       fetchOptions.body = JSON.stringify(options.body);
     }
 
-    const response = await fetch(url.toString(), fetchOptions);
-    const text = await response.text();
+    let response: Response;
+    try {
+      response = await fetch(url.toString(), fetchOptions);
+    } catch (error) {
+      throw asTimeoutError(error, timeoutMs) ?? error;
+    }
+
+    let text: string;
+    try {
+      text = await response.text();
+    } catch (error) {
+      throw asTimeoutError(error, timeoutMs) ?? error;
+    }
 
     if (!response.ok) {
       let errorBody: ApiErrorResponse | undefined;
@@ -177,15 +213,18 @@ export class NotraClient {
         errorBody = undefined;
       }
       const message =
-        typeof errorBody?.message === "string" ? errorBody.message :
-        typeof errorBody?.error === "string" ? errorBody.error :
-        text || `HTTP ${response.status}: ${response.statusText}`;
+        typeof errorBody?.message === "string"
+          ? errorBody.message
+          : typeof errorBody?.error === "string"
+            ? errorBody.error
+            : text || `HTTP ${response.status}: ${response.statusText}`;
       throw new Error(message);
     }
 
+    const parsed = parseChatStream(text);
     return {
-      chatId: response.headers.get("x-chat-id"),
-      stream: text,
+      chatId: parsed.chatId ?? response.headers.get("x-chat-id"),
+      text: parsed.text,
     };
   }
 
@@ -196,7 +235,11 @@ export class NotraClient {
   }
 
   async getPost(postId: string): Promise<PostResponse> {
-    return this.request<PostResponse>("GET", `/v1/posts/${encodeURIComponent(postId)}`);
+    const data = await this.request<PostResponse>("GET", `/v1/posts/${encodeURIComponent(postId)}`);
+    if (!data.post) {
+      throw new Error(`Post not found: ${postId}`);
+    }
+    return data;
   }
 
   async updatePost(postId: string, body: UpdatePostRequest): Promise<PostResponse> {
@@ -220,23 +263,44 @@ export class NotraClient {
   }
 
   async getBrandIdentity(brandIdentityId: string): Promise<BrandIdentityResponse> {
-    return this.request<BrandIdentityResponse>("GET", `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`);
+    const data = await this.request<BrandIdentityResponse>(
+      "GET",
+      `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`,
+    );
+    if (!data.brandIdentity) {
+      throw new Error(`Brand identity not found: ${brandIdentityId}`);
+    }
+    return data;
   }
 
   async updateBrandIdentity(brandIdentityId: string, body: UpdateBrandIdentityRequest): Promise<BrandIdentityResponse> {
-    return this.request<BrandIdentityResponse, UpdateBrandIdentityRequest>("PATCH", `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`, { body });
+    return this.request<BrandIdentityResponse, UpdateBrandIdentityRequest>(
+      "PATCH",
+      `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`,
+      { body },
+    );
   }
 
   async deleteBrandIdentity(brandIdentityId: string): Promise<BrandIdentityDeleteResponse> {
-    return this.request<BrandIdentityDeleteResponse>("DELETE", `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`);
+    return this.request<BrandIdentityDeleteResponse>(
+      "DELETE",
+      `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`,
+    );
   }
 
   async generateBrandIdentity(body: GenerateBrandIdentityRequest): Promise<GenerateBrandIdentityResponse> {
-    return this.request<GenerateBrandIdentityResponse, GenerateBrandIdentityRequest>("POST", "/v1/brand-identities/generate", { body });
+    return this.request<GenerateBrandIdentityResponse, GenerateBrandIdentityRequest>(
+      "POST",
+      "/v1/brand-identities/generate",
+      { body },
+    );
   }
 
   async getBrandIdentityGenerationStatus(jobId: string): Promise<BrandIdentityGenerationStatusResponse> {
-    return this.request<BrandIdentityGenerationStatusResponse>("GET", `/v1/brand-identities/generate/${encodeURIComponent(jobId)}`);
+    return this.request<BrandIdentityGenerationStatusResponse>(
+      "GET",
+      `/v1/brand-identities/generate/${encodeURIComponent(jobId)}`,
+    );
   }
 
   async listIntegrations(): Promise<IntegrationsListResponse> {
@@ -244,7 +308,11 @@ export class NotraClient {
   }
 
   async createGithubIntegration(body: CreateGithubIntegrationRequest): Promise<CreateGithubIntegrationResponse> {
-    return this.request<CreateGithubIntegrationResponse, CreateGithubIntegrationRequest>("POST", "/v1/integrations/github", { body });
+    return this.request<CreateGithubIntegrationResponse, CreateGithubIntegrationRequest>(
+      "POST",
+      "/v1/integrations/github",
+      { body },
+    );
   }
 
   async deleteIntegration(integrationId: string): Promise<IntegrationDeleteResponse> {
@@ -262,7 +330,11 @@ export class NotraClient {
   }
 
   async updateSchedule(scheduleId: string, body: UpdateScheduleRequest): Promise<ScheduleResponse> {
-    return this.request<ScheduleResponse, UpdateScheduleRequest>("PATCH", `/v1/schedules/${encodeURIComponent(scheduleId)}`, { body });
+    return this.request<ScheduleResponse, UpdateScheduleRequest>(
+      "PATCH",
+      `/v1/schedules/${encodeURIComponent(scheduleId)}`,
+      { body },
+    );
   }
 
   async deleteSchedule(scheduleId: string): Promise<ScheduleDeleteResponse> {
@@ -277,7 +349,10 @@ export class NotraClient {
     return this.requestText<SendChatMessageRequest>("POST", "/v1/chats", { body });
   }
 
-  async getChatByExternalChannel(source: Exclude<ExternalChannelSource, "dashboard">, id: string): Promise<ChatSessionSummary> {
+  async getChatByExternalChannel(
+    source: Exclude<ExternalChannelSource, "dashboard">,
+    id: string,
+  ): Promise<ChatSessionSummary> {
     return this.request<ChatSessionSummary>("GET", "/v1/chats/by-external", {
       params: { source, id },
     });

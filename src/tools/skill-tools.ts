@@ -21,41 +21,45 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     "list_skills",
     {
       description: "List reusable writing skills for your organization",
+      annotations: { title: "List Skills", readOnlyHint: true },
       inputSchema: {},
     },
     async () => {
       return handleError(() => client.listSkills());
-    }
+    },
   );
 
   server.registerTool(
     "get_skill",
     {
       description: "Get a single reusable writing skill by name",
+      annotations: { title: "Get Skill", readOnlyHint: true },
       inputSchema: {
         name: skillNameSchema,
       },
     },
     async ({ name }) => {
       return handleError(() => client.getSkill(name));
-    }
+    },
   );
 
   server.registerTool(
     "create_skill",
     {
       description: "Create a reusable writing skill",
+      annotations: { title: "Create Skill", destructiveHint: false },
       inputSchema: skillPayloadSchema,
     },
     async (params) => {
       return handleError(() => client.createSkill(params));
-    }
+    },
   );
 
   server.registerTool(
     "update_skill",
     {
       description: "Update a reusable writing skill by name",
+      annotations: { title: "Update Skill", destructiveHint: true, idempotentHint: true },
       inputSchema: {
         currentName: skillNameSchema.describe("Current skill name to update"),
         name: skillNameSchema.optional().describe("New skill name"),
@@ -65,19 +69,20 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     },
     async ({ currentName, ...body }) => {
       return handleError(() => client.updateSkill(currentName, body));
-    }
+    },
   );
 
   server.registerTool(
     "delete_skill",
     {
       description: "Delete a reusable writing skill by name",
+      annotations: { title: "Delete Skill", destructiveHint: true, idempotentHint: true },
       inputSchema: {
         name: skillNameSchema,
       },
     },
     async ({ name }) => {
       return handleError(() => client.deleteSkill(name));
-    }
+    },
   );
 }

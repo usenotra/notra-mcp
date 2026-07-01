@@ -53,8 +53,21 @@ export interface PostDeleteResponse {
 }
 
 export const POST_STATUS_VALUES = ["draft", "published"] as const;
-export const CONTENT_TYPE_VALUES = ["changelog", "linkedin_post", "twitter_post", "blog_post", "investor_update", "image"] as const;
-export const GENERATABLE_CONTENT_TYPE_VALUES = ["changelog", "blog_post", "linkedin_post", "twitter_post", "image"] as const;
+export const CONTENT_TYPE_VALUES = [
+  "changelog",
+  "linkedin_post",
+  "twitter_post",
+  "blog_post",
+  "investor_update",
+  "image",
+] as const;
+export const GENERATABLE_CONTENT_TYPE_VALUES = [
+  "changelog",
+  "blog_post",
+  "linkedin_post",
+  "twitter_post",
+  "image",
+] as const;
 
 export type PostStatus = (typeof POST_STATUS_VALUES)[number];
 export type ContentType = (typeof CONTENT_TYPE_VALUES)[number];
@@ -62,12 +75,38 @@ export type GeneratableContentType = (typeof GENERATABLE_CONTENT_TYPE_VALUES)[nu
 export type LookbackWindow = "current_day" | "yesterday" | "last_7_days" | "last_14_days" | "last_30_days";
 export type ToneProfile = "Conversational" | "Professional" | "Casual" | "Formal";
 
-export type Language =
-  | "English" | "Spanish" | "French" | "German" | "Portuguese" | "Dutch"
-  | "Italian" | "Japanese" | "Korean" | "Chinese" | "Arabic" | "Hindi"
-  | "Russian" | "Turkish" | "Polish" | "Swedish" | "Danish" | "Norwegian"
-  | "Finnish" | "Czech" | "Romanian" | "Hungarian" | "Greek" | "Thai"
-  | "Vietnamese" | "Indonesian" | "Ukrainian" | "Hebrew";
+export const LANGUAGE_VALUES = [
+  "English",
+  "Spanish",
+  "French",
+  "German",
+  "Portuguese",
+  "Dutch",
+  "Italian",
+  "Japanese",
+  "Korean",
+  "Chinese",
+  "Arabic",
+  "Hindi",
+  "Russian",
+  "Turkish",
+  "Polish",
+  "Swedish",
+  "Danish",
+  "Norwegian",
+  "Finnish",
+  "Czech",
+  "Romanian",
+  "Hungarian",
+  "Greek",
+  "Thai",
+  "Vietnamese",
+  "Indonesian",
+  "Ukrainian",
+  "Hebrew",
+] as const;
+
+export type Language = (typeof LANGUAGE_VALUES)[number];
 
 export interface GeneratePostRequest {
   contentType: GeneratableContentType;
@@ -117,8 +156,15 @@ export interface PostGenerationJob {
 }
 
 export type PostGenerationEventType =
-  | "queued" | "workflow_triggered" | "running" | "fetching_repositories"
-  | "generating_content" | "post_created" | "completed" | "failed" | "skipped";
+  | "queued"
+  | "workflow_triggered"
+  | "running"
+  | "fetching_repositories"
+  | "generating_content"
+  | "post_created"
+  | "completed"
+  | "failed"
+  | "skipped";
 
 export interface PostGenerationEvent {
   id: string;
@@ -411,7 +457,7 @@ export interface SendChatMessageRequest {
 
 export interface ChatStreamResponse {
   chatId: string | null;
-  stream: string;
+  text: string;
 }
 
 export interface GetChatsResponse {

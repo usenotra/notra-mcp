@@ -81,19 +81,12 @@ async function getAuthenticatedSession(req: Request) {
   return session;
 }
 
-function getRequestOrigin(req: Request): string {
-  return oauthConfig.resource;
+function getProtectedResourceMetadataUrl(): string {
+  return new URL(OAUTH_PROTECTED_RESOURCE_METADATA_PATH, oauthConfig.resource).toString();
 }
 
-function getProtectedResourceMetadataUrl(req: Request): string {
-  return new URL(OAUTH_PROTECTED_RESOURCE_METADATA_PATH, getRequestOrigin(req)).toString();
-}
-
-function setBearerChallenge(req: Request, res: Response, error?: string, description?: string) {
-  const params = [
-    `resource_metadata="${getProtectedResourceMetadataUrl(req)}"`,
-    `resource="${oauthConfig.resource}"`,
-  ];
+function setBearerChallenge(res: Response, error?: string, description?: string) {
+  const params = [`resource_metadata="${getProtectedResourceMetadataUrl()}"`, `resource="${oauthConfig.resource}"`];
 
   if (error) {
     params.push(`error="${error}"`);
@@ -106,8 +99,8 @@ function setBearerChallenge(req: Request, res: Response, error?: string, descrip
   res.setHeader("WWW-Authenticate", `Bearer ${params.join(", ")}`);
 }
 
-function sendUnauthorizedJson(req: Request, res: Response, description = "Unauthorized") {
-  setBearerChallenge(req, res, "invalid_token", description);
+function sendUnauthorizedJson(res: Response, description = "Unauthorized") {
+  setBearerChallenge(res, "invalid_token", description);
   res.status(401).json({
     jsonrpc: "2.0",
     error: { code: -32001, message: "Unauthorized" },
@@ -115,8 +108,8 @@ function sendUnauthorizedJson(req: Request, res: Response, description = "Unauth
   });
 }
 
-function sendUnauthorizedText(req: Request, res: Response, description = "Unauthorized") {
-  setBearerChallenge(req, res, "invalid_token", description);
+function sendUnauthorizedText(res: Response, description = "Unauthorized") {
+  setBearerChallenge(res, "invalid_token", description);
   res.status(401).send("Unauthorized");
 }
 
@@ -149,14 +142,14 @@ app.post("/mcp", async (req, res) => {
     if (sessionId) {
       const session = await getAuthenticatedSession(req);
       if (!session) {
-        sendUnauthorizedJson(req, res);
+        sendUnauthorizedJson(res);
         return;
       }
       transport = session.transport;
     } else if (!sessionId && isInitializeRequest(req.body)) {
       const token = parseBearerToken(req.headers["authorization"]);
       if (!token) {
-        sendUnauthorizedJson(req, res, "Missing bearer token");
+        sendUnauthorizedJson(res, "Missing bearer token");
         return;
       }
 
@@ -165,7 +158,7 @@ app.post("/mcp", async (req, res) => {
         auth = await authenticateBearerToken(token, oauthConfig);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Invalid bearer token";
-        sendUnauthorizedJson(req, res, message);
+        sendUnauthorizedJson(res, message);
         return;
       }
 
@@ -177,7 +170,7 @@ app.post("/mcp", async (req, res) => {
         onsessioninitialized: (id: string) => {
           sessions.set(id, { transport, tokenDigest, auth, lastSeen: Date.now() });
         },
-      } as ConstructorParameters<typeof StreamableHTTPServerTransport>[0]);
+      });
 
       transport.onclose = () => {
         const sid = transport.sessionId;
@@ -214,7 +207,7 @@ app.post("/mcp", async (req, res) => {
 app.get("/mcp", async (req, res) => {
   const session = await getAuthenticatedSession(req);
   if (!session) {
-    sendUnauthorizedText(req, res);
+    sendUnauthorizedText(res);
     return;
   }
   await session.transport.handleRequest(req, res);
@@ -223,7 +216,7 @@ app.get("/mcp", async (req, res) => {
 app.delete("/mcp", async (req, res) => {
   const session = await getAuthenticatedSession(req);
   if (!session) {
-    sendUnauthorizedText(req, res);
+    sendUnauthorizedText(res);
     return;
   }
   try {
