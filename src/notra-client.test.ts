@@ -42,16 +42,26 @@ describe("NotraClient query serialization", () => {
     expect(url.searchParams.getAll("repositoryIds")).toEqual(["x,y"]);
   });
 
-  it("appends status arrays as repeated params", async () => {
+  it("comma-joins status arrays", async () => {
     const fetchMock = stubFetch(okResponse());
     const client = new NotraClient("test-token");
 
     await client.listPosts({ status: ["draft", "published"] });
 
     const url = requestedUrl(fetchMock);
-    // BUG: repeated params are rejected by the API; fixed in plan 002
-    expect(url.searchParams.getAll("status")).toEqual(["draft", "published"]);
-    expect(url.search).toContain("status=draft&status=published");
+    expect(url.search).toContain("status=draft%2Cpublished");
+    expect(url.searchParams.getAll("status")).toEqual(["draft,published"]);
+  });
+
+  it("comma-joins contentType arrays", async () => {
+    const fetchMock = stubFetch(okResponse());
+    const client = new NotraClient("test-token");
+
+    await client.listPosts({ contentType: ["blog_post", "changelog"] });
+
+    const url = requestedUrl(fetchMock);
+    expect(url.search).toContain("contentType=blog_post%2Cchangelog");
+    expect(url.searchParams.getAll("contentType")).toEqual(["blog_post,changelog"]);
   });
 });
 
