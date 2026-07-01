@@ -35,7 +35,7 @@ import type {
   UpdateBrandIdentityRequest,
   UpdatePostRequest,
   UpdateSkillRequest,
-} from "./types.js";
+} from "./types/api.js";
 import type { AuthContext } from "./types/auth.js";
 import { parseChatStream } from "./utils/chat-stream.js";
 

@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod";
 import type { NotraClient } from "../notra-client.js";
-import { brandIdentityIdFilterSchema, contentTypeFilterSchema, statusFilterSchema } from "../post-filters.js";
-import { GENERATABLE_CONTENT_TYPE_VALUES } from "../types.js";
+import { brandIdentityIdFilterSchema, contentTypeFilterSchema, statusFilterSchema } from "../schemas/post-filters.js";
+import { GENERATABLE_CONTENT_TYPE_VALUES } from "../types/api.js";
 import { handleError } from "../utils/mcp.js";
 
 export function registerPostTools(server: McpServer, client: NotraClient) {
