@@ -96,6 +96,31 @@ describe("NotraClient timeouts", () => {
 
     await expect(client.listPosts()).rejects.toThrow("timed out");
   });
+
+  it("maps a timeout abort during the JSON body read to a readable error", async () => {
+    const response = new Response(JSON.stringify({}), { status: 200 });
+    vi.spyOn(response, "json").mockRejectedValue(new DOMException("The operation timed out.", "TimeoutError"));
+    stubFetch(response);
+    const client = new NotraClient("test-token");
+
+    await expect(client.listPosts()).rejects.toThrow("Notra API request timed out after 30s");
+  });
+
+  it("maps a timeout abort during the text body read to a readable error", async () => {
+    const response = new Response("data: [DONE]\n", { status: 200 });
+    vi.spyOn(response, "text").mockRejectedValue(new DOMException("The operation timed out.", "TimeoutError"));
+    stubFetch(response);
+    const client = new NotraClient("test-token");
+
+    await expect(client.createChat({ message: "hi" })).rejects.toThrow("Notra API request timed out after 180s");
+  });
+
+  it("still reports invalid JSON for non-timeout body read failures", async () => {
+    stubFetch(new Response("not json", { status: 200 }));
+    const client = new NotraClient("test-token");
+
+    await expect(client.listPosts()).rejects.toThrow("Invalid JSON response from API");
+  });
 });
 
 describe("NotraClient error mapping", () => {

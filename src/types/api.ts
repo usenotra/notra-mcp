@@ -75,35 +75,38 @@ export type GeneratableContentType = (typeof GENERATABLE_CONTENT_TYPE_VALUES)[nu
 export type LookbackWindow = "current_day" | "yesterday" | "last_7_days" | "last_14_days" | "last_30_days";
 export type ToneProfile = "Conversational" | "Professional" | "Casual" | "Formal";
 
-export type Language =
-  | "English"
-  | "Spanish"
-  | "French"
-  | "German"
-  | "Portuguese"
-  | "Dutch"
-  | "Italian"
-  | "Japanese"
-  | "Korean"
-  | "Chinese"
-  | "Arabic"
-  | "Hindi"
-  | "Russian"
-  | "Turkish"
-  | "Polish"
-  | "Swedish"
-  | "Danish"
-  | "Norwegian"
-  | "Finnish"
-  | "Czech"
-  | "Romanian"
-  | "Hungarian"
-  | "Greek"
-  | "Thai"
-  | "Vietnamese"
-  | "Indonesian"
-  | "Ukrainian"
-  | "Hebrew";
+export const LANGUAGE_VALUES = [
+  "English",
+  "Spanish",
+  "French",
+  "German",
+  "Portuguese",
+  "Dutch",
+  "Italian",
+  "Japanese",
+  "Korean",
+  "Chinese",
+  "Arabic",
+  "Hindi",
+  "Russian",
+  "Turkish",
+  "Polish",
+  "Swedish",
+  "Danish",
+  "Norwegian",
+  "Finnish",
+  "Czech",
+  "Romanian",
+  "Hungarian",
+  "Greek",
+  "Thai",
+  "Vietnamese",
+  "Indonesian",
+  "Ukrainian",
+  "Hebrew",
+] as const;
+
+export type Language = (typeof LANGUAGE_VALUES)[number];
 
 export interface GeneratePostRequest {
   contentType: GeneratableContentType;

@@ -49,6 +49,18 @@ interface RequestOptions<B = Record<string, string | number | boolean | null | u
   timeoutMs?: number;
 }
 
+/**
+ * Maps an `AbortSignal.timeout` abort (which can fire during the fetch call or
+ * while reading the response body) to a readable error; returns undefined for
+ * any other error so callers can fall through to their own handling.
+ */
+function asTimeoutError(error: unknown, timeoutMs: number): Error | undefined {
+  if (error instanceof Error && error.name === "TimeoutError") {
+    return new Error(`Notra API request timed out after ${timeoutMs / 1000}s`);
+  }
+  return undefined;
+}
+
 export class NotraClient {
   private token: string;
   private baseUrl: string;
@@ -121,16 +133,17 @@ export class NotraClient {
     try {
       response = await fetch(url.toString(), fetchOptions);
     } catch (error) {
-      if (error instanceof Error && error.name === "TimeoutError") {
-        throw new Error(`Notra API request timed out after ${timeoutMs / 1000}s`);
-      }
-      throw error;
+      throw asTimeoutError(error, timeoutMs) ?? error;
     }
 
     let data: T | ApiErrorResponse;
     try {
       data = await response.json();
-    } catch {
+    } catch (error) {
+      const timeout = asTimeoutError(error, timeoutMs);
+      if (timeout) {
+        throw timeout;
+      }
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -182,12 +195,15 @@ export class NotraClient {
     try {
       response = await fetch(url.toString(), fetchOptions);
     } catch (error) {
-      if (error instanceof Error && error.name === "TimeoutError") {
-        throw new Error(`Notra API request timed out after ${timeoutMs / 1000}s`);
-      }
-      throw error;
+      throw asTimeoutError(error, timeoutMs) ?? error;
     }
-    const text = await response.text();
+
+    let text: string;
+    try {
+      text = await response.text();
+    } catch (error) {
+      throw asTimeoutError(error, timeoutMs) ?? error;
+    }
 
     if (!response.ok) {
       let errorBody: ApiErrorResponse | undefined;

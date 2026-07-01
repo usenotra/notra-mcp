@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod";
 import type { NotraClient } from "../notra-client.js";
+import { LANGUAGE_VALUES } from "../types/api.js";
 import { handleError } from "../utils/mcp.js";
 
 export function registerBrandIdentityTools(server: McpServer, client: NotraClient) {
@@ -66,40 +67,7 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
           .optional()
           .nullable()
           .describe("Target audience description (min 10 chars)"),
-        language: z
-          .enum([
-            "English",
-            "Spanish",
-            "French",
-            "German",
-            "Portuguese",
-            "Dutch",
-            "Italian",
-            "Japanese",
-            "Korean",
-            "Chinese",
-            "Arabic",
-            "Hindi",
-            "Russian",
-            "Turkish",
-            "Polish",
-            "Swedish",
-            "Danish",
-            "Norwegian",
-            "Finnish",
-            "Czech",
-            "Romanian",
-            "Hungarian",
-            "Greek",
-            "Thai",
-            "Vietnamese",
-            "Indonesian",
-            "Ukrainian",
-            "Hebrew",
-          ])
-          .optional()
-          .nullable()
-          .describe("Content language"),
+        language: z.enum(LANGUAGE_VALUES).optional().nullable().describe("Content language"),
         isDefault: z.literal(true).optional().describe("Set as default brand identity"),
       },
     },

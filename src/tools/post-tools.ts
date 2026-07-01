@@ -145,18 +145,20 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
           .describe("Types of data to include in generation"),
         selectedItems: z
           .object({
-            commitShas: z.array(z.string()).optional().describe("Specific commit SHAs to include"),
+            commitShas: z.array(z.string().min(1)).optional().describe("Specific commit SHAs to include"),
             pullRequestNumbers: z
               .array(
                 z.object({
-                  repositoryId: z.string(),
-                  number: z.number(),
+                  repositoryId: z.string().min(1),
+                  number: z.number().int().min(1),
                 }),
               )
               .optional()
               .describe("Specific pull requests to include"),
             releaseTagNames: z
-              .array(z.union([z.string(), z.object({ repositoryId: z.string(), tagName: z.string() })]))
+              .array(
+                z.union([z.string().min(1), z.object({ repositoryId: z.string().min(1), tagName: z.string().min(1) })]),
+              )
               .optional()
               .describe("Specific release tags to include"),
             linearIssueIds: z
