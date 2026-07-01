@@ -39,7 +39,7 @@ import type {
 import type { AuthContext } from "./types/auth.js";
 
 const NOTRA_API_BASE = "https://api.usenotra.com";
-const COMMA_SEPARATED_QUERY_PARAMS = new Set(["status", "contentType", "brandIdentityId", "repositoryIds"]);
+const COMMA_SEPARATED_QUERY_PARAMS = new Set(["brandIdentityId", "repositoryIds"]);
 
 interface RequestOptions<B = Record<string, string | number | boolean | null | undefined>> {
   params?: Record<string, string | string[] | number | boolean | undefined>;
