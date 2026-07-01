@@ -58,6 +58,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     "list_schedules",
     {
       description: "List scheduled content generation jobs, optionally filtered by repository IDs",
+      annotations: { title: "List Schedules", readOnlyHint: true },
       inputSchema: {
         repositoryIds: z
           .array(z.string().min(1))
@@ -74,6 +75,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     "create_schedule",
     {
       description: "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger",
+      annotations: { title: "Create Schedule", destructiveHint: false },
       inputSchema: schedulePayloadSchema,
     },
     async (params) => {
@@ -85,6 +87,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     "update_schedule",
     {
       description: "Update an existing content generation schedule",
+      annotations: { title: "Update Schedule", destructiveHint: true, idempotentHint: true },
       inputSchema: {
         scheduleId: z.string().min(1).describe("The schedule ID to update"),
         ...schedulePayloadSchema,
@@ -99,6 +102,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     "delete_schedule",
     {
       description: "Delete a content generation schedule by its ID",
+      annotations: { title: "Delete Schedule", destructiveHint: true, idempotentHint: true },
       inputSchema: {
         scheduleId: z.string().min(1).describe("The schedule ID to delete"),
       },

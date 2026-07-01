@@ -50,6 +50,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     "list_chats",
     {
       description: "List chat sessions for your organization",
+      annotations: { title: "List Chats", readOnlyHint: true },
       inputSchema: {},
     },
     async () => {
@@ -61,6 +62,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     "get_chat",
     {
       description: "Get a single chat session with its messages",
+      annotations: { title: "Get Chat", readOnlyHint: true },
       inputSchema: {
         chatId: z.string().min(1).describe("The chat ID to retrieve"),
       },
@@ -74,6 +76,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     "get_chat_by_external_channel",
     {
       description: "Get a chat session by Discord or Slack external channel ID",
+      annotations: { title: "Get Chat by External Channel", readOnlyHint: true },
       inputSchema: {
         source: z.enum(["discord", "slack"]).describe("External channel source"),
         id: z.string().min(1).max(200).describe("External channel ID"),
@@ -88,6 +91,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     "create_chat",
     {
       description: "Start a new chat and return the assistant's reply text with the chat ID when available",
+      annotations: { title: "Create Chat", destructiveHint: false },
       inputSchema: sendChatMessageSchema,
     },
     async (params) => {
@@ -99,6 +103,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     "post_chat_message",
     {
       description: "Post a message to an existing chat and return the assistant's reply text",
+      annotations: { title: "Post Chat Message", destructiveHint: false },
       inputSchema: {
         chatId: z.string().min(1).describe("The chat ID to send a message to"),
         ...sendChatMessageSchema,

@@ -21,6 +21,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     "list_skills",
     {
       description: "List reusable writing skills for your organization",
+      annotations: { title: "List Skills", readOnlyHint: true },
       inputSchema: {},
     },
     async () => {
@@ -32,6 +33,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     "get_skill",
     {
       description: "Get a single reusable writing skill by name",
+      annotations: { title: "Get Skill", readOnlyHint: true },
       inputSchema: {
         name: skillNameSchema,
       },
@@ -45,6 +47,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     "create_skill",
     {
       description: "Create a reusable writing skill",
+      annotations: { title: "Create Skill", destructiveHint: false },
       inputSchema: skillPayloadSchema,
     },
     async (params) => {
@@ -56,6 +59,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     "update_skill",
     {
       description: "Update a reusable writing skill by name",
+      annotations: { title: "Update Skill", destructiveHint: true, idempotentHint: true },
       inputSchema: {
         currentName: skillNameSchema.describe("Current skill name to update"),
         name: skillNameSchema.optional().describe("New skill name"),
@@ -72,6 +76,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     "delete_skill",
     {
       description: "Delete a reusable writing skill by name",
+      annotations: { title: "Delete Skill", destructiveHint: true, idempotentHint: true },
       inputSchema: {
         name: skillNameSchema,
       },

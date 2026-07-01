@@ -8,6 +8,7 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     "list_brand_identities",
     {
       description: "List all brand identities configured for your organization",
+      annotations: { title: "List Brand Identities", readOnlyHint: true },
       inputSchema: {},
     },
     async () => {
@@ -19,6 +20,7 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     "get_brand_identity",
     {
       description: "Get a single brand identity by its ID, including tone, audience, and language settings",
+      annotations: { title: "Get Brand Identity", readOnlyHint: true },
       inputSchema: {
         brandIdentityId: z.string().min(1).describe("The brand identity ID to retrieve"),
       },
@@ -32,6 +34,7 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     "update_brand_identity",
     {
       description: "Update a brand identity's settings including name, tone, audience, language, and more",
+      annotations: { title: "Update Brand Identity", destructiveHint: true, idempotentHint: true },
       inputSchema: {
         brandIdentityId: z.string().min(1).describe("The brand identity ID to update"),
         name: z.string().min(1).max(120).optional().describe("Brand identity name (1-120 characters)"),
@@ -109,6 +112,7 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     "delete_brand_identity",
     {
       description: "Delete a brand identity. Returns any schedules or events that were disabled as a result.",
+      annotations: { title: "Delete Brand Identity", destructiveHint: true, idempotentHint: true },
       inputSchema: {
         brandIdentityId: z.string().min(1).describe("The brand identity ID to delete"),
       },
@@ -123,6 +127,7 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     {
       description:
         "Queue async brand identity generation from a website URL. Notra will scrape the site and extract brand info. Use get_brand_identity_generation_status to poll for completion.",
+      annotations: { title: "Generate Brand Identity", destructiveHint: false },
       inputSchema: {
         websiteUrl: z.string().min(1).describe("Website URL to analyze for brand identity extraction"),
         name: z.string().min(1).max(120).optional().describe("Name for the brand identity (1-120 characters)"),
@@ -137,6 +142,7 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     "get_brand_identity_generation_status",
     {
       description: "Check the status of an async brand identity generation job",
+      annotations: { title: "Get Brand Identity Generation Status", readOnlyHint: true },
       inputSchema: {
         jobId: z.string().min(1).describe("The generation job ID to check"),
       },

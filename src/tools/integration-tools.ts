@@ -8,6 +8,7 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
     "list_integrations",
     {
       description: "List all connected integrations (GitHub, Slack, Linear) for your organization",
+      annotations: { title: "List Integrations", readOnlyHint: true },
       inputSchema: {},
     },
     async () => {
@@ -19,6 +20,7 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
     "create_github_integration",
     {
       description: "Connect a GitHub repository as an integration for content generation",
+      annotations: { title: "Create GitHub Integration", destructiveHint: false },
       inputSchema: {
         owner: z.string().min(1).describe("GitHub repository owner (user or organization)"),
         repo: z.string().min(1).describe("GitHub repository name"),
@@ -42,6 +44,7 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
     {
       description:
         "Delete a GitHub or Linear integration. Returns any schedules or events that were disabled as a result.",
+      annotations: { title: "Delete Integration", destructiveHint: true, idempotentHint: true },
       inputSchema: {
         integrationId: z.string().min(1).describe("The integration ID to delete"),
       },
