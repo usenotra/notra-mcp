@@ -32,15 +32,19 @@ claude mcp add notra -- npx -y @usenotra/mcp
 
 Then set the `NOTRA_API_KEY` environment variable in your shell before launching Claude Code.
 
-## Remote OAuth
+## Remote MCP (OAuth)
 
-The hosted streamable HTTP MCP server also accepts dashboard-issued OAuth bearer tokens. MCP clients should discover the protected resource metadata at:
+The hosted streamable HTTP server at `https://mcp.usenotra.com/mcp` uses OAuth as the primary authentication method. MCP clients should discover protected resource metadata at:
 
 ```text
 https://mcp.usenotra.com/.well-known/oauth-protected-resource
 ```
 
-The metadata points clients to the Notra dashboard authorization server at `https://app.usenotra.com/.well-known/oauth-authorization-server`. Static API key bearer authentication remains supported.
+That metadata points to the Notra authorization server at `https://app.usenotra.com/.well-known/oauth-authorization-server`, which supports dynamic client registration (RFC 7591).
+
+### API key alternative
+
+Remote connections also accept a Notra API key as a static `Authorization: Bearer …` header. Generate one from your [Notra workspace dashboard](https://app.usenotra.com) under Developer > API Keys. OAuth-capable clients should prefer the OAuth flow instead of manual key configuration.
 
 For self-hosted HTTP deployments, OAuth validation can be configured with:
 

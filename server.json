@@ -7,20 +7,34 @@
     "url": "https://github.com/usenotra/notra-mcp",
     "source": "github"
   },
-  "version": "1.0.5",
+  "version": "1.0.7",
   "websiteUrl": "https://www.usenotra.com",
   "remotes": [
     {
       "type": "streamable-http",
       "url": "https://mcp.usenotra.com/mcp",
-      "headers": [
-        {
-          "name": "Authorization",
-          "description": "Bearer Notra API key or OAuth access token",
-          "isRequired": true,
-          "isSecret": true
-        }
-      ]
+      "auth": {
+        "posture": "required",
+        "preferred": "oauth",
+        "methods": [
+          {
+            "type": "oauth",
+            "registration": "dynamic",
+            "clientCredential": "none"
+          },
+          {
+            "type": "headers",
+            "headers": [
+              {
+                "name": "Authorization",
+                "description": "Bearer Notra API key from Developer > API Keys",
+                "isRequired": true,
+                "isSecret": true
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

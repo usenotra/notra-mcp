@@ -13,7 +13,7 @@ export function createServer(auth: string | AuthContext): McpServer {
 
   const server = new McpServer({
     name: "notra",
-    version: "1.0.5",
+    version: "1.0.7",
   });
 
   registerPostTools(server, client);
