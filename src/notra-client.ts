@@ -64,46 +64,13 @@ function asTimeoutError(error: unknown, timeoutMs: number): Error | undefined {
 export class NotraClient {
   private token: string;
   private baseUrl: string;
-  private auth?: AuthContext;
 
   constructor(auth: string | AuthContext, baseUrl: string = NOTRA_API_BASE) {
     this.token = typeof auth === "string" ? auth : auth.token;
     this.baseUrl = baseUrl;
-    this.auth = typeof auth === "string" ? undefined : auth;
-  }
-
-  private assertScope(method: string, path: string) {
-    if (!this.auth || this.auth.kind !== "oauth") {
-      return;
-    }
-
-    const domain = path.split("/")[2];
-    if (!domain) {
-      return;
-    }
-
-    const access = method === "GET" ? "read" : "write";
-    const requiredScope = `${domain}.${access}`;
-    const fallbackScope = `api.${access}`;
-    const scopes = new Set(this.auth.scopes);
-
-    if (
-      scopes.has(requiredScope) ||
-      scopes.has(fallbackScope) ||
-      scopes.has(`${domain}.*`) ||
-      scopes.has("api.*") ||
-      scopes.has("mcp") ||
-      scopes.has("mcp.*") ||
-      scopes.has("*")
-    ) {
-      return;
-    }
-
-    throw new Error(`OAuth token is missing required scope: ${requiredScope}`);
   }
 
   private async request<T, B = undefined>(method: string, path: string, options?: RequestOptions<B>): Promise<T> {
-    this.assertScope(method, path);
     const url = new URL(`${this.baseUrl}${path}`);
 
     if (options?.params) {
@@ -169,7 +136,6 @@ export class NotraClient {
     path: string,
     options?: RequestOptions<B>,
   ): Promise<ChatStreamResponse> {
-    this.assertScope(method, path);
     const url = new URL(`${this.baseUrl}${path}`);
 
     if (options?.params) {
