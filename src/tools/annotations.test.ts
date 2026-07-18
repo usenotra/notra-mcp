@@ -3,7 +3,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { beforeAll, describe, expect, it } from "vitest";
 import { createServer } from "../server.js";
 
-const EXPECTED_TOOL_COUNT = 29;
+const EXPECTED_TOOL_COUNT = 30;
 
 type ListedTool = {
   name: string;
@@ -61,5 +61,11 @@ describe("tool annotations", () => {
     const deletePost = tools.find((tool) => tool.name === "delete_post");
     expect(listPosts?.annotations?.readOnlyHint).toBe(true);
     expect(deletePost?.annotations?.destructiveHint).toBe(true);
+  });
+
+  it("marks submit_feedback as non-destructive", () => {
+    const submitFeedback = tools.find((tool) => tool.name === "submit_feedback");
+    expect(submitFeedback?.annotations?.title).toBe("Submit Feedback");
+    expect(submitFeedback?.annotations?.destructiveHint).toBe(false);
   });
 });
