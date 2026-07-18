@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { NotraClient } from "./notra-client.js";
 import { registerBrandIdentityTools } from "./tools/brand-identity-tools.js";
 import { registerChatTools } from "./tools/chat-tools.js";
+import { registerFeedbackTools } from "./tools/feedback-tools.js";
 import { registerIntegrationTools } from "./tools/integration-tools.js";
 import { registerPostTools } from "./tools/post-tools.js";
 import { registerScheduleTools } from "./tools/schedule-tools.js";
@@ -13,7 +14,7 @@ export function createServer(auth: string | AuthContext): McpServer {
 
   const server = new McpServer({
     name: "notra",
-    version: "1.0.7",
+    version: "1.0.8",
   });
 
   registerPostTools(server, client);
@@ -22,6 +23,7 @@ export function createServer(auth: string | AuthContext): McpServer {
   registerScheduleTools(server, client);
   registerChatTools(server, client);
   registerSkillTools(server, client);
+  registerFeedbackTools(server, client);
 
   return server;
 }

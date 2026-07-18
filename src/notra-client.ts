@@ -36,6 +36,7 @@ import type {
   UpdatePostRequest,
   UpdateSkillRequest,
 } from "./types/api.js";
+import type { SubmitFeedbackRequest, SubmitFeedbackResponse } from "./types/feedback.js";
 import type { AuthContext } from "./types/auth.js";
 import { parseChatStream } from "./utils/chat-stream.js";
 
@@ -350,5 +351,9 @@ export class NotraClient {
 
   async deleteSkill(name: string): Promise<DeleteSkillResponse> {
     return this.request<DeleteSkillResponse>("DELETE", `/v1/skills/${encodeURIComponent(name)}`);
+  }
+
+  async submitFeedback(body: SubmitFeedbackRequest): Promise<SubmitFeedbackResponse> {
+    return this.request<SubmitFeedbackResponse, SubmitFeedbackRequest>("POST", "/v1/feedback", { body });
   }
 }

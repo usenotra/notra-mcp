@@ -15,6 +15,10 @@ function requestedUrl(fetchMock: ReturnType<typeof vi.fn>): URL {
   return new URL(fetchMock.mock.calls[0][0] as string);
 }
 
+function requestOptions(fetchMock: ReturnType<typeof vi.fn>): RequestInit {
+  return fetchMock.mock.calls[0][1] as RequestInit;
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -136,5 +140,22 @@ describe("NotraClient error mapping", () => {
     const client = new NotraClient("test-token");
 
     await expect(client.listPosts()).rejects.toThrow("HTTP 502");
+  });
+});
+
+describe("NotraClient feedback", () => {
+  it("submits feedback to the feedback endpoint", async () => {
+    const fetchMock = stubFetch(new Response(JSON.stringify({ success: true }), { status: 200 }));
+    const client = new NotraClient("test-token");
+
+    await expect(client.submitFeedback({ message: "More MCP tools, please", sentiment: "excited" })).resolves.toEqual({
+      success: true,
+    });
+
+    expect(requestedUrl(fetchMock).pathname).toBe("/v1/feedback");
+    expect(requestOptions(fetchMock).method).toBe("POST");
+    expect(requestOptions(fetchMock).body).toBe(
+      JSON.stringify({ message: "More MCP tools, please", sentiment: "excited" }),
+    );
   });
 });

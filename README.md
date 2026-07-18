@@ -118,3 +118,9 @@ When `NODE_ENV=development`, the default issuer is `http://localhost:3000/api/au
 | `create_skill` | Create a reusable writing skill |
 | `update_skill` | Update a reusable writing skill |
 | `delete_skill` | Delete a reusable writing skill |
+
+### Feedback
+
+| Tool              | Description                                               |
+| ----------------- | --------------------------------------------------------- |
+| `submit_feedback` | Send product feedback, a bug report, or a feature request |
