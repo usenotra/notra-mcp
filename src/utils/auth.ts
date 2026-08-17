@@ -71,20 +71,50 @@ export function looksLikeJwt(token: string): boolean {
   return typeof header === "object" && header !== null && typeof payload === "object" && payload !== null;
 }
 
-function extractScopes(payload: JWTPayload): string[] {
-  const rawScopes = payload.scope ?? payload.scp ?? payload.scopes;
+function normalizeScopeValue(rawScopes: unknown): string[] | undefined {
   if (typeof rawScopes === "string") {
     return rawScopes.split(/\s+/).filter(Boolean);
   }
   if (Array.isArray(rawScopes)) {
     return rawScopes.filter((scope): scope is string => typeof scope === "string" && scope.length > 0);
   }
-  return [];
+  return undefined;
+}
+
+// Tokens carrying none of the scope-bearing claims are first-party AuthKit user
+// tokens, which get full access (`*`); the union of `scope`/`scp`/`scopes` and
+// `permissions` applies otherwise.
+export function extractScopes(payload: JWTPayload): string[] {
+  const scopeClaim = normalizeScopeValue(payload.scope ?? payload.scp ?? payload.scopes);
+  const permissionsClaim = normalizeScopeValue(payload.permissions);
+
+  if (scopeClaim === undefined && permissionsClaim === undefined) {
+    return ["*"];
+  }
+
+  return [...new Set([...(scopeClaim ?? []), ...(permissionsClaim ?? [])])];
 }
 
 function getOrganizationId(payload: JWTPayload): string | undefined {
-  const organizationId = payload.organizationId;
+  const organizationId = payload.org_id;
   return typeof organizationId === "string" && organizationId.length > 0 ? organizationId : undefined;
+}
+
+// AuthKit does not stamp a resource audience on first-party tokens, so `aud` is
+// optional; when present it must reference this resource server, the Notra API,
+// or the WorkOS client id.
+export function isAllowedAudience(aud: JWTPayload["aud"], config: OAuthConfig): boolean {
+  if (aud === undefined) {
+    return true;
+  }
+
+  const allowed = new Set(config.resourceAudiences);
+  if (config.clientId) {
+    allowed.add(config.clientId);
+  }
+
+  const audiences = Array.isArray(aud) ? aud : [aud];
+  return audiences.some((audience) => allowed.has(audience));
 }
 
 export async function authenticateBearerToken(token: string, config: OAuthConfig): Promise<AuthContext> {
@@ -92,11 +122,12 @@ export async function authenticateBearerToken(token: string, config: OAuthConfig
     return { kind: "apiKey", token };
   }
 
-  // Notra API keys are themselves JWTs, but they are not issued by our OAuth
-  // authorization server (they carry no `iss` and are signed by a different key).
-  // Only tokens whose `iss` matches our configured issuer are treated as OAuth
-  // access tokens and cryptographically verified here; anything else is forwarded
-  // to the Notra API as an API key, which performs its own authentication.
+  // Notra API keys can themselves be JWTs, but they are not issued by the
+  // AuthKit authorization server (they carry no `iss` or a different one and are
+  // signed by a different key). Only tokens whose `iss` matches our configured
+  // AuthKit issuer are treated as OAuth access tokens and cryptographically
+  // verified here; anything else is forwarded to the Notra API as an API key,
+  // which performs its own authentication.
   // The `iss` read here is unverified and used solely for routing — OAuth tokens
   // are still fully verified below, and API keys are validated downstream.
   let unverifiedIssuer: string | undefined;
@@ -113,8 +144,11 @@ export async function authenticateBearerToken(token: string, config: OAuthConfig
   try {
     const { payload } = await jwtVerify(token, getRemoteJwks(config.jwksUrl), {
       issuer: config.issuer,
-      audience: config.resourceAudiences,
     });
+
+    if (!isAllowedAudience(payload.aud, config)) {
+      throw new AuthError("OAuth token has an invalid audience");
+    }
 
     if (!payload.sub) {
       throw new AuthError("OAuth token is missing subject");
@@ -122,7 +156,7 @@ export async function authenticateBearerToken(token: string, config: OAuthConfig
 
     const organizationId = getOrganizationId(payload);
     if (!organizationId) {
-      throw new AuthError("OAuth token is missing organizationId");
+      throw new AuthError("OAuth token is missing org_id");
     }
 
     return {
