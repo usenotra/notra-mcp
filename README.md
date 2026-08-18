@@ -40,7 +40,7 @@ The hosted streamable HTTP server at `https://mcp.usenotra.com/mcp` uses OAuth a
 https://mcp.usenotra.com/.well-known/oauth-protected-resource
 ```
 
-That metadata points to the Notra authorization server at `https://app.usenotra.com/.well-known/oauth-authorization-server`, which supports dynamic client registration (RFC 7591).
+That metadata points to the Notra authorization server (WorkOS AuthKit) at `https://auth.usenotra.com`, which supports dynamic client registration (RFC 7591). The MCP server also mirrors the authorization server metadata at `https://mcp.usenotra.com/.well-known/oauth-authorization-server`.
 
 ### API key alternative
 
@@ -49,14 +49,14 @@ Remote connections also accept a Notra API key as a static `Authorization: Beare
 For self-hosted HTTP deployments, OAuth validation can be configured with:
 
 ```bash
-NOTRA_OAUTH_ISSUER=https://app.usenotra.com/api/auth
-NOTRA_OAUTH_JWKS_URL=https://app.usenotra.com/api/auth/jwks
+WORKOS_AUTHKIT_DOMAIN=auth.usenotra.com
+WORKOS_CLIENT_ID=client_xxx
 NOTRA_MCP_RESOURCE=https://mcp.usenotra.com
 ```
 
-The issuer must match the `iss` claim in tokens minted by the authorization server (`https://app.usenotra.com/api/auth`); a mismatch causes every bearer token to be rejected.
+The issuer is `https://{WORKOS_AUTHKIT_DOMAIN}` and must match the `iss` claim in tokens minted by AuthKit; a mismatch causes every bearer token to be rejected. Token signatures are verified against `https://{WORKOS_AUTHKIT_DOMAIN}/oauth2/jwks`.
 
-When `NODE_ENV=development`, the default issuer is `http://localhost:3000/api/auth`; production defaults to `https://app.usenotra.com/api/auth`.
+When `NODE_ENV=development`, the default AuthKit domain is `divine-dress-62-development.authkit.app`; production defaults to `auth.usenotra.com`.
 
 ## Tools
 

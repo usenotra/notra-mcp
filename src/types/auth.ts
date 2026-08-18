@@ -18,6 +18,7 @@ export type AuthContext = ApiKeyAuthContext | OAuthAuthContext;
 export type OAuthConfig = {
   issuer: string;
   jwksUrl: string;
+  clientId: string | undefined;
   resource: string;
   resourceAudiences: string[];
   authorizationServerMetadataUrl: string;
@@ -26,7 +27,6 @@ export type OAuthConfig = {
 export type OAuthProtectedResourceMetadata = {
   resource: string;
   authorization_servers: string[];
-  authorization_server_metadata_url: string;
   bearer_methods_supported: string[];
   scopes_supported: string[];
 };

@@ -1,10 +1,11 @@
 import {
   DEFAULT_MCP_RESOURCE,
-  LOCAL_OAUTH_ISSUER,
+  DEVELOPMENT_AUTHKIT_DOMAIN,
+  NOTRA_API_AUDIENCE,
   OAUTH_AUTHORIZATION_SERVER_METADATA_PATH,
   OAUTH_SCOPES,
   OAUTH_JWKS_PATH,
-  PRODUCTION_OAUTH_ISSUER,
+  PRODUCTION_AUTHKIT_DOMAIN,
 } from "../constants/oauth.js";
 import type { OAuthConfig, OAuthProtectedResourceMetadata } from "../types/auth.js";
 
@@ -13,7 +14,7 @@ function buildIssuerUrl(path: string, issuer: string): string {
 }
 
 function buildResourceAudiences(resource: string): string[] {
-  const audiences = new Set([resource]);
+  const audiences = new Set([resource, NOTRA_API_AUDIENCE]);
 
   if (resource.endsWith("/mcp")) {
     audiences.add(resource.slice(0, -4));
@@ -30,14 +31,16 @@ function buildResourceAudiences(resource: string): string[] {
 }
 
 export function getOAuthConfig(): OAuthConfig {
-  const issuer =
-    process.env.NOTRA_OAUTH_ISSUER ??
-    (process.env.NODE_ENV === "development" ? LOCAL_OAUTH_ISSUER : PRODUCTION_OAUTH_ISSUER);
+  const authkitDomain =
+    process.env.WORKOS_AUTHKIT_DOMAIN ??
+    (process.env.NODE_ENV === "development" ? DEVELOPMENT_AUTHKIT_DOMAIN : PRODUCTION_AUTHKIT_DOMAIN);
+  const issuer = `https://${authkitDomain}`;
   const resource = process.env.NOTRA_MCP_RESOURCE ?? DEFAULT_MCP_RESOURCE;
 
   return {
     issuer,
-    jwksUrl: process.env.NOTRA_OAUTH_JWKS_URL ?? buildIssuerUrl(OAUTH_JWKS_PATH, issuer),
+    jwksUrl: buildIssuerUrl(OAUTH_JWKS_PATH, issuer),
+    clientId: process.env.WORKOS_CLIENT_ID,
     resource,
     resourceAudiences: buildResourceAudiences(resource),
     authorizationServerMetadataUrl: buildIssuerUrl(OAUTH_AUTHORIZATION_SERVER_METADATA_PATH, issuer),
@@ -48,7 +51,6 @@ export function getProtectedResourceMetadata(config: OAuthConfig): OAuthProtecte
   return {
     resource: config.resource,
     authorization_servers: [config.issuer],
-    authorization_server_metadata_url: config.authorizationServerMetadataUrl,
     bearer_methods_supported: ["header"],
     scopes_supported: [...OAUTH_SCOPES],
   };

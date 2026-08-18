@@ -40,7 +40,7 @@ import type { SubmitFeedbackRequest, SubmitFeedbackResponse } from "./types/feed
 import type { AuthContext } from "./types/auth.js";
 import { parseChatStream } from "./utils/chat-stream.js";
 
-const NOTRA_API_BASE = "https://api.usenotra.com";
+const NOTRA_API_BASE = process.env.NOTRA_API_BASE ?? "https://api.usenotra.com";
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 const DEFAULT_STREAM_TIMEOUT_MS = 180_000;
 

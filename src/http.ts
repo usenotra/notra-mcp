@@ -122,8 +122,46 @@ setInterval(() => {
   }
 }, SESSION_TTL_MS).unref();
 
-app.get("/.well-known/oauth-authorization-server", (_req, res) => {
-  res.status(404).end();
+const AUTH_SERVER_METADATA_TTL_MS = 5 * 60 * 1000;
+const AUTH_SERVER_METADATA_TIMEOUT_MS = 10_000;
+
+let authServerMetadataCache: { metadata: unknown; expiresAt: number } | undefined;
+
+async function fetchAuthorizationServerMetadata(): Promise<unknown> {
+  const now = Date.now();
+  if (authServerMetadataCache && now < authServerMetadataCache.expiresAt) {
+    return authServerMetadataCache.metadata;
+  }
+
+  try {
+    const response = await fetch(oauthConfig.authorizationServerMetadataUrl, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(AUTH_SERVER_METADATA_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      throw new Error(`Authorization server metadata request failed with HTTP ${response.status}`);
+    }
+
+    const metadata: unknown = await response.json();
+    authServerMetadataCache = { metadata, expiresAt: now + AUTH_SERVER_METADATA_TTL_MS };
+    return metadata;
+  } catch (error) {
+    // Serve stale metadata rather than failing discovery when AuthKit is
+    // briefly unreachable.
+    if (authServerMetadataCache) {
+      return authServerMetadataCache.metadata;
+    }
+    throw error;
+  }
+}
+
+app.get("/.well-known/oauth-authorization-server", async (_req, res) => {
+  try {
+    res.json(await fetchAuthorizationServerMetadata());
+  } catch (error) {
+    console.error("Error fetching authorization server metadata:", error);
+    res.status(502).json({ error: "authorization_server_metadata_unavailable" });
+  }
 });
 
 app.get("/.well-known/oauth-protected-resource", (_req, res) => {
