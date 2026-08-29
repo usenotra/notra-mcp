@@ -121,6 +121,6 @@ When `NODE_ENV=development`, the default AuthKit domain is `divine-dress-62-deve
 
 ### Feedback
 
-| Tool              | Description                                               |
-| ----------------- | --------------------------------------------------------- |
-| `submit_feedback` | Send product feedback, a bug report, or a feature request |
+| Tool              | Description                                                                         |
+| ----------------- | ----------------------------------------------------------------------------------- |
+| `submit_feedback` | Send a bug report, feature request, question or praise to the Notra inbox (no auth) |
