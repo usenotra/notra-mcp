@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod";
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
@@ -35,7 +35,7 @@ const externalChannelIdSchema = z
   })
   .nullable();
 
-const sendChatMessageSchema = {
+const sendChatMessageSchema = z.object({
   message: z.string().min(1).max(50000).describe("Message to send"),
   model: chatModelSchema.optional().describe("Model to use for the reply"),
   enableThinking: z.boolean().optional().describe("Whether to enable model thinking"),
@@ -43,7 +43,7 @@ const sendChatMessageSchema = {
   timezone: z.string().min(1).max(100).optional().describe("IANA timezone for contextual responses"),
   context: chatContextSchema.optional().describe("Repository or Linear context to attach to the chat"),
   externalChannelId: externalChannelIdSchema.optional().describe("External channel to associate with the chat"),
-} as const;
+});
 
 export function registerChatTools(server: McpServer, client: NotraClient) {
   server.registerTool(
@@ -51,7 +51,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     {
       description: "List chat sessions for your organization",
       annotations: { title: "List Chats", readOnlyHint: true },
-      inputSchema: {},
+      inputSchema: z.object({}),
     },
     async () => {
       return handleError(() => client.listChats());
@@ -63,9 +63,9 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     {
       description: "Get a single chat session with its messages",
       annotations: { title: "Get Chat", readOnlyHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         chatId: z.string().min(1).describe("The chat ID to retrieve"),
-      },
+      }),
     },
     async ({ chatId }) => {
       return handleError(() => client.getChat(chatId));
@@ -77,10 +77,10 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     {
       description: "Get a chat session by Discord or Slack external channel ID",
       annotations: { title: "Get Chat by External Channel", readOnlyHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         source: z.enum(["discord", "slack"]).describe("External channel source"),
         id: z.string().min(1).max(200).describe("External channel ID"),
-      },
+      }),
     },
     async ({ source, id }) => {
       return handleError(() => client.getChatByExternalChannel(source, id));
@@ -104,10 +104,10 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     {
       description: "Post a message to an existing chat and return the assistant's reply text",
       annotations: { title: "Post Chat Message", destructiveHint: false },
-      inputSchema: {
+      inputSchema: z.object({
         chatId: z.string().min(1).describe("The chat ID to send a message to"),
-        ...sendChatMessageSchema,
-      },
+        ...sendChatMessageSchema.shape,
+      }),
     },
     async ({ chatId, ...body }) => {
       return handleError(() => client.postChatMessage(chatId, body));

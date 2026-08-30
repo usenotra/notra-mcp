@@ -1,10 +1,11 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import {
   buildFeedbackToolDescription,
   createFeedbackToolHandler,
   feedbackToolInputSchema,
   type FeedbackToolOptions,
 } from "@usenotra/geo/feedback";
+import * as z from "zod";
 
 /**
  * Registers the `submit_feedback` tool from `@usenotra/geo`. Mirrors the package's own
@@ -25,7 +26,7 @@ export function registerFeedbackTools(server: McpServer, options: FeedbackToolOp
         idempotentHint: false,
         openWorldHint: true,
       },
-      inputSchema: feedbackToolInputSchema,
+      inputSchema: z.object(feedbackToolInputSchema),
     },
     // Spread into a fresh object: the SDK's CallToolResult carries an index signature that
     // the package's FeedbackToolResult interface lacks.

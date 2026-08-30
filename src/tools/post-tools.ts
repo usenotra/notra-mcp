@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod";
 import type { NotraClient } from "../notra-client.js";
 import { brandIdentityIdFilterSchema, contentTypeFilterSchema, statusFilterSchema } from "../schemas/post-filters.js";
@@ -12,14 +12,14 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
       description:
         "List posts from Notra with optional filters for sorting, pagination, status, content type, and brand identity",
       annotations: { title: "List Posts", readOnlyHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         sort: z.enum(["asc", "desc"]).optional().describe("Sort by creation date"),
         limit: z.number().int().min(1).max(100).optional().describe("Items per page (1-100, default 10)"),
         page: z.number().int().min(1).optional().describe("Page number (default 1)"),
         status: statusFilterSchema,
         contentType: contentTypeFilterSchema,
         brandIdentityId: brandIdentityIdFilterSchema,
-      },
+      }),
     },
     async (params) => {
       return handleError(() =>
@@ -40,9 +40,9 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
     {
       description: "Get a single post by its ID, including full content in HTML and markdown",
       annotations: { title: "Get Post", readOnlyHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         postId: z.string().min(1).describe("The post ID to retrieve"),
-      },
+      }),
     },
     async ({ postId }) => {
       return handleError(() => client.getPost(postId));
@@ -54,7 +54,7 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
     {
       description: "Update a post's title, markdown content, or publication status",
       annotations: { title: "Update Post", destructiveHint: true, idempotentHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         postId: z.string().min(1).describe("The post ID to update"),
         title: z.string().min(1).max(120).optional().describe("New title (1-120 characters)"),
         slug: z
@@ -67,7 +67,7 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
           .describe("New URL slug (lowercase kebab-case)"),
         markdown: z.string().min(1).max(100000).optional().describe("New markdown content"),
         status: z.enum(["draft", "published"]).optional().describe("Set status to draft or published"),
-      },
+      }),
     },
     async ({ postId, ...body }) => {
       return handleError(() => client.updatePost(postId, body));
@@ -79,9 +79,9 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
     {
       description: "Delete a post by its ID",
       annotations: { title: "Delete Post", destructiveHint: true, idempotentHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         postId: z.string().min(1).describe("The post ID to delete"),
-      },
+      }),
     },
     async ({ postId }) => {
       return handleError(() => client.deletePost(postId));
@@ -94,7 +94,7 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
       description:
         "Queue an async post generation job. Notra will analyze your GitHub activity and generate content. Use get_post_generation_status to poll for completion.",
       annotations: { title: "Generate Post", destructiveHint: false },
-      inputSchema: {
+      inputSchema: z.object({
         contentType: z.enum(GENERATABLE_CONTENT_TYPE_VALUES).describe("Type of content to generate"),
         lookbackWindow: z
           .enum(["current_day", "yesterday", "last_7_days", "last_14_days", "last_30_days"])
@@ -173,7 +173,7 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
           })
           .optional()
           .describe("Specific items to include in generation"),
-      },
+      }),
     },
     async (params) => {
       return handleError(() => client.generatePost(params));
@@ -185,9 +185,9 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
     {
       description: "Check the status of an async post generation job. Returns job status and event log.",
       annotations: { title: "Get Post Generation Status", readOnlyHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         jobId: z.string().min(1).describe("The generation job ID to check"),
-      },
+      }),
     },
     async ({ jobId }) => {
       return handleError(() => client.getPostGenerationStatus(jobId));

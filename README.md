@@ -6,6 +6,8 @@ An MCP (Model Context Protocol) server that provides LLM clients with full acces
 
 You can generate an API key from your [Notra workspace dashboard](https://app.usenotra.com) under Developer > API Keys.
 
+Node.js 20 or newer is required.
+
 ### Claude Desktop
 
 Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
@@ -32,9 +34,58 @@ claude mcp add notra -- npx -y @usenotra/mcp
 
 Then set the `NOTRA_API_KEY` environment variable in your shell before launching Claude Code.
 
+### Codex
+
+```bash
+export NOTRA_API_KEY=your-api-key
+codex mcp add notra --env NOTRA_API_KEY="$NOTRA_API_KEY" -- npx -y @usenotra/mcp
+```
+
+Run `codex mcp list` to verify the connection. The Codex CLI, desktop app, and IDE extension share this MCP configuration.
+
+### OpenCode
+
+Set `NOTRA_API_KEY` in your shell, then add the server to your project-level `opencode.json` or the global `~/.config/opencode/opencode.json`:
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "notra": {
+      "type": "local",
+      "command": ["npx", "-y", "@usenotra/mcp"],
+      "enabled": true,
+      "environment": {
+        "NOTRA_API_KEY": "{env:NOTRA_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+### Amp
+
+Run `amp config edit` and add the following to your settings, or place it in `.amp/settings.json` for a workspace-specific configuration:
+
+```json
+{
+  "amp.mcpServers": {
+    "notra": {
+      "command": "npx",
+      "args": ["-y", "@usenotra/mcp"],
+      "env": {
+        "NOTRA_API_KEY": "${NOTRA_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+Set `NOTRA_API_KEY` in the environment before launching Amp. Workspace MCP servers may require approval with `amp mcp approve notra`.
+
 ## Remote MCP (OAuth)
 
-The hosted streamable HTTP server at `https://mcp.usenotra.com/mcp` uses OAuth as the primary authentication method. MCP clients should discover protected resource metadata at:
+The hosted streamable HTTP server at `https://mcp.usenotra.com/mcp` uses OAuth as the primary authentication method. It supports the current `2026-07-28` MCP protocol as well as legacy 2025 clients. MCP clients should discover protected resource metadata at:
 
 ```text
 https://mcp.usenotra.com/.well-known/oauth-protected-resource

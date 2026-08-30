@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
-import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
+import { createMcpExpressApp } from "@modelcontextprotocol/express";
+import { NodeStreamableHTTPServerTransport, toNodeHandler, toWebRequest } from "@modelcontextprotocol/node";
+import { createMcpHandler, isInitializeRequest, isLegacyRequest, type AuthInfo } from "@modelcontextprotocol/server";
 import type { Request, Response } from "express";
 import { OAUTH_PROTECTED_RESOURCE_METADATA_PATH } from "./constants/oauth.js";
 import { createServer } from "./server.js";
@@ -16,8 +16,23 @@ const SESSION_TTL_MS = 30 * 60 * 1000;
 const SESSION_TOKEN_DIGEST_KEY = randomBytes(32);
 const oauthConfig = getOAuthConfig();
 
+const modernHandler = createMcpHandler(
+  ({ authInfo }) => {
+    if (!authInfo) {
+      throw new Error("Authenticated MCP request is missing auth context");
+    }
+    return createServer(authInfo.token);
+  },
+  {
+    legacy: "reject",
+    onerror: (error) => {
+      console.error("MCP HTTP handler error:", error);
+    },
+  },
+);
+
 type Session = {
-  transport: StreamableHTTPServerTransport;
+  transport: NodeStreamableHTTPServerTransport;
   tokenDigest: Buffer;
   auth: AuthContext;
   lastSeen: number;
@@ -113,6 +128,54 @@ function sendUnauthorizedText(res: Response, description = "Unauthorized") {
   res.status(401).send("Unauthorized");
 }
 
+function toMcpAuthInfo(auth: AuthContext): AuthInfo {
+  if (auth.kind === "oauth") {
+    return {
+      token: auth.token,
+      clientId: oauthConfig.clientId ?? auth.userId,
+      scopes: auth.scopes,
+      resource: new URL(oauthConfig.resource),
+      extra: {
+        kind: auth.kind,
+        userId: auth.userId,
+        organizationId: auth.organizationId,
+      },
+    };
+  }
+
+  return {
+    token: auth.token,
+    clientId: "notra-api-key",
+    scopes: ["*"],
+    resource: new URL(oauthConfig.resource),
+    extra: { kind: auth.kind },
+  };
+}
+
+async function authenticateRequest(req: Request, res: Response): Promise<AuthContext | undefined> {
+  const token = parseBearerToken(req.headers["authorization"]);
+  if (!token) {
+    sendUnauthorizedJson(res, "Missing bearer token");
+    return undefined;
+  }
+
+  try {
+    return await authenticateBearerToken(token, oauthConfig);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invalid bearer token";
+    sendUnauthorizedJson(res, message);
+    return undefined;
+  }
+}
+
+async function handleModernRequest(req: Request, res: Response, auth: AuthContext) {
+  const authInfo = toMcpAuthInfo(auth);
+  const nodeHandler = toNodeHandler({
+    fetch: (request, options) => modernHandler.fetch(request, { ...options, authInfo }),
+  });
+  await nodeHandler(req, res, req.body);
+}
+
 setInterval(() => {
   const now = Date.now();
   for (const [sessionId, session] of sessions.entries()) {
@@ -174,8 +237,17 @@ app.post("/register", (_req, res) => {
 
 app.post("/mcp", async (req, res) => {
   try {
+    const webRequest = await toWebRequest(req, req.body);
+    if (!(await isLegacyRequest(webRequest, req.body))) {
+      const auth = await authenticateRequest(req, res);
+      if (auth) {
+        await handleModernRequest(req, res, auth);
+      }
+      return;
+    }
+
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
-    let transport: StreamableHTTPServerTransport;
+    let transport: NodeStreamableHTTPServerTransport;
 
     if (sessionId) {
       const session = await getAuthenticatedSession(req);
@@ -185,25 +257,15 @@ app.post("/mcp", async (req, res) => {
       }
       transport = session.transport;
     } else if (!sessionId && isInitializeRequest(req.body)) {
-      const token = parseBearerToken(req.headers["authorization"]);
-      if (!token) {
-        sendUnauthorizedJson(res, "Missing bearer token");
+      const auth = await authenticateRequest(req, res);
+      if (!auth) {
         return;
       }
 
-      let auth: AuthContext;
-      try {
-        auth = await authenticateBearerToken(token, oauthConfig);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Invalid bearer token";
-        sendUnauthorizedJson(res, message);
-        return;
-      }
-
-      const tokenDigest = digestToken(token);
+      const tokenDigest = digestToken(auth.token);
       const server = createServer(auth);
 
-      transport = new StreamableHTTPServerTransport({
+      transport = new NodeStreamableHTTPServerTransport({
         sessionIdGenerator: () => randomUUID(),
         onsessioninitialized: (id: string) => {
           sessions.set(id, { transport, tokenDigest, auth, lastSeen: Date.now() });

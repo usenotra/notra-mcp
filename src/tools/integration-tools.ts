@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod";
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
@@ -9,7 +9,7 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
     {
       description: "List all connected integrations (GitHub, Slack, Linear) for your organization",
       annotations: { title: "List Integrations", readOnlyHint: true },
-      inputSchema: {},
+      inputSchema: z.object({}),
     },
     async () => {
       return handleError(() => client.listIntegrations());
@@ -21,12 +21,12 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
     {
       description: "Connect a GitHub repository as an integration for content generation",
       annotations: { title: "Create GitHub Integration", destructiveHint: false },
-      inputSchema: {
+      inputSchema: z.object({
         owner: z.string().min(1).describe("GitHub repository owner (user or organization)"),
         repo: z.string().min(1).describe("GitHub repository name"),
         branch: z.string().min(1).optional().nullable().describe("Default branch (auto-detected if not set)"),
         token: z.string().min(1).optional().nullable().describe("GitHub personal access token for private repos"),
-      },
+      }),
     },
     async (params) => {
       const body: { owner: string; repo: string; branch?: string; token?: string } = {
@@ -45,9 +45,9 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
       description:
         "Delete a GitHub or Linear integration. Returns any schedules or events that were disabled as a result.",
       annotations: { title: "Delete Integration", destructiveHint: true, idempotentHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         integrationId: z.string().min(1).describe("The integration ID to delete"),
-      },
+      }),
     },
     async ({ integrationId }) => {
       return handleError(() => client.deleteIntegration(integrationId));
