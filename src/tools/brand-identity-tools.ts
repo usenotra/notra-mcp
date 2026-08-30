@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod";
+import { LANGUAGE_VALUES } from "../constants/brand-identity.js";
 import type { NotraClient } from "../notra-client.js";
-import { LANGUAGE_VALUES } from "../types/api.js";
 import { handleError } from "../utils/mcp.js";
 
 export function registerBrandIdentityTools(server: McpServer, client: NotraClient) {

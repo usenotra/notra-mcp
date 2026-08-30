@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod";
+import { GENERATABLE_CONTENT_TYPE_VALUES } from "../constants/post.js";
 import type { NotraClient } from "../notra-client.js";
-import { GENERATABLE_CONTENT_TYPE_VALUES } from "../types/api.js";
 import { handleError } from "../utils/mcp.js";
 
 const scheduleCronConfigSchema = z.object({

@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { CONTENT_TYPE_VALUES, POST_STATUS_VALUES } from "../types/api.js";
+import { CONTENT_TYPE_VALUES, POST_STATUS_VALUES } from "../constants/post.js";
 
 function parseCommaSeparatedFilter(value: unknown): unknown {
   if (value === undefined) {

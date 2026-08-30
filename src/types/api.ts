@@ -1,3 +1,6 @@
+import type { LANGUAGE_VALUES } from "../constants/brand-identity.js";
+import type { CONTENT_TYPE_VALUES, GENERATABLE_CONTENT_TYPE_VALUES, POST_STATUS_VALUES } from "../constants/post.js";
+
 export interface Organization {
   id: string;
   slug: string;
@@ -52,59 +55,11 @@ export interface PostDeleteResponse {
   organization: Organization;
 }
 
-export const POST_STATUS_VALUES = ["draft", "published"] as const;
-export const CONTENT_TYPE_VALUES = [
-  "changelog",
-  "linkedin_post",
-  "twitter_post",
-  "blog_post",
-  "investor_update",
-  "image",
-] as const;
-export const GENERATABLE_CONTENT_TYPE_VALUES = [
-  "changelog",
-  "blog_post",
-  "linkedin_post",
-  "twitter_post",
-  "image",
-] as const;
-
 export type PostStatus = (typeof POST_STATUS_VALUES)[number];
 export type ContentType = (typeof CONTENT_TYPE_VALUES)[number];
 export type GeneratableContentType = (typeof GENERATABLE_CONTENT_TYPE_VALUES)[number];
 export type LookbackWindow = "current_day" | "yesterday" | "last_7_days" | "last_14_days" | "last_30_days";
 export type ToneProfile = "Conversational" | "Professional" | "Casual" | "Formal";
-
-export const LANGUAGE_VALUES = [
-  "English",
-  "Spanish",
-  "French",
-  "German",
-  "Portuguese",
-  "Dutch",
-  "Italian",
-  "Japanese",
-  "Korean",
-  "Chinese",
-  "Arabic",
-  "Hindi",
-  "Russian",
-  "Turkish",
-  "Polish",
-  "Swedish",
-  "Danish",
-  "Norwegian",
-  "Finnish",
-  "Czech",
-  "Romanian",
-  "Hungarian",
-  "Greek",
-  "Thai",
-  "Vietnamese",
-  "Indonesian",
-  "Ukrainian",
-  "Hebrew",
-] as const;
 
 export type Language = (typeof LANGUAGE_VALUES)[number];
 
