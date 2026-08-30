@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Notra GEO API verification</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0a0b0d;
+        --panel: #121418;
+        --panel-2: #181b20;
+        --line: #292e36;
+        --text: #f5f7fa;
+        --muted: #98a2b3;
+        --green: #73e2a7;
+        --green-2: #2ecf83;
+        --blue: #80aaff;
+        --amber: #f7c76b;
+        --red: #ff8c8c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at 12% -10%, rgba(46, 207, 131, 0.12), transparent 30rem),
+          radial-gradient(circle at 95% 12%, rgba(128, 170, 255, 0.09), transparent 26rem), var(--bg);
+        color: var(--text);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        line-height: 1.5;
+      }
+
+      main {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 56px 0 80px;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+      h1 {
+        max-width: 780px;
+        margin-bottom: 16px;
+        font-size: clamp(36px, 6vw, 68px);
+        line-height: 1;
+        letter-spacing: -0.055em;
+      }
+      h2 {
+        margin-bottom: 8px;
+        font-size: 24px;
+        letter-spacing: -0.025em;
+      }
+      h3 {
+        margin-bottom: 4px;
+        font-size: 15px;
+      }
+      .eyebrow {
+        margin-bottom: 18px;
+        color: var(--green);
+        font-size: 12px;
+        font-weight: 750;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .lede {
+        max-width: 760px;
+        color: #c7cdd7;
+        font-size: 18px;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        margin-top: 26px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .section {
+        margin-top: 56px;
+      }
+      .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+      .section-head p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+      .grid-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .grid-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .card {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(18, 20, 24, 0.92);
+        box-shadow: 0 16px 50px rgba(0, 0, 0, 0.24);
+      }
+      .card-pad {
+        padding: 20px;
+      }
+      .metric {
+        padding: 20px;
+      }
+      .metric strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 32px;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+      .metric span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .ok {
+        color: var(--green);
+      }
+      .warning {
+        color: var(--amber);
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 9px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--panel-2);
+        color: #d9dee7;
+        font-size: 12px;
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .chart {
+        min-height: 280px;
+        padding: 20px;
+      }
+      .chart-title {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .chart-title p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .bars {
+        display: grid;
+        gap: 13px;
+      }
+      .bar-row {
+        display: grid;
+        grid-template-columns: minmax(150px, 1.3fr) minmax(120px, 2fr) 58px;
+        align-items: center;
+        gap: 12px;
+      }
+      .bar-label {
+        overflow: hidden;
+        color: #d6dbe3;
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .bar-track {
+        height: 8px;
+        overflow: hidden;
+        border-radius: 99px;
+        background: #242830;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--green-2), var(--green));
+      }
+      .bar-fill.blue {
+        background: linear-gradient(90deg, #557ee8, var(--blue));
+      }
+      .bar-value {
+        color: #eef2f7;
+        font-variant-numeric: tabular-nums;
+        font-size: 12px;
+        text-align: right;
+      }
+
+      .line-wrap {
+        position: relative;
+        height: 240px;
+        margin-top: 12px;
+      }
+      .line-wrap svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+      .axis-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .legend i {
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        margin-right: 6px;
+        border-radius: 50%;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 13px 16px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+      th {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      td {
+        color: #dce1e9;
+        font-size: 13px;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      .status {
+        font-weight: 700;
+      }
+
+      .callout {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        padding: 18px;
+        border: 1px solid rgba(247, 199, 107, 0.35);
+        border-radius: 14px;
+        background: rgba(247, 199, 107, 0.07);
+      }
+      .callout strong {
+        display: block;
+        margin-bottom: 3px;
+      }
+      .callout p {
+        margin: 0;
+        color: #c9c3b5;
+        font-size: 13px;
+      }
+      code {
+        color: #b8c9ff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      footer {
+        margin-top: 56px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      @media (max-width: 840px) {
+        .grid-4,
+        .grid-2 {
+          grid-template-columns: 1fr 1fr;
+        }
+        .bar-row {
+          grid-template-columns: minmax(110px, 1fr) minmax(90px, 1.4fr) 50px;
+        }
+      }
+
+      @media (max-width: 560px) {
+        main {
+          width: min(100% - 20px, 1180px);
+          padding-top: 32px;
+        }
+        .grid-4,
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+        .section-head {
+          align-items: start;
+          flex-direction: column;
+        }
+        th:nth-child(3),
+        td:nth-child(3) {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Live API verification · 30-day window</div>
+        <h1>The GEO data is ready for charts.</h1>
+        <p class="lede">
+          Real read-only requests against <code>localhost:3010</code> returned the full visibility, competitor,
+          language, and AI traffic datasets for the Notra demo project.
+        </p>
+        <div class="meta">
+          <span>Organization: Notra Demo</span>
+          <span>Project: Notra demo</span>
+          <span>Verified: 30 Aug 2026, 19:46 CEST</span>
+          <span>Temporary read-only key deleted after the run</span>
+        </div>
+      </header>
+
+      <section class="section">
+        <div class="grid grid-4">
+          <article class="card metric"><span>Project requests</span><strong class="ok">20/20</strong></article>
+          <article class="card metric"><span>Visibility points</span><strong>210</strong></article>
+          <article class="card metric"><span>Competitor points</span><strong>210</strong></article>
+          <article class="card metric"><span>Traffic points</span><strong>360</strong></article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2>AI visibility</h2>
+            <p>Seven answer engines, 2,100 checks in the current overview.</p>
+          </div>
+          <span class="pill ok"><span class="dot"></span> API shape complete</span>
+        </div>
+        <div class="grid grid-2">
+          <article class="card chart">
+            <div class="chart-title">
+              <div>
+                <h3>Mention rate by engine</h3>
+                <p>Mentions divided by checks</p>
+              </div>
+            </div>
+            <div class="bars" id="engine-bars"></div>
+          </article>
+          <article class="card chart">
+            <div class="chart-title">
+              <div>
+                <h3>Daily mention rate</h3>
+                <p>All engines combined</p>
+              </div>
+              <strong>63.6%</strong>
+            </div>
+            <div class="line-wrap" id="visibility-line"></div>
+            <div class="axis-labels"><span>1 Aug</span><span>15 Aug</span><span>30 Aug</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2>Competitive and language coverage</h2>
+            <p>The API returns both snapshot values and chart-ready timeseries.</p>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <article class="card chart">
+            <div class="chart-title">
+              <div>
+                <h3>Competitor mentions</h3>
+                <p>Seven tracked brands</p>
+              </div>
+            </div>
+            <div class="bars" id="competitor-bars"></div>
+          </article>
+          <article class="card chart">
+            <div class="chart-title">
+              <div>
+                <h3>Mention rate by language</h3>
+                <p>English and German coverage</p>
+              </div>
+            </div>
+            <div class="bars" id="language-bars"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2>AI traffic</h2>
+            <p>1,152 visits across crawler and assistant-referral traffic.</p>
+          </div>
+          <span class="pill ok"><span class="dot"></span> 12 sources · 10 top pages</span>
+        </div>
+        <div class="grid grid-4">
+          <article class="card metric"><span>Crawler visits</span><strong>827</strong></article>
+          <article class="card metric"><span>AI referrals</span><strong>325</strong></article>
+          <article class="card metric"><span>Crawler share</span><strong>71.8%</strong></article>
+          <article class="card metric"><span>Top source</span><strong style="font-size: 22px">GPTBot</strong></article>
+        </div>
+        <div class="grid grid-2" style="margin-top: 16px">
+          <article class="card chart">
+            <div class="chart-title">
+              <div>
+                <h3>Daily visits</h3>
+                <p>Crawlers and AI referrals</p>
+              </div>
+            </div>
+            <div class="line-wrap" id="traffic-line"></div>
+            <div class="legend">
+              <span><i style="background: var(--blue)"></i>Crawler</span
+              ><span><i style="background: var(--green)"></i>AI referral</span>
+            </div>
+            <div class="axis-labels"><span>1 Aug</span><span>15 Aug</span><span>30 Aug</span></div>
+          </article>
+          <article class="card chart">
+            <div class="chart-title">
+              <div>
+                <h3>Top traffic sources</h3>
+                <p>Visits in the selected window</p>
+              </div>
+            </div>
+            <div class="bars" id="source-bars"></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2>Contract coverage</h2>
+            <p>Important graph inputs and drill-downs were exercised against the live local API.</p>
+          </div>
+        </div>
+        <article class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Area</th>
+                <th>Result</th>
+                <th>Returned data</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Projects and settings</td>
+                <td class="status ok">200</td>
+                <td>1 project, settings configured</td>
+              </tr>
+              <tr>
+                <td>Prompts and sequences</td>
+                <td class="status ok">200</td>
+                <td>18 prompts, 2 sequences</td>
+              </tr>
+              <tr>
+                <td>Competitors and scans</td>
+                <td class="status ok">200</td>
+                <td>7 competitors, 5 recent scans</td>
+              </tr>
+              <tr>
+                <td>Visibility overview and timeseries</td>
+                <td class="status ok">200</td>
+                <td>7 engines, 210 daily points</td>
+              </tr>
+              <tr>
+                <td>Prompt results</td>
+                <td class="status ok">200</td>
+                <td>70 answer records</td>
+              </tr>
+              <tr>
+                <td>Competitor share and detail</td>
+                <td class="status ok">200</td>
+                <td>210 daily points, 76 detail prompts</td>
+              </tr>
+              <tr>
+                <td>Language share</td>
+                <td class="status ok">200</td>
+                <td>English and German</td>
+              </tr>
+              <tr>
+                <td>Content gaps and briefs</td>
+                <td class="status ok">200</td>
+                <td>2 prompt gaps, valid empty brief list</td>
+              </tr>
+              <tr>
+                <td>Agent readiness</td>
+                <td class="status ok">200</td>
+                <td>Valid empty history</td>
+              </tr>
+              <tr>
+                <td>Traffic overview, log, journeys, pages</td>
+                <td class="status ok">200</td>
+                <td>360 points, 10 log entries, 10 journeys, 10 pages</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+
+      <section class="section">
+        <div class="callout">
+          <span class="warning">●</span>
+          <div>
+            <strong>One local configuration warning</strong>
+            <p>
+              <code>GET /v1/geo/ingest/setup</code> returned 503 because the already-running API process did not load
+              <code>BEACON_INGEST_SECRET</code> from the monorepo root environment. The graph endpoints are unaffected.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <footer>No scans, sequence runs, content briefs, tokens, or other billed/write operations were triggered.</footer>
+    </main>
+
+    <script>
+      const engines = [
+        ["openai/gpt-5.4-grounded", 75],
+        ["openai/gpt-5.4", 68.3],
+        ["perplexity-sonar", 64.7],
+        ["anthropic/claude-sonnet-4.6-grounded", 56.7],
+        ["anthropic/claude-sonnet-4.6", 54.3],
+        ["google/gemini-3-flash-grounded", 48.7],
+        ["google/gemini-3-flash", 45],
+      ];
+      const visibility = [
+        55.7, 55.7, 64.8, 58, 54.5, 62.5, 48.9, 55.7, 62.5, 65.9, 64.8, 62.5, 63.6, 61.4, 56.8, 52.3, 60.2, 60.2, 53.4,
+        67, 54.5, 56.8, 55.7, 60.2, 63.6, 67, 75, 67, 62.5, 63.6,
+      ];
+      const competitors = [
+        ["Jasper", 1587],
+        ["HubSpot", 1574],
+        ["Copy.ai", 1574],
+        ["Peec AI", 1568],
+        ["Notion", 1567],
+        ["Writer", 1565],
+        ["Profound", 1540],
+      ];
+      const languages = [
+        ["English", 60.4],
+        ["German", 50.4],
+      ];
+      const trafficCrawler = [
+        27, 27, 34, 32, 31, 26, 28, 25, 27, 25, 26, 25, 24, 22, 25, 25, 26, 26, 26, 23, 25, 29, 28, 30, 25, 32, 31, 36,
+        29, 32,
+      ];
+      const trafficReferral = [
+        11, 9, 11, 13, 12, 11, 12, 10, 11, 14, 15, 15, 16, 15, 9, 10, 9, 7, 8, 10, 9, 8, 7, 8, 11, 8, 10, 13, 11, 12,
+      ];
+      const sources = [
+        ["GPTBot", 144],
+        ["Google-Extended", 140],
+        ["ClaudeBot", 139],
+        ["OAI-SearchBot", 138],
+        ["PerplexityBot", 135],
+        ["Bytespider", 131],
+        ["claude", 64],
+        ["perplexity", 60],
+        ["gemini", 53],
+        ["chatgpt", 50],
+      ];
+
+      function bars(id, rows, options = {}) {
+        const max = options.max ?? Math.max(...rows.map((row) => row[1]));
+        document.getElementById(id).innerHTML = rows
+          .map(
+            ([label, value]) => `
+          <div class="bar-row">
+            <div class="bar-label" title="${label}">${label}</div>
+            <div class="bar-track"><div class="bar-fill ${options.blue ? "blue" : ""}" style="width:${Math.max(2, (value / max) * 100)}%"></div></div>
+            <div class="bar-value">${options.percent ? value.toFixed(1) + "%" : value.toLocaleString()}</div>
+          </div>`,
+          )
+          .join("");
+      }
+
+      function lineChart(id, series, colors, maxValue) {
+        const width = 700,
+          height = 220,
+          pad = 10;
+        const max = maxValue ?? Math.max(...series.flat());
+        const x = (index, count) => pad + index * ((width - pad * 2) / (count - 1));
+        const y = (value) => height - pad - (value / max) * (height - pad * 2);
+        const grid = [0.25, 0.5, 0.75, 1]
+          .map(
+            (ratio) =>
+              `<line x1="0" y1="${y(max * ratio)}" x2="${width}" y2="${y(max * ratio)}" stroke="#292e36" stroke-width="1" />`,
+          )
+          .join("");
+        const paths = series
+          .map((values, seriesIndex) => {
+            const points = values.map((value, index) => `${x(index, values.length)},${y(value)}`).join(" ");
+            return `<polyline points="${points}" fill="none" stroke="${colors[seriesIndex]}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`;
+          })
+          .join("");
+        document.getElementById(id).innerHTML =
+          `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img">${grid}${paths}</svg>`;
+      }
+
+      bars("engine-bars", engines, { percent: true, max: 100 });
+      bars("competitor-bars", competitors, { blue: true });
+      bars("language-bars", languages, { percent: true, max: 100 });
+      bars("source-bars", sources, { blue: true });
+      lineChart("visibility-line", [visibility], ["#73e2a7"], 100);
+      lineChart("traffic-line", [trafficCrawler, trafficReferral], ["#80aaff", "#73e2a7"], 40);
+    </script>
+  </body>
+</html>
