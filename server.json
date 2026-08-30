@@ -2,12 +2,12 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.usenotra/notra",
   "title": "Notra",
-  "description": "Access the Notra API for managing posts, brand identities, integrations, and schedules.",
+  "description": "Access the Notra API for managing posts, brand identities, integrations, schedules, and GEO: AI visibility scans, competitor share of voice, content briefs, and AI traffic analytics.",
   "repository": {
     "url": "https://github.com/usenotra/notra-mcp",
     "source": "github"
   },
-  "version": "1.0.8",
+  "version": "1.1.0",
   "websiteUrl": "https://www.usenotra.com",
   "remotes": [
     {
