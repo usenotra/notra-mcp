@@ -47,7 +47,7 @@ export function registerGeoSettingsTools(server: McpServer, client: NotraClient)
           .describe("Engines explicitly approved despite not being zero-data-retention"),
         enabled: z.boolean().describe("Whether recurring scans are enabled"),
         scanIntervalHours: z
-          .literal(GEO_SCAN_INTERVAL_HOURS)
+          .union(GEO_SCAN_INTERVAL_HOURS.map((hours) => z.literal(hours)))
           .describe(`Hours between recurring scans: ${GEO_SCAN_INTERVAL_HOURS.join(", ")}`),
       }),
     },
