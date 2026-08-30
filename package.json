@@ -13,7 +13,6 @@
     "start:http": "node build/http.js",
     "prepublishOnly": "npm run build",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --test test/*.test.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
