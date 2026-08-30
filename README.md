@@ -1,6 +1,6 @@
 # Notra MCP Server
 
-An MCP (Model Context Protocol) server that provides LLM clients with full access to the [Notra API](https://docs.usenotra.com) for managing posts, brand identities, integrations, and schedules.
+An MCP (Model Context Protocol) server for the [Notra API](https://docs.usenotra.com). It manages posts, brand identities, integrations, schedules, GEO visibility scans, competitors, content briefs, and AI traffic analytics.
 
 ## Setup
 
@@ -169,6 +169,94 @@ When `NODE_ENV=development`, the default AuthKit domain is `divine-dress-62-deve
 | `create_skill` | Create a reusable writing skill |
 | `update_skill` | Update a reusable writing skill |
 | `delete_skill` | Delete a reusable writing skill |
+
+### Projects
+
+GEO features are scoped to a project. Most GEO tools take a `projectId`; call `list_projects` first to find it. GEO tools require an organization-scoped API key and the GEO plan.
+
+| Tool             | Description                                          |
+| ---------------- | ---------------------------------------------------- |
+| `list_projects`  | List the organization's GEO projects                 |
+| `get_project`    | Get a single project by ID                           |
+| `create_project` | Create a project, optionally linked to a brand       |
+| `update_project` | Rename a project or relink its brand identity        |
+| `delete_project` | Delete a project and all of its GEO data (cascading) |
+
+### GEO settings
+
+| Tool                  | Description                                                      |
+| --------------------- | ---------------------------------------------------------------- |
+| `get_geo_settings`    | Get tracked company, aliases, languages, engines and scan config |
+| `update_geo_settings` | Replace the settings document and restart the scan cycle         |
+
+### GEO prompts and sequences
+
+| Tool                  | Description                                                           |
+| --------------------- | --------------------------------------------------------------------- |
+| `list_geo_prompts`    | List tracked prompts (custom and auto-derived)                        |
+| `create_geo_prompt`   | Track a new prompt                                                    |
+| `update_geo_prompt`   | Enable or disable a tracked prompt                                    |
+| `delete_geo_prompt`   | Stop tracking a prompt                                                |
+| `import_geo_prompts`  | Bulk import prompts from rows or CSV                                  |
+| `list_geo_sequences`  | List multi-turn prompt sequences                                      |
+| `create_geo_sequence` | Create a prompt sequence                                              |
+| `update_geo_sequence` | Update a sequence's name, steps or enabled state                      |
+| `delete_geo_sequence` | Delete a sequence                                                     |
+| `run_geo_sequence`    | Run a sequence now, synchronously (uses AI credits, can take minutes) |
+
+### GEO competitors
+
+| Tool                      | Description                                 |
+| ------------------------- | ------------------------------------------- |
+| `list_geo_competitors`    | List tracked competitors                    |
+| `upsert_geo_competitor`   | Create, update or rename a competitor       |
+| `suggest_geo_competitors` | AI-discover likely competitors for a domain |
+| `delete_geo_competitor`   | Stop tracking a competitor                  |
+| `import_geo_competitors`  | Bulk import competitors from rows or CSV    |
+
+### GEO scans and visibility
+
+| Tool                            | Description                                                 |
+| ------------------------------- | ----------------------------------------------------------- |
+| `create_geo_scan`               | Trigger an async visibility scan (uses AI credits)          |
+| `list_geo_scans`                | List scans with pagination                                  |
+| `get_geo_scan`                  | Get a scan and its status                                   |
+| `get_geo_visibility_overview`   | Mention rates per answer engine                             |
+| `get_geo_visibility_timeseries` | Daily mention counts per engine                             |
+| `get_geo_prompt_results`        | Latest stored answer per prompt and engine, with sources    |
+| `get_geo_competitor_share`      | Share of voice across tracked brands                        |
+| `get_geo_language_share`        | Mention rates per tracked language                          |
+| `get_geo_competitor_detail`     | One competitor's mention history and the prompts driving it |
+
+### GEO content briefs
+
+| Tool                        | Description                                                   |
+| --------------------------- | ------------------------------------------------------------- |
+| `list_geo_content_gaps`     | Prompts where competitors are mentioned and this brand is not |
+| `list_geo_content_briefs`   | List content briefs and their statuses                        |
+| `plan_geo_content_brief`    | Research a topic and plan a brief (billed, can take minutes)  |
+| `get_geo_content_brief`     | Get a brief with the full document and writer status          |
+| `approve_geo_content_brief` | Approve a brief and start the article writer                  |
+
+### Agent readiness
+
+| Tool                             | Description                                                   |
+| -------------------------------- | ------------------------------------------------------------- |
+| `get_geo_agent_readiness`        | Latest readiness report, score history and any scan in flight |
+| `start_geo_agent_readiness_scan` | Queue a readiness scan of the project's website               |
+
+### AI traffic
+
+| Tool                        | Description                                                  |
+| --------------------------- | ------------------------------------------------------------ |
+| `get_geo_traffic_overview`  | Crawler and AI-referral totals, sources and daily timeseries |
+| `get_geo_traffic_log`       | Most recent individual AI crawler/referral requests          |
+| `list_geo_traffic_journeys` | Sessions grouped by journey                                  |
+| `get_geo_traffic_journey`   | Every event in one journey                                   |
+| `list_geo_traffic_pages`    | Most visited pages by AI traffic                             |
+| `get_geo_ingest_setup`      | Tracking install snippets and ingest endpoint                |
+| `issue_geo_ingest_token`    | Issue the tracking token                                     |
+| `rotate_geo_ingest_token`   | Rotate the token, invalidating all previously issued tokens  |
 
 ### Feedback
 

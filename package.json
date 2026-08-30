@@ -1,6 +1,6 @@
 {
   "name": "@usenotra/mcp",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "MCP server for the Notra API",
   "mcpName": "io.github.usenotra/notra",
   "type": "module",

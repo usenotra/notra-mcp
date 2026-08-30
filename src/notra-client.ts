@@ -1,3 +1,4 @@
+import { GEO_LONG_RUNNING_TIMEOUT_MS } from "./constants/geo.js";
 import type {
   ApiErrorResponse,
   BrandIdentityDeleteResponse,
@@ -37,17 +38,78 @@ import type {
   UpdateSkillRequest,
 } from "./types/api.js";
 import type { AuthContext } from "./types/auth.js";
+import type {
+  ApproveGeoContentBriefResponse,
+  GeoContentBriefListResponse,
+  GeoContentBriefResponse,
+  GeoContentGapsResponse,
+  PlanGeoContentBriefRequest,
+  PlanGeoContentBriefResponse,
+} from "./types/geo-brief.js";
+import type { GeoAgentReadinessResponse, StartGeoAgentReadinessScanResponse } from "./types/geo-agent-readiness.js";
+import type { GeoWindowParams } from "./types/geo-common.js";
+import type {
+  GeoCompetitorListResponse,
+  ImportGeoCompetitorsRequest,
+  ImportGeoCompetitorsResponse,
+  SuggestGeoCompetitorsResponse,
+  UpsertGeoCompetitorRequest,
+} from "./types/geo-competitor.js";
+import type {
+  GeoPromptDeleteResponse,
+  GeoPromptListResponse,
+  GeoPromptResponse,
+  ImportGeoPromptsRequest,
+  ImportGeoPromptsResponse,
+} from "./types/geo-prompt.js";
+import type {
+  CreateGeoScanResponse,
+  GeoScanListResponse,
+  GeoScanResponse,
+  ListGeoScansParams,
+} from "./types/geo-scan.js";
+import type {
+  CreateGeoSequenceRequest,
+  GeoSequenceDeleteResponse,
+  GeoSequenceListResponse,
+  GeoSequenceResponse,
+  RunGeoSequenceResponse,
+  UpdateGeoSequenceRequest,
+} from "./types/geo-sequence.js";
+import type { GeoSettingsResponse, UpdateGeoSettingsRequest } from "./types/geo-settings.js";
+import type {
+  GeoIngestSetupResponse,
+  GeoIngestTokenResponse,
+  GeoTrafficJourneyResponse,
+  GeoTrafficJourneysResponse,
+  GeoTrafficLogParams,
+  GeoTrafficLogResponse,
+  GeoTrafficOverviewResponse,
+  GeoTrafficPagesParams,
+  GeoTrafficPagesResponse,
+} from "./types/geo-traffic.js";
+import type {
+  GeoVisibilityCompetitorDetailResponse,
+  GeoVisibilityCompetitorShareResponse,
+  GeoVisibilityLanguageShareResponse,
+  GeoVisibilityOverviewResponse,
+  GeoVisibilityPromptResultsResponse,
+  GeoVisibilityTimeseriesResponse,
+} from "./types/geo-visibility.js";
+import type {
+  CreateProjectRequest,
+  ProjectDeleteResponse,
+  ProjectListResponse,
+  ProjectResponse,
+  UpdateProjectRequest,
+} from "./types/project.js";
+import type { RequestOptions } from "./types/request.js";
 import { parseChatStream } from "./utils/chat-stream.js";
+import { appendQueryParams } from "./utils/query-params.js";
 
 const NOTRA_API_BASE = process.env.NOTRA_API_BASE ?? "https://api.usenotra.com";
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 const DEFAULT_STREAM_TIMEOUT_MS = 180_000;
-
-interface RequestOptions<B = Record<string, string | number | boolean | null | undefined>> {
-  params?: Record<string, string | string[] | number | boolean | undefined>;
-  body?: B;
-  timeoutMs?: number;
-}
 
 /**
  * Maps an `AbortSignal.timeout` abort (which can fire during the fetch call or
@@ -74,14 +136,7 @@ export class NotraClient {
     const url = new URL(`${this.baseUrl}${path}`);
 
     if (options?.params) {
-      for (const [key, value] of Object.entries(options.params)) {
-        if (value === undefined) continue;
-        if (Array.isArray(value)) {
-          url.searchParams.set(key, value.join(","));
-        } else {
-          url.searchParams.set(key, String(value));
-        }
-      }
+      appendQueryParams(url, options.params);
     }
 
     const headers: Record<string, string> = {
@@ -139,10 +194,7 @@ export class NotraClient {
     const url = new URL(`${this.baseUrl}${path}`);
 
     if (options?.params) {
-      for (const [key, value] of Object.entries(options.params)) {
-        if (value === undefined) continue;
-        url.searchParams.set(key, String(value));
-      }
+      appendQueryParams(url, options.params);
     }
 
     const headers: Record<string, string> = {
@@ -196,7 +248,7 @@ export class NotraClient {
 
   async listPosts(params?: ListPostsParams): Promise<PostListResponse> {
     return this.request<PostListResponse>("GET", "/v1/posts", {
-      params: params as RequestOptions["params"],
+      params,
     });
   }
 
@@ -287,7 +339,7 @@ export class NotraClient {
 
   async listSchedules(params?: ListSchedulesParams): Promise<ScheduleListResponse> {
     return this.request<ScheduleListResponse>("GET", "/v1/schedules", {
-      params: params as RequestOptions["params"],
+      params,
     });
   }
 
@@ -350,5 +402,321 @@ export class NotraClient {
 
   async deleteSkill(name: string): Promise<DeleteSkillResponse> {
     return this.request<DeleteSkillResponse>("DELETE", `/v1/skills/${encodeURIComponent(name)}`);
+  }
+
+  private geoPath(projectId: string, suffix: string): string {
+    return `/v1/projects/${encodeURIComponent(projectId)}/geo${suffix}`;
+  }
+
+  async listProjects(): Promise<ProjectListResponse> {
+    return this.request<ProjectListResponse>("GET", "/v1/projects");
+  }
+
+  async createProject(body: CreateProjectRequest): Promise<ProjectResponse> {
+    return this.request<ProjectResponse, CreateProjectRequest>("POST", "/v1/projects", { body });
+  }
+
+  async getProject(projectId: string): Promise<ProjectResponse> {
+    return this.request<ProjectResponse>("GET", `/v1/projects/${encodeURIComponent(projectId)}`);
+  }
+
+  async updateProject(projectId: string, body: UpdateProjectRequest): Promise<ProjectResponse> {
+    return this.request<ProjectResponse, UpdateProjectRequest>(
+      "PATCH",
+      `/v1/projects/${encodeURIComponent(projectId)}`,
+      { body },
+    );
+  }
+
+  async deleteProject(projectId: string): Promise<ProjectDeleteResponse> {
+    return this.request<ProjectDeleteResponse>("DELETE", `/v1/projects/${encodeURIComponent(projectId)}`);
+  }
+
+  async getGeoSettings(projectId: string): Promise<GeoSettingsResponse> {
+    return this.request<GeoSettingsResponse>("GET", this.geoPath(projectId, "/settings"));
+  }
+
+  async updateGeoSettings(projectId: string, body: UpdateGeoSettingsRequest): Promise<GeoSettingsResponse> {
+    return this.request<GeoSettingsResponse, UpdateGeoSettingsRequest>("PATCH", this.geoPath(projectId, "/settings"), {
+      body,
+    });
+  }
+
+  async listGeoPrompts(projectId: string): Promise<GeoPromptListResponse> {
+    return this.request<GeoPromptListResponse>("GET", this.geoPath(projectId, "/prompts"));
+  }
+
+  async createGeoPrompt(projectId: string, prompt: string): Promise<GeoPromptResponse> {
+    return this.request<GeoPromptResponse, { prompt: string }>("POST", this.geoPath(projectId, "/prompts"), {
+      body: { prompt },
+    });
+  }
+
+  async updateGeoPrompt(projectId: string, promptId: string, enabled: boolean): Promise<GeoPromptResponse> {
+    return this.request<GeoPromptResponse, { enabled: boolean }>(
+      "PATCH",
+      this.geoPath(projectId, `/prompts/${encodeURIComponent(promptId)}`),
+      { body: { enabled } },
+    );
+  }
+
+  async deleteGeoPrompt(projectId: string, promptId: string): Promise<GeoPromptDeleteResponse> {
+    return this.request<GeoPromptDeleteResponse>(
+      "DELETE",
+      this.geoPath(projectId, `/prompts/${encodeURIComponent(promptId)}`),
+    );
+  }
+
+  async importGeoPrompts(projectId: string, body: ImportGeoPromptsRequest): Promise<ImportGeoPromptsResponse> {
+    return this.request<ImportGeoPromptsResponse, ImportGeoPromptsRequest>(
+      "POST",
+      this.geoPath(projectId, "/prompts/import"),
+      { body },
+    );
+  }
+
+  async listGeoSequences(projectId: string): Promise<GeoSequenceListResponse> {
+    return this.request<GeoSequenceListResponse>("GET", this.geoPath(projectId, "/sequences"));
+  }
+
+  async createGeoSequence(projectId: string, body: CreateGeoSequenceRequest): Promise<GeoSequenceResponse> {
+    return this.request<GeoSequenceResponse, CreateGeoSequenceRequest>("POST", this.geoPath(projectId, "/sequences"), {
+      body,
+    });
+  }
+
+  async updateGeoSequence(
+    projectId: string,
+    sequenceId: string,
+    body: UpdateGeoSequenceRequest,
+  ): Promise<GeoSequenceResponse> {
+    return this.request<GeoSequenceResponse, UpdateGeoSequenceRequest>(
+      "PATCH",
+      this.geoPath(projectId, `/sequences/${encodeURIComponent(sequenceId)}`),
+      { body },
+    );
+  }
+
+  async deleteGeoSequence(projectId: string, sequenceId: string): Promise<GeoSequenceDeleteResponse> {
+    return this.request<GeoSequenceDeleteResponse>(
+      "DELETE",
+      this.geoPath(projectId, `/sequences/${encodeURIComponent(sequenceId)}`),
+    );
+  }
+
+  async runGeoSequence(projectId: string, sequenceId: string): Promise<RunGeoSequenceResponse> {
+    return this.request<RunGeoSequenceResponse>(
+      "POST",
+      this.geoPath(projectId, `/sequences/${encodeURIComponent(sequenceId)}/run`),
+      { timeoutMs: GEO_LONG_RUNNING_TIMEOUT_MS },
+    );
+  }
+
+  async listGeoCompetitors(projectId: string): Promise<GeoCompetitorListResponse> {
+    return this.request<GeoCompetitorListResponse>("GET", this.geoPath(projectId, "/competitors"));
+  }
+
+  async upsertGeoCompetitor(projectId: string, body: UpsertGeoCompetitorRequest): Promise<GeoCompetitorListResponse> {
+    return this.request<GeoCompetitorListResponse, UpsertGeoCompetitorRequest>(
+      "PUT",
+      this.geoPath(projectId, "/competitors"),
+      { body },
+    );
+  }
+
+  async suggestGeoCompetitors(projectId: string, domain: string): Promise<SuggestGeoCompetitorsResponse> {
+    return this.request<SuggestGeoCompetitorsResponse>("GET", this.geoPath(projectId, "/competitors/suggestions"), {
+      params: { domain },
+      timeoutMs: GEO_LONG_RUNNING_TIMEOUT_MS,
+    });
+  }
+
+  async deleteGeoCompetitor(projectId: string, name: string): Promise<GeoCompetitorListResponse> {
+    return this.request<GeoCompetitorListResponse>(
+      "DELETE",
+      this.geoPath(projectId, `/competitors/${encodeURIComponent(name)}`),
+    );
+  }
+
+  async importGeoCompetitors(
+    projectId: string,
+    body: ImportGeoCompetitorsRequest,
+  ): Promise<ImportGeoCompetitorsResponse> {
+    return this.request<ImportGeoCompetitorsResponse, ImportGeoCompetitorsRequest>(
+      "POST",
+      this.geoPath(projectId, "/competitors/import"),
+      { body },
+    );
+  }
+
+  async createGeoScan(projectId: string): Promise<CreateGeoScanResponse> {
+    return this.request<CreateGeoScanResponse>("POST", this.geoPath(projectId, "/scans"));
+  }
+
+  async listGeoScans(projectId: string, params?: ListGeoScansParams): Promise<GeoScanListResponse> {
+    return this.request<GeoScanListResponse>("GET", this.geoPath(projectId, "/scans"), {
+      params,
+    });
+  }
+
+  async getGeoScan(projectId: string, scanId: string): Promise<GeoScanResponse> {
+    return this.request<GeoScanResponse>("GET", this.geoPath(projectId, `/scans/${encodeURIComponent(scanId)}`));
+  }
+
+  async getGeoVisibilityOverview(projectId: string, params?: GeoWindowParams): Promise<GeoVisibilityOverviewResponse> {
+    return this.request<GeoVisibilityOverviewResponse>("GET", this.geoPath(projectId, "/visibility/overview"), {
+      params,
+    });
+  }
+
+  async getGeoVisibilityTimeseries(
+    projectId: string,
+    params?: GeoWindowParams,
+  ): Promise<GeoVisibilityTimeseriesResponse> {
+    return this.request<GeoVisibilityTimeseriesResponse>("GET", this.geoPath(projectId, "/visibility/timeseries"), {
+      params,
+    });
+  }
+
+  async getGeoVisibilityPromptResults(
+    projectId: string,
+    params?: GeoWindowParams,
+  ): Promise<GeoVisibilityPromptResultsResponse> {
+    return this.request<GeoVisibilityPromptResultsResponse>(
+      "GET",
+      this.geoPath(projectId, "/visibility/prompt-results"),
+      { params },
+    );
+  }
+
+  async getGeoVisibilityCompetitorShare(
+    projectId: string,
+    params?: GeoWindowParams,
+  ): Promise<GeoVisibilityCompetitorShareResponse> {
+    return this.request<GeoVisibilityCompetitorShareResponse>(
+      "GET",
+      this.geoPath(projectId, "/visibility/competitor-share"),
+      { params },
+    );
+  }
+
+  async getGeoVisibilityLanguageShare(
+    projectId: string,
+    params?: GeoWindowParams,
+  ): Promise<GeoVisibilityLanguageShareResponse> {
+    return this.request<GeoVisibilityLanguageShareResponse>(
+      "GET",
+      this.geoPath(projectId, "/visibility/language-share"),
+      { params },
+    );
+  }
+
+  async getGeoVisibilityCompetitorDetail(
+    projectId: string,
+    brand: string,
+    params?: GeoWindowParams,
+  ): Promise<GeoVisibilityCompetitorDetailResponse> {
+    return this.request<GeoVisibilityCompetitorDetailResponse>(
+      "GET",
+      this.geoPath(projectId, `/visibility/competitors/${encodeURIComponent(brand)}`),
+      { params },
+    );
+  }
+
+  async listGeoContentGaps(projectId: string): Promise<GeoContentGapsResponse> {
+    return this.request<GeoContentGapsResponse>("GET", this.geoPath(projectId, "/gaps"));
+  }
+
+  async listGeoContentBriefs(projectId: string): Promise<GeoContentBriefListResponse> {
+    return this.request<GeoContentBriefListResponse>("GET", this.geoPath(projectId, "/briefs"));
+  }
+
+  async planGeoContentBrief(projectId: string, body: PlanGeoContentBriefRequest): Promise<PlanGeoContentBriefResponse> {
+    return this.request<PlanGeoContentBriefResponse, PlanGeoContentBriefRequest>(
+      "POST",
+      this.geoPath(projectId, "/briefs"),
+      { body, timeoutMs: GEO_LONG_RUNNING_TIMEOUT_MS },
+    );
+  }
+
+  async getGeoContentBrief(projectId: string, briefId: string): Promise<GeoContentBriefResponse> {
+    return this.request<GeoContentBriefResponse>(
+      "GET",
+      this.geoPath(projectId, `/briefs/${encodeURIComponent(briefId)}`),
+    );
+  }
+
+  async approveGeoContentBrief(projectId: string, briefId: string): Promise<ApproveGeoContentBriefResponse> {
+    return this.request<ApproveGeoContentBriefResponse>(
+      "POST",
+      this.geoPath(projectId, `/briefs/${encodeURIComponent(briefId)}/approve`),
+    );
+  }
+
+  async getGeoAgentReadiness(projectId: string): Promise<GeoAgentReadinessResponse> {
+    return this.request<GeoAgentReadinessResponse>("GET", this.geoPath(projectId, "/agent-readiness"));
+  }
+
+  async startGeoAgentReadinessScan(projectId: string): Promise<StartGeoAgentReadinessScanResponse> {
+    return this.request<StartGeoAgentReadinessScanResponse>("POST", this.geoPath(projectId, "/agent-readiness/scan"));
+  }
+
+  async getGeoTrafficOverview(projectId: string, params?: GeoWindowParams): Promise<GeoTrafficOverviewResponse> {
+    return this.request<GeoTrafficOverviewResponse>("GET", this.geoPath(projectId, "/traffic/overview"), {
+      params,
+    });
+  }
+
+  async getGeoTrafficLog(projectId: string, params?: GeoTrafficLogParams): Promise<GeoTrafficLogResponse> {
+    return this.request<GeoTrafficLogResponse>("GET", this.geoPath(projectId, "/traffic/log"), {
+      params: {
+        limit: params?.limit,
+        visitorTypes: params?.visitorTypes,
+        categories: params?.categories,
+      },
+    });
+  }
+
+  async listGeoTrafficJourneys(
+    projectId: string,
+    params?: GeoWindowParams & { limit?: number },
+  ): Promise<GeoTrafficJourneysResponse> {
+    return this.request<GeoTrafficJourneysResponse>("GET", this.geoPath(projectId, "/traffic/journeys"), {
+      params,
+    });
+  }
+
+  async getGeoTrafficJourney(
+    projectId: string,
+    journeyId: string,
+    params?: GeoWindowParams,
+  ): Promise<GeoTrafficJourneyResponse> {
+    return this.request<GeoTrafficJourneyResponse>(
+      "GET",
+      this.geoPath(projectId, `/traffic/journeys/${encodeURIComponent(journeyId)}`),
+      { params },
+    );
+  }
+
+  async listGeoTrafficPages(projectId: string, params?: GeoTrafficPagesParams): Promise<GeoTrafficPagesResponse> {
+    return this.request<GeoTrafficPagesResponse>("GET", this.geoPath(projectId, "/traffic/pages"), {
+      params,
+    });
+  }
+
+  async getGeoIngestSetup(): Promise<GeoIngestSetupResponse> {
+    return this.request<GeoIngestSetupResponse>("GET", "/v1/geo/ingest/setup");
+  }
+
+  async issueGeoIngestToken(projectId?: string): Promise<GeoIngestTokenResponse> {
+    return this.request<GeoIngestTokenResponse>("POST", "/v1/geo/ingest/token", {
+      params: { projectId },
+    });
+  }
+
+  async rotateGeoIngestToken(projectId?: string): Promise<GeoIngestTokenResponse> {
+    return this.request<GeoIngestTokenResponse>("POST", "/v1/geo/ingest/rotate-token", {
+      params: { projectId },
+    });
   }
 }
