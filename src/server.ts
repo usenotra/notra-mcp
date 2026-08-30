@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { FEEDBACK_AGENT_CLIENT, FEEDBACK_PRODUCT_NAME, FEEDBACK_URL } from "./constants/feedback.js";
 import { SERVER_INSTRUCTIONS } from "./constants/server.js";
 import { NotraClient } from "./notra-client.js";

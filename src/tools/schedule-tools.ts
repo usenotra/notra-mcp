@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod";
 import type { NotraClient } from "../notra-client.js";
 import { GENERATABLE_CONTENT_TYPE_VALUES } from "../types/api.js";
@@ -18,7 +18,7 @@ const scheduleCronConfigSchema = z.object({
   dayOfMonth: z.number().int().min(1).max(31).optional().describe("UTC day of month for monthly schedules (1-31)"),
 });
 
-const schedulePayloadSchema = {
+const schedulePayloadSchema = z.object({
   name: z.string().min(1).max(120).describe("Schedule name (1-120 characters)"),
   sourceType: z.literal("cron").describe("Schedule trigger type"),
   sourceConfig: z
@@ -51,7 +51,7 @@ const schedulePayloadSchema = {
     .enum(["current_day", "yesterday", "last_7_days", "last_14_days", "last_30_days"])
     .optional()
     .describe("Time window for gathering data before generation (default: last_7_days)"),
-} as const;
+});
 
 export function registerScheduleTools(server: McpServer, client: NotraClient) {
   server.registerTool(
@@ -59,12 +59,12 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     {
       description: "List scheduled content generation jobs, optionally filtered by repository IDs",
       annotations: { title: "List Schedules", readOnlyHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         repositoryIds: z
           .array(z.string().min(1))
           .optional()
           .describe("Only return schedules targeting these repository IDs"),
-      },
+      }),
     },
     async ({ repositoryIds }) => {
       return handleError(() => client.listSchedules({ repositoryIds }));
@@ -88,10 +88,10 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     {
       description: "Update an existing content generation schedule",
       annotations: { title: "Update Schedule", destructiveHint: true, idempotentHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         scheduleId: z.string().min(1).describe("The schedule ID to update"),
-        ...schedulePayloadSchema,
-      },
+        ...schedulePayloadSchema.shape,
+      }),
     },
     async ({ scheduleId, ...body }) => {
       return handleError(() => client.updateSchedule(scheduleId, body));
@@ -103,9 +103,9 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     {
       description: "Delete a content generation schedule by its ID",
       annotations: { title: "Delete Schedule", destructiveHint: true, idempotentHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         scheduleId: z.string().min(1).describe("The schedule ID to delete"),
-      },
+      }),
     },
     async ({ scheduleId }) => {
       return handleError(() => client.deleteSchedule(scheduleId));

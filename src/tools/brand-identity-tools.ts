@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod";
 import type { NotraClient } from "../notra-client.js";
 import { LANGUAGE_VALUES } from "../types/api.js";
@@ -10,7 +10,7 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     {
       description: "List all brand identities configured for your organization",
       annotations: { title: "List Brand Identities", readOnlyHint: true },
-      inputSchema: {},
+      inputSchema: z.object({}),
     },
     async () => {
       return handleError(() => client.listBrandIdentities());
@@ -22,9 +22,9 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     {
       description: "Get a single brand identity by its ID, including tone, audience, and language settings",
       annotations: { title: "Get Brand Identity", readOnlyHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         brandIdentityId: z.string().min(1).describe("The brand identity ID to retrieve"),
-      },
+      }),
     },
     async ({ brandIdentityId }) => {
       return handleError(() => client.getBrandIdentity(brandIdentityId));
@@ -36,7 +36,7 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     {
       description: "Update a brand identity's settings including name, tone, audience, language, and more",
       annotations: { title: "Update Brand Identity", destructiveHint: true, idempotentHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         brandIdentityId: z.string().min(1).describe("The brand identity ID to update"),
         name: z.string().min(1).max(120).optional().describe("Brand identity name (1-120 characters)"),
         websiteUrl: z.string().min(1).optional().describe("Website URL"),
@@ -69,7 +69,7 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
           .describe("Target audience description (min 10 chars)"),
         language: z.enum(LANGUAGE_VALUES).optional().nullable().describe("Content language"),
         isDefault: z.literal(true).optional().describe("Set as default brand identity"),
-      },
+      }),
     },
     async ({ brandIdentityId, ...body }) => {
       return handleError(() => client.updateBrandIdentity(brandIdentityId, body));
@@ -81,9 +81,9 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     {
       description: "Delete a brand identity. Returns any schedules or events that were disabled as a result.",
       annotations: { title: "Delete Brand Identity", destructiveHint: true, idempotentHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         brandIdentityId: z.string().min(1).describe("The brand identity ID to delete"),
-      },
+      }),
     },
     async ({ brandIdentityId }) => {
       return handleError(() => client.deleteBrandIdentity(brandIdentityId));
@@ -96,10 +96,10 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
       description:
         "Queue async brand identity generation from a website URL. Notra will scrape the site and extract brand info. Use get_brand_identity_generation_status to poll for completion.",
       annotations: { title: "Generate Brand Identity", destructiveHint: false },
-      inputSchema: {
+      inputSchema: z.object({
         websiteUrl: z.string().min(1).describe("Website URL to analyze for brand identity extraction"),
         name: z.string().min(1).max(120).optional().describe("Name for the brand identity (1-120 characters)"),
-      },
+      }),
     },
     async (params) => {
       return handleError(() => client.generateBrandIdentity(params));
@@ -111,9 +111,9 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     {
       description: "Check the status of an async brand identity generation job",
       annotations: { title: "Get Brand Identity Generation Status", readOnlyHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         jobId: z.string().min(1).describe("The generation job ID to check"),
-      },
+      }),
     },
     async ({ jobId }) => {
       return handleError(() => client.getBrandIdentityGenerationStatus(jobId));

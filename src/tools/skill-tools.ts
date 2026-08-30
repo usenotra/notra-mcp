@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod";
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
@@ -10,11 +10,11 @@ const skillNameSchema = z
   .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/)
   .describe("Skill name. Lowercase letters, digits, and hyphens only.");
 
-const skillPayloadSchema = {
+const skillPayloadSchema = z.object({
   name: skillNameSchema,
   description: z.string().min(1).max(1000).describe("Short description of when the skill should be used"),
   content: z.string().min(1).max(200000).describe("Full skill instructions, typically Markdown"),
-} as const;
+});
 
 export function registerSkillTools(server: McpServer, client: NotraClient) {
   server.registerTool(
@@ -22,7 +22,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     {
       description: "List reusable writing skills for your organization",
       annotations: { title: "List Skills", readOnlyHint: true },
-      inputSchema: {},
+      inputSchema: z.object({}),
     },
     async () => {
       return handleError(() => client.listSkills());
@@ -34,9 +34,9 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     {
       description: "Get a single reusable writing skill by name",
       annotations: { title: "Get Skill", readOnlyHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         name: skillNameSchema,
-      },
+      }),
     },
     async ({ name }) => {
       return handleError(() => client.getSkill(name));
@@ -60,12 +60,12 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     {
       description: "Update a reusable writing skill by name",
       annotations: { title: "Update Skill", destructiveHint: true, idempotentHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         currentName: skillNameSchema.describe("Current skill name to update"),
         name: skillNameSchema.optional().describe("New skill name"),
         description: z.string().min(1).max(1000).optional().describe("Updated short description"),
         content: z.string().min(1).max(200000).optional().describe("Updated full skill instructions"),
-      },
+      }),
     },
     async ({ currentName, ...body }) => {
       return handleError(() => client.updateSkill(currentName, body));
@@ -77,9 +77,9 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     {
       description: "Delete a reusable writing skill by name",
       annotations: { title: "Delete Skill", destructiveHint: true, idempotentHint: true },
-      inputSchema: {
+      inputSchema: z.object({
         name: skillNameSchema,
-      },
+      }),
     },
     async ({ name }) => {
       return handleError(() => client.deleteSkill(name));
