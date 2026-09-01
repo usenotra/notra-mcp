@@ -4,11 +4,16 @@ import { createMcpExpressApp } from "@modelcontextprotocol/express";
 import { NodeStreamableHTTPServerTransport, toNodeHandler, toWebRequest } from "@modelcontextprotocol/node";
 import { createMcpHandler, isInitializeRequest, isLegacyRequest, type AuthInfo } from "@modelcontextprotocol/server";
 import type { Request, Response } from "express";
-import { OAUTH_PROTECTED_RESOURCE_METADATA_PATH } from "./constants/oauth.js";
+import {
+  OAUTH_AUTHORIZATION_SERVER_MCP_METADATA_PATH,
+  OAUTH_AUTHORIZATION_SERVER_METADATA_PATH,
+  OAUTH_PROTECTED_RESOURCE_MCP_METADATA_PATH,
+  OAUTH_PROTECTED_RESOURCE_METADATA_PATH,
+} from "./constants/oauth.js";
 import { createServer } from "./server.js";
 import type { AuthContext } from "./types/auth.js";
 import { authenticateBearerToken, parseBearerToken } from "./utils/auth.js";
-import { getOAuthConfig, getProtectedResourceMetadata } from "./utils/oauth-config.js";
+import { getMcpResourceUrl, getOAuthConfig, getProtectedResourceMetadata } from "./utils/oauth-config.js";
 
 const app = createMcpExpressApp({ host: "0.0.0.0" });
 
@@ -218,17 +223,24 @@ async function fetchAuthorizationServerMetadata(): Promise<unknown> {
   }
 }
 
-app.get("/.well-known/oauth-authorization-server", async (_req, res) => {
+async function handleAuthorizationServerMetadata(_req: Request, res: Response) {
   try {
     res.json(await fetchAuthorizationServerMetadata());
   } catch (error) {
     console.error("Error fetching authorization server metadata:", error);
     res.status(502).json({ error: "authorization_server_metadata_unavailable" });
   }
+}
+
+app.get(OAUTH_AUTHORIZATION_SERVER_METADATA_PATH, handleAuthorizationServerMetadata);
+app.get(OAUTH_AUTHORIZATION_SERVER_MCP_METADATA_PATH, handleAuthorizationServerMetadata);
+
+app.get(OAUTH_PROTECTED_RESOURCE_METADATA_PATH, (_req, res) => {
+  res.json(getProtectedResourceMetadata(oauthConfig));
 });
 
-app.get("/.well-known/oauth-protected-resource", (_req, res) => {
-  res.json(getProtectedResourceMetadata(oauthConfig));
+app.get(OAUTH_PROTECTED_RESOURCE_MCP_METADATA_PATH, (_req, res) => {
+  res.json(getProtectedResourceMetadata(oauthConfig, getMcpResourceUrl(oauthConfig)));
 });
 
 app.post("/register", (_req, res) => {
