@@ -47,9 +47,24 @@ export function getOAuthConfig(): OAuthConfig {
   };
 }
 
-export function getProtectedResourceMetadata(config: OAuthConfig): OAuthProtectedResourceMetadata {
+export function getMcpResourceUrl(config: OAuthConfig): string {
+  if (config.resource.endsWith("/mcp")) {
+    return config.resource;
+  }
+
+  try {
+    return new URL("/mcp", config.resource).toString();
+  } catch {
+    return config.resource;
+  }
+}
+
+export function getProtectedResourceMetadata(
+  config: OAuthConfig,
+  resource: string = config.resource,
+): OAuthProtectedResourceMetadata {
   return {
-    resource: config.resource,
+    resource,
     authorization_servers: [config.issuer],
     bearer_methods_supported: ["header"],
     scopes_supported: [...OAUTH_SCOPES],

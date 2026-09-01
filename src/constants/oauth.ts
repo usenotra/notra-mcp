@@ -7,7 +7,9 @@ export const DEFAULT_MCP_RESOURCE = "https://mcp.usenotra.com";
 export const NOTRA_API_AUDIENCE = "https://api.usenotra.com";
 
 export const OAUTH_AUTHORIZATION_SERVER_METADATA_PATH = "/.well-known/oauth-authorization-server";
+export const OAUTH_AUTHORIZATION_SERVER_MCP_METADATA_PATH = "/.well-known/oauth-authorization-server/mcp";
 export const OAUTH_PROTECTED_RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
+export const OAUTH_PROTECTED_RESOURCE_MCP_METADATA_PATH = "/.well-known/oauth-protected-resource/mcp";
 export const OAUTH_JWKS_PATH = "/oauth2/jwks";
 
 export const OAUTH_SCOPES = [
