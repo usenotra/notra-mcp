@@ -91,7 +91,7 @@ The hosted streamable HTTP server at `https://mcp.usenotra.com/mcp` uses OAuth a
 https://mcp.usenotra.com/.well-known/oauth-protected-resource
 ```
 
-That metadata points to the Notra authorization server (WorkOS AuthKit) at `https://strong-summit-11.authkit.app`, which supports dynamic client registration (RFC 7591). The MCP server also mirrors the authorization server metadata at `https://mcp.usenotra.com/.well-known/oauth-authorization-server`.
+That metadata points to the Notra authorization server (WorkOS AuthKit) at `https://oauth.usenotra.com`, which supports dynamic client registration (RFC 7591). The MCP server also mirrors the authorization server metadata at `https://mcp.usenotra.com/.well-known/oauth-authorization-server`.
 
 ### API key alternative
 
@@ -100,14 +100,14 @@ Remote connections also accept a Notra API key as a static `Authorization: Beare
 For self-hosted HTTP deployments, OAuth validation can be configured with:
 
 ```bash
-WORKOS_AUTHKIT_DOMAIN=strong-summit-11.authkit.app
+WORKOS_AUTHKIT_DOMAIN=oauth.usenotra.com
 WORKOS_CLIENT_ID=client_xxx
 NOTRA_MCP_RESOURCE=https://mcp.usenotra.com
 ```
 
 The issuer is `https://{WORKOS_AUTHKIT_DOMAIN}` and must match the `iss` claim in tokens minted by AuthKit; a mismatch causes every bearer token to be rejected. Token signatures are verified against `https://{WORKOS_AUTHKIT_DOMAIN}/oauth2/jwks`.
 
-When `NODE_ENV=development`, the default AuthKit domain is `essential-berry-67-development-2.authkit.app`; production defaults to `strong-summit-11.authkit.app`. `auth.usenotra.com` is the WorkOS Authentication API domain and serves none of the OAuth endpoints, so it does not work here.
+When `NODE_ENV=development`, the default AuthKit domain is `essential-berry-67-development-2.authkit.app`; production defaults to `oauth.usenotra.com`. `auth.usenotra.com` is the WorkOS Authentication API domain and serves none of the OAuth endpoints, so it does not work here.
 
 ## Tools
 
