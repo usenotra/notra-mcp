@@ -1,8 +1,11 @@
 // The OAuth authorization server is WorkOS AuthKit. Tokens are minted with
 // `iss` set to `https://{WORKOS_AUTHKIT_DOMAIN}`, so the issuer must match what
 // we pass to jwtVerify — otherwise every bearer token is rejected.
-export const PRODUCTION_AUTHKIT_DOMAIN = "auth.usenotra.com";
-export const DEVELOPMENT_AUTHKIT_DOMAIN = "divine-dress-62-development.authkit.app";
+// This has to be the AuthKit domain. `auth.usenotra.com` is the WorkOS
+// Authentication API custom domain and serves no `/oauth2/*` or `/.well-known/*`
+// route, so pointing it here breaks both discovery and JWKS verification.
+export const PRODUCTION_AUTHKIT_DOMAIN = "strong-summit-11.authkit.app";
+export const DEVELOPMENT_AUTHKIT_DOMAIN = "essential-berry-67-development-2.authkit.app";
 export const DEFAULT_MCP_RESOURCE = "https://mcp.usenotra.com";
 export const NOTRA_API_AUDIENCE = "https://api.usenotra.com";
 
