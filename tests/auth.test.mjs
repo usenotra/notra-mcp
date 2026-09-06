@@ -45,8 +45,10 @@ test("OAuth configuration discovers the configured issuer and both resource alia
     process.env.NOTRA_MCP_RESOURCE = resource;
     const config = getOAuthConfig();
     assert.equal(config.jwksUrl, "https://auth.example.test/oauth2/jwks");
-    assert.ok(config.resourceAudiences.includes("https://mcp.example.test"));
-    assert.ok(config.resourceAudiences.includes("https://mcp.example.test/mcp"));
+    assert.deepEqual(
+      new Set(config.resourceAudiences),
+      new Set(["https://mcp.example.test", "https://mcp.example.test/mcp", "https://api.usenotra.com"]),
+    );
     assert.equal(getMcpResourceUrl(config), "https://mcp.example.test/mcp");
     assert.deepEqual(getProtectedResourceMetadata(config).authorization_servers, [config.issuer]);
   }
