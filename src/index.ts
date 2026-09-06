@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import "zod/compile";
+
 import "dotenv/config";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { createServer } from "./server.js";

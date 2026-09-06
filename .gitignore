@@ -4,3 +4,4 @@ node_modules/
 build/
 .mcpregistry*
 .claude/settings.local.json
+coverage/

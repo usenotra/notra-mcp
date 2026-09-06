@@ -1,18 +1,5 @@
-export interface ParsedChatStream {
-  /** Concatenated assistant text fragments. */
-  text: string;
-  /** Chat ID from frame metadata, if present. */
-  chatId: string | null;
-  /** The original stream, untouched. */
-  raw: string;
-}
-
-interface ChatStreamFrame {
-  type?: unknown;
-  delta?: unknown;
-  textDelta?: unknown;
-  messageMetadata?: { chatId?: unknown };
-}
+import type { ChatStreamResponse } from "../types/api.js";
+import { chatStreamFrameSchema } from "../schemas/chat-stream.js";
 
 /**
  * Parses a Vercel AI-SDK UI message SSE stream (newline-separated `data: {json}`
@@ -23,7 +10,7 @@ interface ChatStreamFrame {
  * returned as `text` so a protocol change degrades to the previous behavior,
  * never to an empty reply.
  */
-export function parseChatStream(stream: string): ParsedChatStream {
+export function parseChatStream(stream: string): ChatStreamResponse {
   let text = "";
   let chatId: string | null = null;
 
@@ -37,33 +24,23 @@ export function parseChatStream(stream: string): ParsedChatStream {
       continue;
     }
 
-    let frame: ChatStreamFrame;
+    let data: unknown;
     try {
-      const parsed: unknown = JSON.parse(payload);
-      if (typeof parsed !== "object" || parsed === null) {
-        continue;
-      }
-      frame = parsed as ChatStreamFrame;
+      data = JSON.parse(payload);
     } catch {
       continue;
     }
 
+    const parsed = chatStreamFrameSchema.safeParse(data);
+    if (!parsed.success) continue;
+    const frame = parsed.data;
     const fragment = frame.delta ?? frame.textDelta;
-    if (frame.type === "text-delta" && typeof fragment === "string") {
+    if (frame.type === "text-delta" && fragment !== undefined) {
       text += fragment;
     }
 
-    if (chatId === null) {
-      const metadataChatId = frame.messageMetadata?.chatId;
-      if (typeof metadataChatId === "string" && metadataChatId.length > 0) {
-        chatId = metadataChatId;
-      }
-    }
+    chatId ??= frame.messageMetadata?.chatId ?? null;
   }
 
-  if (text.length === 0 && stream.length > 0) {
-    return { text: stream, chatId, raw: stream };
-  }
-
-  return { text, chatId, raw: stream };
+  return { text: text || stream, chatId };
 }

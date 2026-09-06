@@ -1,5 +1,3 @@
-export type AuthKind = "apiKey" | "oauth";
-
 export type OAuthAuthContext = {
   kind: "oauth";
   token: string;

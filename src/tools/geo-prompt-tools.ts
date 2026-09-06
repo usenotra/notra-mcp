@@ -1,7 +1,13 @@
+import {
+  listGeoPromptsSchema,
+  createGeoPromptSchema,
+  updateGeoPromptSchema,
+  deleteGeoPromptSchema,
+} from "../schemas/geo-prompt.js";
 import type { McpServer } from "@modelcontextprotocol/server";
-import * as z from "zod";
+
 import type { NotraClient } from "../notra-client.js";
-import { geoPromptTextSchema, geoResourceIdSchema, projectIdSchema } from "../schemas/geo-fields.js";
+
 import { geoPromptImportSchema } from "../schemas/geo-import.js";
 import { toImportSource } from "../utils/import-source.js";
 import { handleError } from "../utils/mcp.js";
@@ -13,13 +19,9 @@ export function registerGeoPromptTools(server: McpServer, client: NotraClient) {
       description:
         "List the GEO prompts tracked for a project: custom prompts plus the ones derived automatically from the brand context",
       annotations: { title: "List GEO Prompts", readOnlyHint: true },
-      inputSchema: z.object({
-        projectId: projectIdSchema,
-      }),
+      inputSchema: listGeoPromptsSchema,
     },
-    async ({ projectId }) => {
-      return handleError(() => client.listGeoPrompts(projectId));
-    },
+    ({ projectId }) => handleError(() => client.listGeoPrompts(projectId)),
   );
 
   server.registerTool(
@@ -27,14 +29,9 @@ export function registerGeoPromptTools(server: McpServer, client: NotraClient) {
     {
       description: "Track a new GEO prompt so future scans check it against every configured answer engine",
       annotations: { title: "Create GEO Prompt", destructiveHint: false },
-      inputSchema: z.object({
-        projectId: projectIdSchema,
-        prompt: geoPromptTextSchema.describe("The prompt to track (8-300 characters), phrased like a real user query"),
-      }),
+      inputSchema: createGeoPromptSchema,
     },
-    async ({ projectId, prompt }) => {
-      return handleError(() => client.createGeoPrompt(projectId, prompt));
-    },
+    ({ projectId, prompt }) => handleError(() => client.createGeoPrompt(projectId, prompt)),
   );
 
   server.registerTool(
@@ -42,15 +39,9 @@ export function registerGeoPromptTools(server: McpServer, client: NotraClient) {
     {
       description: "Enable or disable a tracked GEO prompt",
       annotations: { title: "Update GEO Prompt", destructiveHint: true, idempotentHint: true },
-      inputSchema: z.object({
-        projectId: projectIdSchema,
-        promptId: geoResourceIdSchema.describe("The prompt ID to update"),
-        enabled: z.boolean().describe("Whether the prompt is checked during scans"),
-      }),
+      inputSchema: updateGeoPromptSchema,
     },
-    async ({ projectId, promptId, enabled }) => {
-      return handleError(() => client.updateGeoPrompt(projectId, promptId, enabled));
-    },
+    ({ projectId, promptId, enabled }) => handleError(() => client.updateGeoPrompt(projectId, promptId, enabled)),
   );
 
   server.registerTool(
@@ -58,14 +49,9 @@ export function registerGeoPromptTools(server: McpServer, client: NotraClient) {
     {
       description: "Stop tracking a GEO prompt",
       annotations: { title: "Delete GEO Prompt", destructiveHint: true, idempotentHint: true },
-      inputSchema: z.object({
-        projectId: projectIdSchema,
-        promptId: geoResourceIdSchema.describe("The prompt ID to delete"),
-      }),
+      inputSchema: deleteGeoPromptSchema,
     },
-    async ({ projectId, promptId }) => {
-      return handleError(() => client.deleteGeoPrompt(projectId, promptId));
-    },
+    ({ projectId, promptId }) => handleError(() => client.deleteGeoPrompt(projectId, promptId)),
   );
 
   server.registerTool(
@@ -76,8 +62,6 @@ export function registerGeoPromptTools(server: McpServer, client: NotraClient) {
       annotations: { title: "Import GEO Prompts", destructiveHint: false },
       inputSchema: geoPromptImportSchema,
     },
-    async ({ projectId, rows, csv }) => {
-      return handleError(() => client.importGeoPrompts(projectId, toImportSource(rows, csv)));
-    },
+    ({ projectId, rows, csv }) => handleError(() => client.importGeoPrompts(projectId, toImportSource(rows, csv))),
   );
 }

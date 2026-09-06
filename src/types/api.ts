@@ -356,12 +356,6 @@ export interface ListSchedulesParams {
   repositoryIds?: string[];
 }
 
-export interface ApiErrorResponse {
-  code?: string;
-  message?: string;
-  error?: string;
-}
-
 export type ChatModel =
   | "auto"
   | "anthropic/claude-opus-4.8"

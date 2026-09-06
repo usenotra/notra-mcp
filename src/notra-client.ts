@@ -1,6 +1,5 @@
 import { GEO_LONG_RUNNING_TIMEOUT_MS } from "./constants/geo.js";
 import type {
-  ApiErrorResponse,
   BrandIdentityDeleteResponse,
   BrandIdentityGenerationStatusResponse,
   BrandIdentityListResponse,
@@ -104,12 +103,11 @@ import type {
   UpdateProjectRequest,
 } from "./types/project.js";
 import type { RequestOptions } from "./types/request.js";
+import { apiErrorSchema } from "./schemas/api.js";
 import { parseChatStream } from "./utils/chat-stream.js";
 import { appendQueryParams } from "./utils/query-params.js";
 
 const NOTRA_API_BASE = process.env.NOTRA_API_BASE ?? "https://api.usenotra.com";
-const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
-const DEFAULT_STREAM_TIMEOUT_MS = 180_000;
 
 /**
  * Maps an `AbortSignal.timeout` abort (which can fire during the fetch call or
@@ -124,11 +122,11 @@ function asTimeoutError(error: unknown, timeoutMs: number): Error | undefined {
 }
 
 export class NotraClient {
-  private token: string;
+  private auth: AuthContext;
   private baseUrl: string;
 
   constructor(auth: string | AuthContext, baseUrl: string = NOTRA_API_BASE) {
-    this.token = typeof auth === "string" ? auth : auth.token;
+    this.auth = typeof auth === "string" ? { kind: "apiKey", token: auth } : auth;
     this.baseUrl = baseUrl;
   }
 
@@ -140,12 +138,12 @@ export class NotraClient {
     }
 
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.token}`,
+      Authorization: `Bearer ${this.auth.token}`,
       "Content-Type": "application/json",
       Accept: "application/json",
     };
 
-    const timeoutMs = options?.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+    const timeoutMs = options?.timeoutMs ?? 30_000;
     const fetchOptions: RequestInit = { method, headers, signal: AbortSignal.timeout(timeoutMs) };
     if (options?.body && (method === "POST" || method === "PATCH" || method === "PUT")) {
       fetchOptions.body = JSON.stringify(options.body);
@@ -158,7 +156,7 @@ export class NotraClient {
       throw asTimeoutError(error, timeoutMs) ?? error;
     }
 
-    let data: T | ApiErrorResponse;
+    let data: unknown;
     try {
       data = await response.json();
     } catch (error) {
@@ -173,13 +171,8 @@ export class NotraClient {
     }
 
     if (!response.ok) {
-      const errorBody = data as ApiErrorResponse;
-      const message =
-        typeof errorBody?.message === "string"
-          ? errorBody.message
-          : typeof errorBody?.error === "string"
-            ? errorBody.error
-            : `HTTP ${response.status}: ${response.statusText}`;
+      const errorBody = apiErrorSchema.safeParse(data).data;
+      const message = errorBody?.message ?? errorBody?.error ?? `HTTP ${response.status}: ${response.statusText}`;
       throw new Error(message);
     }
 
@@ -198,12 +191,12 @@ export class NotraClient {
     }
 
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.token}`,
+      Authorization: `Bearer ${this.auth.token}`,
       "Content-Type": "application/json",
       Accept: "text/event-stream, application/json",
     };
 
-    const timeoutMs = options?.timeoutMs ?? DEFAULT_STREAM_TIMEOUT_MS;
+    const timeoutMs = options?.timeoutMs ?? 180_000;
     const fetchOptions: RequestInit = { method, headers, signal: AbortSignal.timeout(timeoutMs) };
     if (options?.body && (method === "POST" || method === "PATCH" || method === "PUT")) {
       fetchOptions.body = JSON.stringify(options.body);
@@ -224,18 +217,15 @@ export class NotraClient {
     }
 
     if (!response.ok) {
-      let errorBody: ApiErrorResponse | undefined;
+      let data: unknown;
       try {
-        errorBody = JSON.parse(text) as ApiErrorResponse;
+        data = JSON.parse(text);
       } catch {
-        errorBody = undefined;
+        // Non-JSON errors use the response text below.
       }
+      const errorBody = apiErrorSchema.safeParse(data).data;
       const message =
-        typeof errorBody?.message === "string"
-          ? errorBody.message
-          : typeof errorBody?.error === "string"
-            ? errorBody.error
-            : text || `HTTP ${response.status}: ${response.statusText}`;
+        errorBody?.message ?? errorBody?.error ?? (text || `HTTP ${response.status}: ${response.statusText}`);
       throw new Error(message);
     }
 
@@ -669,11 +659,7 @@ export class NotraClient {
 
   async getGeoTrafficLog(projectId: string, params?: GeoTrafficLogParams): Promise<GeoTrafficLogResponse> {
     return this.request<GeoTrafficLogResponse>("GET", this.geoPath(projectId, "/traffic/log"), {
-      params: {
-        limit: params?.limit,
-        visitorTypes: params?.visitorTypes,
-        categories: params?.categories,
-      },
+      params,
     });
   }
 

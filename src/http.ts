@@ -1,15 +1,11 @@
+import "zod/compile";
 import "dotenv/config";
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { createMcpExpressApp } from "@modelcontextprotocol/express";
 import { NodeStreamableHTTPServerTransport, toNodeHandler, toWebRequest } from "@modelcontextprotocol/node";
 import { createMcpHandler, isInitializeRequest, isLegacyRequest, type AuthInfo } from "@modelcontextprotocol/server";
 import type { Request, Response } from "express";
-import {
-  OAUTH_AUTHORIZATION_SERVER_MCP_METADATA_PATH,
-  OAUTH_AUTHORIZATION_SERVER_METADATA_PATH,
-  OAUTH_PROTECTED_RESOURCE_MCP_METADATA_PATH,
-  OAUTH_PROTECTED_RESOURCE_METADATA_PATH,
-} from "./constants/oauth.js";
+import { OAUTH_AUTHORIZATION_SERVER_METADATA_PATH, OAUTH_PROTECTED_RESOURCE_METADATA_PATH } from "./constants/oauth.js";
 import { createServer } from "./server.js";
 import type { AuthContext } from "./types/auth.js";
 import { authenticateBearerToken, parseBearerToken } from "./utils/auth.js";
@@ -49,11 +45,6 @@ function digestToken(token: string): Buffer {
   return createHmac("sha256", SESSION_TOKEN_DIGEST_KEY).update(token).digest();
 }
 
-function tokenMatches(token: string, expectedDigest: Buffer): boolean {
-  const actualDigest = digestToken(token);
-  return timingSafeEqual(actualDigest, expectedDigest);
-}
-
 async function getAuthenticatedSession(req: Request) {
   const sessionId = req.headers["mcp-session-id"] as string | undefined;
   const token = parseBearerToken(req.headers["authorization"]);
@@ -87,13 +78,14 @@ async function getAuthenticatedSession(req: Request) {
         sessions.delete(sessionId);
         return undefined;
       }
-      session.auth = nextAuth;
+      // The session's client shares this object and must see refreshed credentials.
+      Object.assign(session.auth, nextAuth);
       session.tokenDigest = digestToken(token);
     } catch {
       sessions.delete(sessionId);
       return undefined;
     }
-  } else if (token && !tokenMatches(token, session.tokenDigest)) {
+  } else if (token && !timingSafeEqual(digestToken(token), session.tokenDigest)) {
     return undefined;
   }
 
@@ -101,12 +93,9 @@ async function getAuthenticatedSession(req: Request) {
   return session;
 }
 
-function getProtectedResourceMetadataUrl(): string {
-  return new URL(OAUTH_PROTECTED_RESOURCE_METADATA_PATH, oauthConfig.resource).toString();
-}
-
 function setBearerChallenge(res: Response, error?: string, description?: string) {
-  const params = [`resource_metadata="${getProtectedResourceMetadataUrl()}"`, `resource="${oauthConfig.resource}"`];
+  const metadataUrl = new URL(OAUTH_PROTECTED_RESOURCE_METADATA_PATH, oauthConfig.resource).toString();
+  const params = [`resource_metadata="${metadataUrl}"`, `resource="${oauthConfig.resource}"`];
 
   if (error) {
     params.push(`error="${error}"`);
@@ -190,9 +179,6 @@ setInterval(() => {
   }
 }, SESSION_TTL_MS).unref();
 
-const AUTH_SERVER_METADATA_TTL_MS = 5 * 60 * 1000;
-const AUTH_SERVER_METADATA_TIMEOUT_MS = 10_000;
-
 let authServerMetadataCache: { metadata: unknown; expiresAt: number } | undefined;
 
 async function fetchAuthorizationServerMetadata(): Promise<unknown> {
@@ -204,14 +190,14 @@ async function fetchAuthorizationServerMetadata(): Promise<unknown> {
   try {
     const response = await fetch(oauthConfig.authorizationServerMetadataUrl, {
       headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(AUTH_SERVER_METADATA_TIMEOUT_MS),
+      signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) {
       throw new Error(`Authorization server metadata request failed with HTTP ${response.status}`);
     }
 
     const metadata: unknown = await response.json();
-    authServerMetadataCache = { metadata, expiresAt: now + AUTH_SERVER_METADATA_TTL_MS };
+    authServerMetadataCache = { metadata, expiresAt: now + 5 * 60 * 1000 };
     return metadata;
   } catch (error) {
     // Serve stale metadata rather than failing discovery when AuthKit is
@@ -233,13 +219,13 @@ async function handleAuthorizationServerMetadata(_req: Request, res: Response) {
 }
 
 app.get(OAUTH_AUTHORIZATION_SERVER_METADATA_PATH, handleAuthorizationServerMetadata);
-app.get(OAUTH_AUTHORIZATION_SERVER_MCP_METADATA_PATH, handleAuthorizationServerMetadata);
+app.get("/.well-known/oauth-authorization-server/mcp", handleAuthorizationServerMetadata);
 
 app.get(OAUTH_PROTECTED_RESOURCE_METADATA_PATH, (_req, res) => {
   res.json(getProtectedResourceMetadata(oauthConfig));
 });
 
-app.get(OAUTH_PROTECTED_RESOURCE_MCP_METADATA_PATH, (_req, res) => {
+app.get("/.well-known/oauth-protected-resource/mcp", (_req, res) => {
   res.json(getProtectedResourceMetadata(oauthConfig, getMcpResourceUrl(oauthConfig)));
 });
 
@@ -268,7 +254,7 @@ app.post("/mcp", async (req, res) => {
         return;
       }
       transport = session.transport;
-    } else if (!sessionId && isInitializeRequest(req.body)) {
+    } else if (isInitializeRequest(req.body)) {
       const auth = await authenticateRequest(req, res);
       if (!auth) {
         return;
@@ -278,7 +264,7 @@ app.post("/mcp", async (req, res) => {
       const server = createServer(auth);
 
       transport = new NodeStreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
+        sessionIdGenerator: randomUUID,
         onsessioninitialized: (id: string) => {
           sessions.set(id, { transport, tokenDigest, auth, lastSeen: Date.now() });
         },
@@ -346,6 +332,7 @@ app.get("/health", (_req, res) => {
 });
 
 const PORT = parseInt(process.env.PORT || "3000", 10);
-app.listen(PORT, () => {
-  console.log(`Notra MCP HTTP server listening on port ${PORT}`);
+const listener = app.listen(PORT, () => {
+  const address = listener.address();
+  console.log(`Notra MCP HTTP server listening on port ${typeof address === "object" ? address?.port : PORT}`);
 });

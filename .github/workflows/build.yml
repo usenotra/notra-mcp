@@ -1,0 +1,31 @@
+name: Build
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - name: Check server version matches package.json
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import { SERVER_VERSION } from './build/server.js';
+
+          const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
+          if (SERVER_VERSION !== version) {
+            throw new Error(`SERVER_VERSION (${SERVER_VERSION}) does not match package.json (${version})`);
+          }
+          console.log(`Server and package versions match: ${version}`);
+          NODE

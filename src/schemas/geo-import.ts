@@ -4,7 +4,6 @@ import {
   GEO_COMPETITOR_MAX_SYNONYMS,
   GEO_CSV_IMPORT_MAX_LENGTH,
   GEO_MAX_COMPETITORS,
-  GEO_PROMPT_IMPORT_MAX_ROWS,
 } from "../constants/geo.js";
 import { geoPromptTextSchema, geoShortTextSchema, projectIdSchema } from "./geo-fields.js";
 
@@ -19,7 +18,7 @@ export const geoPromptImportSchema = z
         }),
       )
       .min(1)
-      .max(GEO_PROMPT_IMPORT_MAX_ROWS)
+      .max(500)
       .optional()
       .describe("Structured prompt rows to import"),
     csv: z

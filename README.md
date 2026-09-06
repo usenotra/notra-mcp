@@ -263,3 +263,18 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | Tool              | Description                                                                         |
 | ----------------- | ----------------------------------------------------------------------------------- |
 | `submit_feedback` | Send a bug report, feature request, question or praise to the Notra inbox (no auth) |
+
+## Development
+
+Use Node 22.12+ (Node 22) or Node 24 and the pnpm version pinned in `package.json`:
+
+```sh
+corepack enable
+pnpm install --frozen-lockfile
+pnpm test
+pnpm run test:coverage
+pnpm run typecheck
+pnpm run format:check
+```
+
+Vitest runs directly against the source with Zod compilation enabled. CI runs tests, typechecking, formatting checks, and the build on pull requests and pushes to `main`.

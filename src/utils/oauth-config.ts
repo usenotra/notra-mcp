@@ -4,14 +4,9 @@ import {
   NOTRA_API_AUDIENCE,
   OAUTH_AUTHORIZATION_SERVER_METADATA_PATH,
   OAUTH_SCOPES,
-  OAUTH_JWKS_PATH,
   PRODUCTION_AUTHKIT_DOMAIN,
 } from "../constants/oauth.js";
 import type { OAuthConfig, OAuthProtectedResourceMetadata } from "../types/auth.js";
-
-function buildIssuerUrl(path: string, issuer: string): string {
-  return new URL(path, issuer).toString();
-}
 
 function buildResourceAudiences(resource: string): string[] {
   const audiences = new Set([resource, NOTRA_API_AUDIENCE]);
@@ -39,11 +34,11 @@ export function getOAuthConfig(): OAuthConfig {
 
   return {
     issuer,
-    jwksUrl: buildIssuerUrl(OAUTH_JWKS_PATH, issuer),
+    jwksUrl: new URL("/oauth2/jwks", issuer).toString(),
     clientId: process.env.WORKOS_CLIENT_ID,
     resource,
     resourceAudiences: buildResourceAudiences(resource),
-    authorizationServerMetadataUrl: buildIssuerUrl(OAUTH_AUTHORIZATION_SERVER_METADATA_PATH, issuer),
+    authorizationServerMetadataUrl: new URL(OAUTH_AUTHORIZATION_SERVER_METADATA_PATH, issuer).toString(),
   };
 }
 

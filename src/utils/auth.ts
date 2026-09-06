@@ -95,11 +95,6 @@ export function extractScopes(payload: JWTPayload): string[] {
   return [...new Set([...(scopeClaim ?? []), ...(permissionsClaim ?? [])])];
 }
 
-function getOrganizationId(payload: JWTPayload): string | undefined {
-  const organizationId = payload.org_id;
-  return typeof organizationId === "string" && organizationId.length > 0 ? organizationId : undefined;
-}
-
 // AuthKit does not stamp a resource audience on first-party tokens, so `aud` is
 // optional; when present it must reference this resource server, the Notra API,
 // or the WorkOS client id.
@@ -154,8 +149,8 @@ export async function authenticateBearerToken(token: string, config: OAuthConfig
       throw new AuthError("OAuth token is missing subject");
     }
 
-    const organizationId = getOrganizationId(payload);
-    if (!organizationId) {
+    const organizationId = payload.org_id;
+    if (typeof organizationId !== "string" || organizationId.length === 0) {
       throw new AuthError("OAuth token is missing org_id");
     }
 

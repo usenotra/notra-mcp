@@ -1,6 +1,6 @@
 build/
 node_modules/
-package-lock.json
-bun.lock
+pnpm-lock.yaml
 plans/
 .agents/
+coverage/

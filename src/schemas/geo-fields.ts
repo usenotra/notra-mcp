@@ -1,11 +1,14 @@
 import * as z from "zod";
-import { GEO_DAY_PATTERN, GEO_RESOURCE_ID_PATTERN } from "../constants/geo.js";
 
-export const geoResourceIdSchema = z.string().trim().min(1).regex(new RegExp(GEO_RESOURCE_ID_PATTERN));
+export const geoResourceIdSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .regex(/^[A-Za-z0-9_-]{1,100}$/);
 
 export const projectIdSchema = geoResourceIdSchema.describe("The GEO project ID (see list_projects)");
 
-export const geoDaySchema = z.string().regex(GEO_DAY_PATTERN, "Expected a YYYY-MM-DD date");
+export const geoDaySchema = z.iso.date("Expected a valid YYYY-MM-DD date");
 
 export const geoWindowShape = {
   days: z

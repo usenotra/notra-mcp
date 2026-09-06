@@ -1,5 +1,5 @@
+import "zod/compile";
 import { McpServer } from "@modelcontextprotocol/server";
-import { FEEDBACK_AGENT_CLIENT, FEEDBACK_PRODUCT_NAME, FEEDBACK_URL } from "./constants/feedback.js";
 import { SERVER_INSTRUCTIONS } from "./constants/server.js";
 import { NotraClient } from "./notra-client.js";
 import { registerBrandIdentityTools } from "./tools/brand-identity-tools.js";
@@ -21,7 +21,7 @@ import { registerScheduleTools } from "./tools/schedule-tools.js";
 import { registerSkillTools } from "./tools/skill-tools.js";
 import type { AuthContext } from "./types/auth.js";
 
-const SERVER_VERSION = "1.1.0";
+export const SERVER_VERSION = "1.1.0";
 
 export function createServer(auth: string | AuthContext): McpServer {
   const client = new NotraClient(auth);
@@ -51,9 +51,9 @@ export function createServer(auth: string | AuthContext): McpServer {
   registerGeoAgentReadinessTools(server, client);
   registerGeoTrafficTools(server, client);
   registerFeedbackTools(server, {
-    url: FEEDBACK_URL,
-    productName: FEEDBACK_PRODUCT_NAME,
-    defaults: { agentClient: FEEDBACK_AGENT_CLIENT, toolVersion: SERVER_VERSION },
+    url: "https://api.usenotra.com/v1/feedback/notra",
+    productName: "Notra",
+    defaults: { agentClient: "notra-mcp", toolVersion: SERVER_VERSION },
   });
 
   return server;
