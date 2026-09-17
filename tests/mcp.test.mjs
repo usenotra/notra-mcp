@@ -1,14 +1,16 @@
 import assert from "node:assert/strict";
-import { test } from "vitest";
+import { McpServer } from "@modelcontextprotocol/server";
+import { test, vi } from "vitest";
 import { createServer } from "../src/server.ts";
 import { handleError } from "../src/utils/mcp.ts";
 
 test("every exposed tool explicitly declares all three submission permission hints", async () => {
-  const server = createServer("test-key");
+  const registrations = vi.spyOn(McpServer.prototype, "registerTool");
+  let server;
   try {
-    const tools = Object.entries(server._registeredTools);
-    assert.ok(tools.length > 0);
-    for (const [name, tool] of tools) {
+    server = createServer("test-key");
+    assert.ok(registrations.mock.calls.length > 0);
+    for (const [name, tool] of registrations.mock.calls) {
       for (const hint of ["readOnlyHint", "openWorldHint", "destructiveHint"]) {
         assert.equal(typeof tool.annotations?.[hint], "boolean", `${name} must explicitly declare ${hint}`);
       }
@@ -17,7 +19,8 @@ test("every exposed tool explicitly declares all three submission permission hin
       }
     }
   } finally {
-    await server.close();
+    registrations.mockRestore();
+    await server?.close();
   }
 });
 
