@@ -93,7 +93,7 @@ export function extractScopes(payload: JWTPayload): string[] {
     payload[OAUTH_WORKSPACE_CLAIM] !== undefined ||
     Object.keys(payload).some((key) => key.startsWith(OAUTH_PERMISSION_CLAIM_PREFIX))
   ) {
-    const workspace = payload[OAUTH_WORKSPACE_CLAIM];
+    const workspace = payload[OAUTH_WORKSPACE_CLAIM] ?? payload.org_id;
     if (typeof workspace !== "string" || !workspace.trim()) {
       throw new AuthError("OAuth token has an invalid consent workspace");
     }

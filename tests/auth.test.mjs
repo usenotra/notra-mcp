@@ -114,6 +114,13 @@ test("OAuth verifies signatures and claims; API keys remain delegated to the API
   ]) {
     await assert.rejects(authenticateBearerToken(await sign(claims), config), AuthError);
   }
+  const organizationToken = await sign({ org_id: "workos-org", "urn:notra:access": "read" });
+  const organizationAuth = await authenticateBearerToken(organizationToken, config);
+  assert.equal(organizationAuth.organizationId, "workos-org");
+  assert.equal(organizationAuth.scopes.length, 17);
+  assert.ok(organizationAuth.scopes.includes("traffic.read"));
+  assert.ok(!organizationAuth.scopes.includes("posts.write"));
+
   const consentToken = await sign({
     org_id: undefined,
     "urn:notra:workspace": "local-workspace",
@@ -126,7 +133,7 @@ test("OAuth verifies signatures and claims; API keys remain delegated to the API
   assert.equal(consentAuth.organizationId, "local-workspace");
   assert.deepEqual(consentAuth.scopes, ["posts.read", "scans.read", "scans.write"]);
   for (const claims of [
-    { "urn:notra:permission:posts": "write" },
+    { org_id: undefined, "urn:notra:permission:posts": "write" },
     { "urn:notra:workspace": "", permissions: ["*"] },
     { "urn:notra:workspace": "local-workspace", "urn:notra:permission:posts": "*" },
   ]) {
