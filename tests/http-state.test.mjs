@@ -158,6 +158,39 @@ test("failed token verification invalidates the session", async () => {
   expect(retry.status).toHaveBeenCalledWith(401);
 });
 
+test("both protected resource discovery routes include content, feedback, and GEO scopes", async () => {
+  const resources = [
+    "posts",
+    "brand-identities",
+    "integrations",
+    "schedules",
+    "event-triggers",
+    "chats",
+    "skills",
+    "feedback",
+    "projects",
+    "geo-settings",
+    "prompts",
+    "competitors",
+    "scans",
+    "visibility",
+    "briefs",
+    "agent-readiness",
+    "traffic",
+  ];
+  const scopes = ["offline_access", ...resources.flatMap((resource) => [`${resource}.read`, `${resource}.write`])];
+  for (const suffix of ["", "/mcp"]) {
+    const res = response();
+    await state.routes.get(`GET /.well-known/oauth-protected-resource${suffix}`)({}, res);
+    expect(res.json).toHaveBeenCalledWith({
+      resource: `https://mcp.example.test${suffix}`,
+      authorization_servers: ["https://auth.example.test"],
+      bearer_methods_supported: ["header"],
+      scopes_supported: scopes,
+    });
+  }
+});
+
 test("discovery caches successful metadata and refreshes it after five minutes", async () => {
   const first = { issuer: "https://auth.example.test", authorization_endpoint: "https://auth.example.test/authorize" };
   const next = { ...first, authorization_endpoint: "https://auth.example.test/authorize-v2" };
