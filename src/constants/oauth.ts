@@ -14,12 +14,9 @@ export const NOTRA_API_AUDIENCE = "https://api.usenotra.com";
 export const OAUTH_AUTHORIZATION_SERVER_METADATA_PATH = "/.well-known/oauth-authorization-server";
 export const OAUTH_PROTECTED_RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
 
-// WorkOS rejects custom scopes for CIMD/DCR clients. Notra permissions are
-// selected on its consent screen and signed into the access token instead.
 export const OAUTH_SCOPES = ["openid", "offline_access"] as const;
 export const OAUTH_WORKSPACE_CLAIM = "urn:notra:workspace";
 export const OAUTH_PERMISSION_CLAIM_PREFIX = "urn:notra:permission:";
-// Keep these resource IDs in sync with Notra's API_SCOPE_RESOURCES registry.
 export const OAUTH_PERMISSION_RESOURCES = [
   "posts",
   "brand-identities",
