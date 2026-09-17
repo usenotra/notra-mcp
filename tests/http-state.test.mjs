@@ -158,27 +158,8 @@ test("failed token verification invalidates the session", async () => {
   expect(retry.status).toHaveBeenCalledWith(401);
 });
 
-test("both protected resource discovery routes include content, feedback, and GEO scopes", async () => {
-  const resources = [
-    "posts",
-    "brand-identities",
-    "integrations",
-    "schedules",
-    "event-triggers",
-    "chats",
-    "skills",
-    "feedback",
-    "projects",
-    "geo-settings",
-    "prompts",
-    "competitors",
-    "scans",
-    "visibility",
-    "briefs",
-    "agent-readiness",
-    "traffic",
-  ];
-  const scopes = ["offline_access", ...resources.flatMap((resource) => [`${resource}.read`, `${resource}.write`])];
+test("both protected resource discovery routes request only Connect-supported OAuth scopes", async () => {
+  const scopes = ["openid", "offline_access"];
   for (const suffix of ["", "/mcp"]) {
     const res = response();
     await state.routes.get(`GET /.well-known/oauth-protected-resource${suffix}`)({}, res);

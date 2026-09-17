@@ -15,7 +15,7 @@ test("bearer parsing handles header arrays and rejects missing or split tokens",
 });
 
 test("scope claims merge and deduplicate without granting wildcard for explicit empty scopes", () => {
-  assert.deepEqual(extractScopes({}), ["*"]);
+  assert.deepEqual(extractScopes({}), []);
   assert.deepEqual(extractScopes({ scope: "posts.read posts.write", permissions: ["posts.read", "skills.read", 42] }), [
     "posts.read",
     "posts.write",
@@ -83,7 +83,14 @@ test("OAuth verifies signatures and claims; API keys remain delegated to the API
     clientId: "client-1",
   };
   const sign = (claims = {}, key = privateKey) =>
-    new SignJWT({ iss: issuer, sub: "user-1", org_id: "org-1", exp: Math.floor(Date.now() / 1000) + 300, ...claims })
+    new SignJWT({
+      iss: issuer,
+      aud: config.resource,
+      sub: "user-1",
+      org_id: "org-1",
+      exp: Math.floor(Date.now() / 1000) + 300,
+      ...claims,
+    })
       .setProtectedHeader({ alg: "RS256", kid: "test-key" })
       .sign(key);
   const token = await sign({ scope: "posts.read" });
@@ -98,11 +105,30 @@ test("OAuth verifies signatures and claims; API keys remain delegated to the API
     assert.equal((await authenticateBearerToken(await sign({ aud }), config)).kind, "oauth");
   for (const claims of [
     { aud: "wrong" },
+    { aud: undefined },
     { sub: undefined },
     { org_id: undefined },
     { org_id: "" },
     { org_id: 42 },
     { exp: 1 },
+  ]) {
+    await assert.rejects(authenticateBearerToken(await sign(claims), config), AuthError);
+  }
+  const consentToken = await sign({
+    org_id: undefined,
+    "urn:notra:workspace": "local-workspace",
+    "urn:notra:permission:posts": "read",
+    "urn:notra:permission:scans": "write",
+    scope: "openid offline_access",
+    permissions: ["*"],
+  });
+  const consentAuth = await authenticateBearerToken(consentToken, config);
+  assert.equal(consentAuth.organizationId, "local-workspace");
+  assert.deepEqual(consentAuth.scopes, ["posts.read", "scans.read", "scans.write"]);
+  for (const claims of [
+    { "urn:notra:permission:posts": "write" },
+    { "urn:notra:workspace": "", permissions: ["*"] },
+    { "urn:notra:workspace": "local-workspace", "urn:notra:permission:posts": "*" },
   ]) {
     await assert.rejects(authenticateBearerToken(await sign(claims), config), AuthError);
   }

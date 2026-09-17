@@ -14,42 +14,28 @@ export const NOTRA_API_AUDIENCE = "https://api.usenotra.com";
 export const OAUTH_AUTHORIZATION_SERVER_METADATA_PATH = "/.well-known/oauth-authorization-server";
 export const OAUTH_PROTECTED_RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
 
-// Keep in sync with PUBLIC_API_SCOPES in Notra's shared api-scopes registry,
-// which drives the dashboard's Create API Key picker and API authorization.
-export const OAUTH_SCOPES = [
-  "offline_access",
-  "posts.read",
-  "posts.write",
-  "brand-identities.read",
-  "brand-identities.write",
-  "integrations.read",
-  "integrations.write",
-  "schedules.read",
-  "schedules.write",
-  "event-triggers.read",
-  "event-triggers.write",
-  "chats.read",
-  "chats.write",
-  "skills.read",
-  "skills.write",
-  "feedback.read",
-  "feedback.write",
-  "projects.read",
-  "projects.write",
-  "geo-settings.read",
-  "geo-settings.write",
-  "prompts.read",
-  "prompts.write",
-  "competitors.read",
-  "competitors.write",
-  "scans.read",
-  "scans.write",
-  "visibility.read",
-  "visibility.write",
-  "briefs.read",
-  "briefs.write",
-  "agent-readiness.read",
-  "agent-readiness.write",
-  "traffic.read",
-  "traffic.write",
+// WorkOS rejects custom scopes for CIMD/DCR clients. Notra permissions are
+// selected on its consent screen and signed into the access token instead.
+export const OAUTH_SCOPES = ["openid", "offline_access"] as const;
+export const OAUTH_WORKSPACE_CLAIM = "urn:notra:workspace";
+export const OAUTH_PERMISSION_CLAIM_PREFIX = "urn:notra:permission:";
+// Keep these resource IDs in sync with Notra's API_SCOPE_RESOURCES registry.
+export const OAUTH_PERMISSION_RESOURCES = [
+  "posts",
+  "brand-identities",
+  "integrations",
+  "schedules",
+  "event-triggers",
+  "chats",
+  "skills",
+  "feedback",
+  "projects",
+  "geo-settings",
+  "prompts",
+  "competitors",
+  "scans",
+  "visibility",
+  "briefs",
+  "agent-readiness",
+  "traffic",
 ] as const;

@@ -1,4 +1,9 @@
 import { createRemoteJWKSet, decodeJwt, errors as joseErrors, jwtVerify, type JWTPayload } from "jose";
+import {
+  OAUTH_WORKSPACE_CLAIM,
+  OAUTH_PERMISSION_CLAIM_PREFIX,
+  OAUTH_PERMISSION_RESOURCES,
+} from "../constants/oauth.js";
 import type { AuthContext, OAuthConfig } from "../types/auth.js";
 
 const remoteJwksByUrl = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
@@ -81,26 +86,40 @@ function normalizeScopeValue(rawScopes: unknown): string[] | undefined {
   return undefined;
 }
 
-// Tokens carrying none of the scope-bearing claims are first-party AuthKit user
-// tokens, which get full access (`*`); the union of `scope`/`scp`/`scopes` and
-// `permissions` applies otherwise.
 export function extractScopes(payload: JWTPayload): string[] {
+  if (
+    payload[OAUTH_WORKSPACE_CLAIM] !== undefined ||
+    Object.keys(payload).some((key) => key.startsWith(OAUTH_PERMISSION_CLAIM_PREFIX))
+  ) {
+    const workspace = payload[OAUTH_WORKSPACE_CLAIM];
+    if (typeof workspace !== "string" || !workspace.trim()) {
+      throw new AuthError("OAuth token has an invalid consent workspace");
+    }
+    const scopes: string[] = [];
+    for (const resource of OAUTH_PERMISSION_RESOURCES) {
+      const access = payload[`${OAUTH_PERMISSION_CLAIM_PREFIX}${resource}`];
+      if (access === undefined || access === "none") continue;
+      if (access !== "read" && access !== "write") {
+        throw new AuthError("OAuth token has an invalid permission choice");
+      }
+      scopes.push(`${resource}.read`);
+      if (access === "write") scopes.push(`${resource}.write`);
+    }
+    return scopes;
+  }
   const scopeClaim = normalizeScopeValue(payload.scope ?? payload.scp ?? payload.scopes);
   const permissionsClaim = normalizeScopeValue(payload.permissions);
 
   if (scopeClaim === undefined && permissionsClaim === undefined) {
-    return ["*"];
+    return [];
   }
 
   return [...new Set([...(scopeClaim ?? []), ...(permissionsClaim ?? [])])];
 }
 
-// AuthKit does not stamp a resource audience on first-party tokens, so `aud` is
-// optional; when present it must reference this resource server, the Notra API,
-// or the WorkOS client id.
 export function isAllowedAudience(aud: JWTPayload["aud"], config: OAuthConfig): boolean {
   if (aud === undefined) {
-    return true;
+    return false;
   }
 
   const allowed = new Set(config.resourceAudiences);
@@ -149,9 +168,9 @@ export async function authenticateBearerToken(token: string, config: OAuthConfig
       throw new AuthError("OAuth token is missing subject");
     }
 
-    const organizationId = payload.org_id;
+    const organizationId = payload[OAUTH_WORKSPACE_CLAIM] ?? payload.org_id;
     if (typeof organizationId !== "string" || organizationId.length === 0) {
-      throw new AuthError("OAuth token is missing org_id");
+      throw new AuthError("OAuth token is missing workspace");
     }
 
     return {
