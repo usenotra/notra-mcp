@@ -144,3 +144,24 @@ test("OAuth verifies signatures and claims; API keys remain delegated to the API
     assert.deepEqual(await authenticateBearerToken(key, config), { kind: "apiKey", token: key });
   }
 });
+
+test("access levels expand scopes without broader claims overriding consent", () => {
+  for (const level of ["read", "write", "full"]) {
+    const scopes = extractScopes({
+      "urn:notra:workspace": "workspace-1",
+      "urn:notra:access": level,
+      "urn:notra:permission:posts": "write",
+      permissions: ["*"],
+    });
+    assert.equal(scopes.length, level === "full" ? 34 : 17);
+    assert.equal(scopes.includes("posts.read"), level !== "write");
+    assert.equal(scopes.includes("scans.write"), level !== "read");
+    assert.equal(scopes.includes("traffic.read"), level !== "write");
+    assert.ok(!scopes.includes("*"));
+  }
+  assert.throws(
+    () => extractScopes({ "urn:notra:workspace": "workspace-1", "urn:notra:access": "invalid" }),
+    AuthError,
+  );
+  assert.throws(() => extractScopes({ "urn:notra:access": "full" }), AuthError);
+});

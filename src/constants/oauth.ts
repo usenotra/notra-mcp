@@ -36,3 +36,5 @@ export const OAUTH_PERMISSION_RESOURCES = [
   "agent-readiness",
   "traffic",
 ] as const;
+
+export const OAUTH_ACCESS_CLAIM = "urn:notra:access";

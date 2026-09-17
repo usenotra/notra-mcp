@@ -1,5 +1,6 @@
 import { createRemoteJWKSet, decodeJwt, errors as joseErrors, jwtVerify, type JWTPayload } from "jose";
 import {
+  OAUTH_ACCESS_CLAIM,
   OAUTH_WORKSPACE_CLAIM,
   OAUTH_PERMISSION_CLAIM_PREFIX,
   OAUTH_PERMISSION_RESOURCES,
@@ -88,12 +89,22 @@ function normalizeScopeValue(rawScopes: unknown): string[] | undefined {
 
 export function extractScopes(payload: JWTPayload): string[] {
   if (
+    payload[OAUTH_ACCESS_CLAIM] !== undefined ||
     payload[OAUTH_WORKSPACE_CLAIM] !== undefined ||
     Object.keys(payload).some((key) => key.startsWith(OAUTH_PERMISSION_CLAIM_PREFIX))
   ) {
     const workspace = payload[OAUTH_WORKSPACE_CLAIM];
     if (typeof workspace !== "string" || !workspace.trim()) {
       throw new AuthError("OAuth token has an invalid consent workspace");
+    }
+    const accessLevel = payload[OAUTH_ACCESS_CLAIM];
+    if (accessLevel !== undefined) {
+      if (accessLevel !== "read" && accessLevel !== "write" && accessLevel !== "full") {
+        throw new AuthError("OAuth token has an invalid access level");
+      }
+      return OAUTH_PERMISSION_RESOURCES.flatMap((resource) =>
+        accessLevel === "full" ? [`${resource}.read`, `${resource}.write`] : [`${resource}.${accessLevel}`],
+      );
     }
     const scopes: string[] = [];
     for (const resource of OAUTH_PERMISSION_RESOURCES) {
