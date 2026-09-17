@@ -6,6 +6,7 @@ import { NodeStreamableHTTPServerTransport, toNodeHandler, toWebRequest } from "
 import { createMcpHandler, isInitializeRequest, isLegacyRequest, type AuthInfo } from "@modelcontextprotocol/server";
 import type { Request, Response } from "express";
 import { OAUTH_AUTHORIZATION_SERVER_METADATA_PATH, OAUTH_PROTECTED_RESOURCE_METADATA_PATH } from "./constants/oauth.js";
+import { OPENAI_APPS_CHALLENGE_PATH, OPENAI_APPS_CHALLENGE_TOKEN } from "./constants/openai-apps.js";
 import { createServer } from "./server.js";
 import type { AuthContext } from "./types/auth.js";
 import { authenticateBearerToken, parseBearerToken } from "./utils/auth.js";
@@ -227,6 +228,10 @@ app.get(OAUTH_PROTECTED_RESOURCE_METADATA_PATH, (_req, res) => {
 
 app.get("/.well-known/oauth-protected-resource/mcp", (_req, res) => {
   res.json(getProtectedResourceMetadata(oauthConfig, getMcpResourceUrl(oauthConfig)));
+});
+
+app.get(OPENAI_APPS_CHALLENGE_PATH, (_req, res) => {
+  res.type("text/plain").send(OPENAI_APPS_CHALLENGE_TOKEN);
 });
 
 app.post("/register", (_req, res) => {
