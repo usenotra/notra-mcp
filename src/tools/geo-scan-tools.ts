@@ -4,6 +4,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import type { NotraClient } from "../notra-client.js";
 
 import { handleError } from "../utils/mcp.js";
+import { apiOutputSchema } from "../utils/output-schema.js";
 
 export function registerGeoScanTools(server: McpServer, client: NotraClient) {
   server.registerTool(
@@ -13,6 +14,7 @@ export function registerGeoScanTools(server: McpServer, client: NotraClient) {
         "Trigger a GEO visibility scan. The scan runs asynchronously and checks every enabled prompt against every configured answer engine; poll get_geo_scan with the returned scanId for status, progress, mentions, and safe failure details. This uses AI credits.",
       annotations: { title: "Create GEO Scan", destructiveHint: false },
       inputSchema: createGeoScanSchema,
+      outputSchema: apiOutputSchema("createGeoScan"),
     },
     ({ projectId }) => handleError(() => client.createGeoScan(projectId)),
   );
@@ -24,6 +26,7 @@ export function registerGeoScanTools(server: McpServer, client: NotraClient) {
         "List a project's GEO scans, newest first, with pagination, check totals by engine, and safe failure details",
       annotations: { title: "List GEO Scans", readOnlyHint: true },
       inputSchema: listGeoScansSchema,
+      outputSchema: apiOutputSchema("listGeoScans"),
     },
     ({ projectId, ...params }) => handleError(() => client.listGeoScans(projectId, params)),
   );
@@ -35,6 +38,7 @@ export function registerGeoScanTools(server: McpServer, client: NotraClient) {
         "Get a GEO scan's status, planned and completed checks, mentions and explicit failures by engine, plus safe failure details when the scan failed",
       annotations: { title: "Get GEO Scan", readOnlyHint: true },
       inputSchema: getGeoScanSchema,
+      outputSchema: apiOutputSchema("getGeoScan"),
     },
     ({ projectId, scanId }) => handleError(() => client.getGeoScan(projectId, scanId)),
   );

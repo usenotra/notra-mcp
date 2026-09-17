@@ -12,6 +12,7 @@ import {
   updateFeedbackSchema,
 } from "../schemas/feedback.js";
 import { handleError } from "../utils/mcp.js";
+import { apiOutputSchema } from "../utils/output-schema.js";
 
 /**
  * Registers the `submit_feedback` tool from `@usenotra/geo`. Mirrors the package's own
@@ -48,6 +49,7 @@ export function registerFeedbackInboxTools(server: McpServer, client: NotraClien
         "List feedback your organization received through its feedback URL, MCP servers or SDKs, filtered by triage status, kind or project",
       annotations: { title: "List Feedback", readOnlyHint: true },
       inputSchema: listFeedbackSchema,
+      outputSchema: apiOutputSchema("listFeedback"),
     },
     (params) => handleError(() => client.listFeedback(params)),
   );
@@ -58,6 +60,7 @@ export function registerFeedbackInboxTools(server: McpServer, client: NotraClien
       description: "Get a single feedback entry with its full message, agent metadata and context URL",
       annotations: { title: "Get Feedback", readOnlyHint: true },
       inputSchema: getFeedbackSchema,
+      outputSchema: apiOutputSchema("getFeedback"),
     },
     ({ feedbackId }) => handleError(() => client.getFeedback(feedbackId)),
   );
@@ -68,6 +71,7 @@ export function registerFeedbackInboxTools(server: McpServer, client: NotraClien
       description: "Set the triage status of a feedback entry: new, triaged, resolved or archived",
       annotations: { title: "Update Feedback", destructiveHint: false, idempotentHint: true },
       inputSchema: updateFeedbackSchema,
+      outputSchema: apiOutputSchema("updateFeedback"),
     },
     ({ feedbackId, status }) => handleError(() => client.updateFeedback(feedbackId, { status })),
   );

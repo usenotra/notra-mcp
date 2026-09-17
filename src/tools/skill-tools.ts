@@ -9,6 +9,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
+import { apiOutputSchema } from "../utils/output-schema.js";
 
 export function registerSkillTools(server: McpServer, client: NotraClient) {
   server.registerTool(
@@ -17,6 +18,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
       description: "List reusable writing skills for your organization",
       annotations: { title: "List Skills", readOnlyHint: true },
       inputSchema: listSkillsSchema,
+      outputSchema: apiOutputSchema("listSkills"),
     },
     () => handleError(() => client.listSkills()),
   );
@@ -27,6 +29,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
       description: "Get a single reusable writing skill by name",
       annotations: { title: "Get Skill", readOnlyHint: true },
       inputSchema: getSkillSchema,
+      outputSchema: apiOutputSchema("getSkill"),
     },
     ({ name }) => handleError(() => client.getSkill(name)),
   );
@@ -37,6 +40,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
       description: "Create a reusable writing skill",
       annotations: { title: "Create Skill", destructiveHint: false },
       inputSchema: skillPayloadSchema,
+      outputSchema: apiOutputSchema("createSkill"),
     },
     (params) => handleError(() => client.createSkill(params)),
   );
@@ -47,6 +51,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
       description: "Update a reusable writing skill by name",
       annotations: { title: "Update Skill", destructiveHint: true, idempotentHint: true },
       inputSchema: updateSkillSchema,
+      outputSchema: apiOutputSchema("patchSkill"),
     },
     ({ currentName, ...body }) => handleError(() => client.updateSkill(currentName, body)),
   );
@@ -57,6 +62,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
       description: "Delete a reusable writing skill by name",
       annotations: { title: "Delete Skill", destructiveHint: true, idempotentHint: true },
       inputSchema: deleteSkillSchema,
+      outputSchema: apiOutputSchema("deleteSkill"),
     },
     ({ name }) => handleError(() => client.deleteSkill(name)),
   );

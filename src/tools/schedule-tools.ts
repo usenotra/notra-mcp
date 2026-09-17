@@ -8,6 +8,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
+import { apiOutputSchema } from "../utils/output-schema.js";
 
 export function registerScheduleTools(server: McpServer, client: NotraClient) {
   server.registerTool(
@@ -16,6 +17,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
       description: "List scheduled content generation jobs, optionally filtered by repository IDs",
       annotations: { title: "List Schedules", readOnlyHint: true },
       inputSchema: listSchedulesSchema,
+      outputSchema: apiOutputSchema("listSchedules"),
     },
     ({ repositoryIds }) => handleError(() => client.listSchedules({ repositoryIds })),
   );
@@ -26,6 +28,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
       description: "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger",
       annotations: { title: "Create Schedule", destructiveHint: false },
       inputSchema: schedulePayloadSchema,
+      outputSchema: apiOutputSchema("createSchedule"),
     },
     (params) => handleError(() => client.createSchedule(params)),
   );
@@ -36,6 +39,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
       description: "Update an existing content generation schedule",
       annotations: { title: "Update Schedule", destructiveHint: true, idempotentHint: true },
       inputSchema: updateScheduleSchema,
+      outputSchema: apiOutputSchema("updateSchedule"),
     },
     ({ scheduleId, ...body }) => handleError(() => client.updateSchedule(scheduleId, body)),
   );
@@ -46,6 +50,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
       description: "Delete a content generation schedule by its ID",
       annotations: { title: "Delete Schedule", destructiveHint: true, idempotentHint: true },
       inputSchema: deleteScheduleSchema,
+      outputSchema: apiOutputSchema("deleteSchedule"),
     },
     ({ scheduleId }) => handleError(() => client.deleteSchedule(scheduleId)),
   );

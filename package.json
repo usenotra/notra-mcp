@@ -17,7 +17,9 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "check:api-coverage": "pnpm run build && node scripts/check-api-coverage.mjs"
+    "check:api-coverage": "pnpm run build && node scripts/check-api-coverage.mjs",
+    "generate:output-schemas": "node scripts/generate-output-schemas.mjs",
+    "check:output-schemas": "node scripts/generate-output-schemas.mjs --check"
   },
   "files": [
     "build"

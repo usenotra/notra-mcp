@@ -57,3 +57,11 @@ export const postChatMessageSchema = z.object({
   chatId: z.string().min(1).describe("The chat ID to send a message to"),
   ...sendChatMessageSchema.shape,
 });
+
+export const chatStreamOutputSchema = z.object({
+  chatId: z
+    .string()
+    .nullable()
+    .describe("ID of the chat the reply belongs to, null when the stream did not report one"),
+  text: z.string().describe("Assistant reply text"),
+});

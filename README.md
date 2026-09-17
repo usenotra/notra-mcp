@@ -310,4 +310,6 @@ pnpm run typecheck
 pnpm run format:check
 ```
 
+Tool output schemas in `src/schemas/api-responses.ts` are generated from the Notra OpenAPI spec. Run `pnpm run generate:output-schemas` after the API changes; CI fails when the file is stale.
+
 Vitest runs directly against the source with Zod compilation enabled. CI runs tests, typechecking, formatting checks, and the build on pull requests and pushes to `main`.
