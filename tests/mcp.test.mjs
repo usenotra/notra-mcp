@@ -1,6 +1,25 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
+import { createServer } from "../src/server.ts";
 import { handleError } from "../src/utils/mcp.ts";
+
+test("every exposed tool explicitly declares all three submission permission hints", async () => {
+  const server = createServer("test-key");
+  try {
+    const tools = Object.entries(server._registeredTools);
+    assert.ok(tools.length > 0);
+    for (const [name, tool] of tools) {
+      for (const hint of ["readOnlyHint", "openWorldHint", "destructiveHint"]) {
+        assert.equal(typeof tool.annotations?.[hint], "boolean", `${name} must explicitly declare ${hint}`);
+      }
+      if (tool.annotations.readOnlyHint) {
+        assert.equal(tool.annotations.destructiveHint, false, `${name} cannot be both read-only and destructive`);
+      }
+    }
+  } finally {
+    await server.close();
+  }
+});
 
 test("object API responses include both MCP text and structured content", async () => {
   const data = { posts: [{ id: "post-1" }] };

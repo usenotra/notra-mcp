@@ -16,7 +16,7 @@ export function registerProjectTools(server: McpServer, client: NotraClient) {
     "list_projects",
     {
       description: "List the organization's GEO projects. Most GEO tools take a projectId; call this first to find it.",
-      annotations: { title: "List Projects", readOnlyHint: true },
+      annotations: { title: "List Projects", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: listProjectsSchema,
     },
     () => handleError(() => client.listProjects()),
@@ -26,7 +26,7 @@ export function registerProjectTools(server: McpServer, client: NotraClient) {
     "get_project",
     {
       description: "Get a single GEO project by its ID",
-      annotations: { title: "Get Project", readOnlyHint: true },
+      annotations: { title: "Get Project", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: getProjectSchema,
     },
     ({ projectId }) => handleError(() => client.getProject(projectId)),
@@ -36,7 +36,7 @@ export function registerProjectTools(server: McpServer, client: NotraClient) {
     "create_project",
     {
       description: "Create a new GEO project, optionally linked to a brand identity",
-      annotations: { title: "Create Project", destructiveHint: false },
+      annotations: { title: "Create Project", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
       inputSchema: createProjectSchema,
     },
     (params) => handleError(() => client.createProject(params)),
@@ -46,7 +46,13 @@ export function registerProjectTools(server: McpServer, client: NotraClient) {
     "update_project",
     {
       description: "Rename a GEO project or relink its brand identity",
-      annotations: { title: "Update Project", destructiveHint: true, idempotentHint: true },
+      annotations: {
+        title: "Update Project",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
       inputSchema: updateProjectSchema,
     },
     ({ projectId, ...body }) => handleError(() => client.updateProject(projectId, body)),
@@ -57,7 +63,13 @@ export function registerProjectTools(server: McpServer, client: NotraClient) {
     {
       description:
         "Delete a GEO project and its settings, prompts, sequences, competitors, scans, checks, and reports. This cannot be undone. The organization's last project cannot be deleted.",
-      annotations: { title: "Delete Project", destructiveHint: true, idempotentHint: true },
+      annotations: {
+        title: "Delete Project",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
       inputSchema: deleteProjectSchema,
     },
     ({ projectId }) => handleError(() => client.deleteProject(projectId)),

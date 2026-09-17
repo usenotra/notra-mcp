@@ -19,7 +19,7 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     {
       description:
         "Get a compact GEO diagnosis across visibility, sentiment, scan changes, competitors, content gaps, shelf sources, readiness and AI traffic, with deterministic next actions",
-      annotations: { title: "Get GEO Snapshot", readOnlyHint: true },
+      annotations: { title: "Get GEO Snapshot", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: getGeoSnapshotSchema,
     },
     ({ projectId, ...window }) => handleError(() => loadGeoSnapshot(client, projectId, window)),
@@ -29,7 +29,7 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     "get_geo_changes",
     {
       description: "Compare the two latest GEO scans and list gained or lost mentions, positions and citations",
-      annotations: { title: "Get GEO Changes", readOnlyHint: true },
+      annotations: { title: "Get GEO Changes", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: getGeoChangesSchema,
     },
     ({ projectId }) => handleError(() => client.getGeoChanges(projectId)),
@@ -40,7 +40,12 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     {
       description:
         "Get compact historical checks for one prompt. Use a returned check id with get_geo_prompt_result_detail for the full answer.",
-      annotations: { title: "Get GEO Prompt History", readOnlyHint: true },
+      annotations: {
+        title: "Get GEO Prompt History",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
       inputSchema: getGeoPromptHistorySchema,
     },
     ({ projectId, promptId, scanId }) => handleError(() => client.getGeoPromptHistory(projectId, promptId, scanId)),
@@ -50,7 +55,7 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     "get_geo_sentiment",
     {
       description: "Get aggregate GEO sentiment, engine breakdowns, timeseries and previous-period comparison",
-      annotations: { title: "Get GEO Sentiment", readOnlyHint: true },
+      annotations: { title: "Get GEO Sentiment", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: getGeoSentimentSchema,
     },
     ({ projectId, ...window }) => handleError(() => client.getGeoSentiment(projectId, window)),
@@ -60,7 +65,12 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     "get_geo_sentiment_analysis",
     {
       description: "Get the stored thematic GEO sentiment analysis without starting a billed analysis run",
-      annotations: { title: "Get GEO Sentiment Analysis", readOnlyHint: true },
+      annotations: {
+        title: "Get GEO Sentiment Analysis",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
       inputSchema: getGeoSentimentAnalysisSchema,
     },
     ({ projectId, ...window }) => handleError(() => client.getGeoSentimentAnalysis(projectId, window)),
@@ -70,7 +80,12 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     "list_geo_sentiment_evidence",
     {
       description: "List a bounded page of full answers used as sentiment evidence",
-      annotations: { title: "List GEO Sentiment Evidence", readOnlyHint: true },
+      annotations: {
+        title: "List GEO Sentiment Evidence",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
       inputSchema: listGeoSentimentEvidenceSchema,
     },
     ({ projectId, ...params }) => handleError(() => client.listGeoSentimentEvidence(projectId, params)),
@@ -80,7 +95,12 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     "list_geo_shelf_sources",
     {
       description: "List cited and manually tracked GEO shelf sources, including placements and opportunity state",
-      annotations: { title: "List GEO Shelf Sources", readOnlyHint: true },
+      annotations: {
+        title: "List GEO Shelf Sources",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
       inputSchema: listGeoShelfSourcesSchema,
     },
     ({ projectId, ...params }) => handleError(() => client.listGeoShelfSources(projectId, params)),

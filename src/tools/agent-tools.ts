@@ -9,7 +9,7 @@ export function registerAgentTools(server: McpServer, client: NotraClient) {
     {
       description:
         "List durable agent sessions started from the Notra dashboard or the agent API, with their status and linked chat ID",
-      annotations: { title: "List Agent Sessions", readOnlyHint: true },
+      annotations: { title: "List Agent Sessions", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: listAgentChatsSchema,
     },
     async (params) => {

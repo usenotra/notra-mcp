@@ -11,7 +11,7 @@ export function registerGeoScanTools(server: McpServer, client: NotraClient) {
     {
       description:
         "Trigger a GEO visibility scan. The scan runs asynchronously and checks every enabled prompt against every configured answer engine; poll get_geo_scan with the returned scanId for status, progress, mentions, and safe failure details. This uses AI credits.",
-      annotations: { title: "Create GEO Scan", destructiveHint: false },
+      annotations: { title: "Create GEO Scan", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
       inputSchema: createGeoScanSchema,
     },
     ({ projectId }) => handleError(() => client.createGeoScan(projectId)),
@@ -22,7 +22,7 @@ export function registerGeoScanTools(server: McpServer, client: NotraClient) {
     {
       description:
         "List a project's GEO scans, newest first, with pagination, check totals by engine, and safe failure details",
-      annotations: { title: "List GEO Scans", readOnlyHint: true },
+      annotations: { title: "List GEO Scans", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: listGeoScansSchema,
     },
     ({ projectId, ...params }) => handleError(() => client.listGeoScans(projectId, params)),
@@ -33,7 +33,7 @@ export function registerGeoScanTools(server: McpServer, client: NotraClient) {
     {
       description:
         "Get a GEO scan's status, planned and completed checks, mentions and explicit failures by engine, plus safe failure details when the scan failed",
-      annotations: { title: "Get GEO Scan", readOnlyHint: true },
+      annotations: { title: "Get GEO Scan", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: getGeoScanSchema,
     },
     ({ projectId, scanId }) => handleError(() => client.getGeoScan(projectId, scanId)),

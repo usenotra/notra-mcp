@@ -48,7 +48,7 @@ export function registerWorkspaceTools(server: McpServer, client: NotraClient) {
     {
       description:
         "Show the current Notra workspace and authenticated account. Use this to confirm which workspace this MCP connection operates against.",
-      annotations: { title: "Who Am I", readOnlyHint: true },
+      annotations: { title: "Who Am I", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: whoAmIInputSchema,
     },
     async () => {
@@ -61,7 +61,7 @@ export function registerWorkspaceTools(server: McpServer, client: NotraClient) {
     {
       description:
         "List accepted and pending Notra workspaces available to the authenticated account. Organization API keys only return their current workspace.",
-      annotations: { title: "List Workspaces", readOnlyHint: true },
+      annotations: { title: "List Workspaces", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: listWorkspacesInputSchema,
     },
     async () => {

@@ -14,7 +14,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     "list_schedules",
     {
       description: "List scheduled content generation jobs, optionally filtered by repository IDs",
-      annotations: { title: "List Schedules", readOnlyHint: true },
+      annotations: { title: "List Schedules", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: listSchedulesSchema,
     },
     ({ repositoryIds }) => handleError(() => client.listSchedules({ repositoryIds })),
@@ -24,7 +24,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     "create_schedule",
     {
       description: "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger",
-      annotations: { title: "Create Schedule", destructiveHint: false },
+      annotations: { title: "Create Schedule", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
       inputSchema: schedulePayloadSchema,
     },
     (params) => handleError(() => client.createSchedule(params)),
@@ -34,7 +34,13 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     "update_schedule",
     {
       description: "Update an existing content generation schedule",
-      annotations: { title: "Update Schedule", destructiveHint: true, idempotentHint: true },
+      annotations: {
+        title: "Update Schedule",
+        readOnlyHint: false,
+        openWorldHint: true,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
       inputSchema: updateScheduleSchema,
     },
     ({ scheduleId, ...body }) => handleError(() => client.updateSchedule(scheduleId, body)),
@@ -44,7 +50,13 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     "delete_schedule",
     {
       description: "Delete a content generation schedule by its ID",
-      annotations: { title: "Delete Schedule", destructiveHint: true, idempotentHint: true },
+      annotations: {
+        title: "Delete Schedule",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
       inputSchema: deleteScheduleSchema,
     },
     ({ scheduleId }) => handleError(() => client.deleteSchedule(scheduleId)),

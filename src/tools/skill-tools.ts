@@ -15,7 +15,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     "list_skills",
     {
       description: "List reusable writing skills for your organization",
-      annotations: { title: "List Skills", readOnlyHint: true },
+      annotations: { title: "List Skills", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: listSkillsSchema,
     },
     () => handleError(() => client.listSkills()),
@@ -25,7 +25,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     "get_skill",
     {
       description: "Get a single reusable writing skill by name",
-      annotations: { title: "Get Skill", readOnlyHint: true },
+      annotations: { title: "Get Skill", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: getSkillSchema,
     },
     ({ name }) => handleError(() => client.getSkill(name)),
@@ -35,7 +35,7 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     "create_skill",
     {
       description: "Create a reusable writing skill",
-      annotations: { title: "Create Skill", destructiveHint: false },
+      annotations: { title: "Create Skill", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
       inputSchema: skillPayloadSchema,
     },
     (params) => handleError(() => client.createSkill(params)),
@@ -45,7 +45,13 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     "update_skill",
     {
       description: "Update a reusable writing skill by name",
-      annotations: { title: "Update Skill", destructiveHint: true, idempotentHint: true },
+      annotations: {
+        title: "Update Skill",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
       inputSchema: updateSkillSchema,
     },
     ({ currentName, ...body }) => handleError(() => client.updateSkill(currentName, body)),
@@ -55,7 +61,13 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     "delete_skill",
     {
       description: "Delete a reusable writing skill by name",
-      annotations: { title: "Delete Skill", destructiveHint: true, idempotentHint: true },
+      annotations: {
+        title: "Delete Skill",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
       inputSchema: deleteSkillSchema,
     },
     ({ name }) => handleError(() => client.deleteSkill(name)),
