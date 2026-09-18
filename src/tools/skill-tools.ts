@@ -37,7 +37,8 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
   server.registerTool(
     "create_skill",
     {
-      description: "Create a reusable writing skill",
+      description:
+        "Save a reusable writing skill directly through the API. Prefer this over asking a chat agent to create a skill. Provide its name, description, and full instructions; report it saved only after this tool succeeds. Use get_skill to verify or retrieve the saved content.",
       annotations: { title: "Create Skill", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
       inputSchema: skillPayloadSchema,
       outputSchema: apiOutputSchema("createSkill"),
