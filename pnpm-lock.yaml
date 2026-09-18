@@ -18,8 +18,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       '@usenotra/geo':
-        specifier: ^0.3.0
-        version: 0.3.0(zod@4.5.4)
+        specifier: ^0.5.0
+        version: 0.5.0(zod@4.5.4)
       dotenv:
         specifier: ^17.3.1
         version: 17.4.2
@@ -475,8 +475,8 @@ packages:
   '@types/serve-static@2.2.0':
     resolution: {integrity: sha512-8mam4H1NHLtu7nmtalF7eyBH14QyOASmcxHhSfEoRyr0nP/YdoesEtU+uSRvMe96TW/HPTtkoKqQLl53N7UXMQ==}
 
-  '@usenotra/geo@0.3.0':
-    resolution: {integrity: sha512-8l4NKUXwtdoAqP8+ZfB95yjpjSpexBgewCsPYpUAUZ2wY/CFvIX8HHHl0GRh51+KsKe0+1deJdmZsTEqi4Qxjg==}
+  '@usenotra/geo@0.5.0':
+    resolution: {integrity: sha512-SUjbORLQ444fkvqRIMW9JeN2sC2wU6/iAzr3VtJet69ACnhlyprsmb35BjBPgqYDDEE4F4TVv0nqkJyyqGu3kA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^4.0.0
@@ -1562,7 +1562,7 @@ snapshots:
       '@types/http-errors': 2.0.5
       '@types/node': 25.9.4
 
-  '@usenotra/geo@0.3.0(zod@4.5.4)':
+  '@usenotra/geo@0.5.0(zod@4.5.4)':
     optionalDependencies:
       zod: 4.5.4
 

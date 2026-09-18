@@ -47,7 +47,7 @@
     "@modelcontextprotocol/express": "^2.0.0",
     "@modelcontextprotocol/node": "^2.0.0",
     "@modelcontextprotocol/server": "^2.0.0",
-    "@usenotra/geo": "^0.3.0",
+    "@usenotra/geo": "^0.5.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "jose": "^6.2.3",
