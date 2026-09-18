@@ -1,0 +1,19 @@
+tests/http-e2e.test.mjs
+  s_03348ef4d79dba::t_f5d94415aa8e97 42-47,49-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "889222935612a42510426675d1790748d85ef058",
+  "prompts": {},
+  "sessions": {
+    "s_03348ef4d79dba": {
+      "agent_id": {
+        "tool": "amp",
+        "id": "TU-034QmOVY8Y8ZrGLZw7sy2q",
+        "model": "unknown"
+      },
+      "human_author": "Jan Burzinski <156842394+janburzinski@users.noreply.github.com>"
+    }
+  }
+}
