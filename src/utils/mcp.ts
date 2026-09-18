@@ -2,7 +2,7 @@ export async function handleError<T>(fn: () => Promise<T>) {
   try {
     const data = await fn();
     const result = {
-      content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+      content: [{ type: "text" as const, text: JSON.stringify(data) }],
     };
 
     if (typeof data === "object" && data !== null && !Array.isArray(data)) {

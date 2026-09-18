@@ -1,5 +1,6 @@
 import { getGeoSettingsSchema, updateGeoSettingsSchema } from "../schemas/geo-settings.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 
@@ -13,8 +14,8 @@ export function registerGeoSettingsTools(server: McpServer, client: NotraClient)
       description:
         "Get a project's GEO settings: tracked company name, aliases, languages, answer engines and the recurring scan configuration",
       annotations: { title: "Get GEO Settings", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: getGeoSettingsSchema,
-      outputSchema: apiOutputSchema("getGeoSettings"),
+      inputSchema: shareJsonSchema(getGeoSettingsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoSettings")),
     },
     ({ projectId }) => handleError(() => client.getGeoSettings(projectId)),
   );
@@ -31,8 +32,8 @@ export function registerGeoSettingsTools(server: McpServer, client: NotraClient)
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: updateGeoSettingsSchema,
-      outputSchema: apiOutputSchema("updateGeoSettings"),
+      inputSchema: shareJsonSchema(updateGeoSettingsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("updateGeoSettings")),
     },
     ({ projectId, ...body }) => handleError(() => client.updateGeoSettings(projectId, body)),
   );

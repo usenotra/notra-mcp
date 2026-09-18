@@ -1,5 +1,6 @@
 export interface RequestTimeoutOptions {
   timeoutMs?: number;
+  signal?: AbortSignal;
 }
 
 export interface RequestOptions<
@@ -8,3 +9,7 @@ export interface RequestOptions<
   params?: object;
   body?: B;
 }
+
+export type RequestScope = {
+  signal?: AbortSignal;
+};

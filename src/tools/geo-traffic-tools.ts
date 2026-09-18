@@ -9,6 +9,7 @@ import {
   rotateGeoIngestTokenSchema,
 } from "../schemas/geo-traffic.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 
@@ -27,8 +28,8 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoTrafficOverviewSchema,
-      outputSchema: apiOutputSchema("getGeoTrafficOverview"),
+      inputSchema: shareJsonSchema(getGeoTrafficOverviewSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoTrafficOverview")),
     },
     ({ projectId, ...params }) => handleError(() => client.getGeoTrafficOverview(projectId, params)),
   );
@@ -39,8 +40,8 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
       description:
         "Get the most recent individual requests from AI crawlers and referrals. This endpoint has no time window; use limit to bound it.",
       annotations: { title: "Get AI Traffic Log", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: getGeoTrafficLogSchema,
-      outputSchema: apiOutputSchema("getGeoTrafficLog"),
+      inputSchema: shareJsonSchema(getGeoTrafficLogSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoTrafficLog")),
     },
     ({ projectId, ...params }) => handleError(() => client.getGeoTrafficLog(projectId, params)),
   );
@@ -56,8 +57,8 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: listGeoTrafficJourneysSchema,
-      outputSchema: apiOutputSchema("listGeoTrafficJourneys"),
+      inputSchema: shareJsonSchema(listGeoTrafficJourneysSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoTrafficJourneys")),
     },
     ({ projectId, ...params }) => handleError(() => client.listGeoTrafficJourneys(projectId, params)),
   );
@@ -72,8 +73,8 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoTrafficJourneySchema,
-      outputSchema: apiOutputSchema("getGeoTrafficJourney"),
+      inputSchema: shareJsonSchema(getGeoTrafficJourneySchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoTrafficJourney")),
     },
     ({ projectId, journeyId, ...params }) =>
       handleError(() => client.getGeoTrafficJourney(projectId, journeyId, params)),
@@ -85,8 +86,8 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
       description:
         "List the pages AI crawlers and referrals read most, with the previous window's count for comparison",
       annotations: { title: "List AI Traffic Pages", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listGeoTrafficPagesSchema,
-      outputSchema: apiOutputSchema("listGeoTrafficPages"),
+      inputSchema: shareJsonSchema(listGeoTrafficPagesSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoTrafficPages")),
     },
     ({ projectId, ...params }) => handleError(() => client.listGeoTrafficPages(projectId, params)),
   );
@@ -102,8 +103,8 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoIngestSetupSchema,
-      outputSchema: apiOutputSchema("getGeoIngestSetup"),
+      inputSchema: shareJsonSchema(getGeoIngestSetupSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoIngestSetup")),
     },
     () => handleError(() => client.getGeoIngestSetup()),
   );
@@ -119,8 +120,8 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: issueGeoIngestTokenSchema,
-      outputSchema: apiOutputSchema("issueGeoIngestToken"),
+      inputSchema: shareJsonSchema(issueGeoIngestTokenSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("issueGeoIngestToken")),
     },
     ({ projectId }) => handleError(() => client.issueGeoIngestToken(projectId)),
   );
@@ -136,8 +137,8 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
         openWorldHint: false,
         destructiveHint: true,
       },
-      inputSchema: rotateGeoIngestTokenSchema,
-      outputSchema: apiOutputSchema("rotateGeoIngestToken"),
+      inputSchema: shareJsonSchema(rotateGeoIngestTokenSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("rotateGeoIngestToken")),
     },
     ({ projectId }) => handleError(() => client.rotateGeoIngestToken(projectId)),
   );

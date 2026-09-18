@@ -1,4 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import type { NotraClient } from "../notra-client.js";
 import {
   listWorkspacesInputSchema,
@@ -54,8 +55,8 @@ export function registerWorkspaceTools(server: McpServer, client: NotraClient) {
       description:
         "Show the current Notra workspace and authenticated account. Use this to confirm which workspace this MCP connection operates against.",
       annotations: { title: "Who Am I", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: whoAmIInputSchema,
-      outputSchema: whoAmIOutputSchema,
+      inputSchema: shareJsonSchema(whoAmIInputSchema),
+      outputSchema: shareJsonSchema(whoAmIOutputSchema),
     },
     async () => {
       return handleError(() => getWhoAmI(client));
@@ -68,8 +69,8 @@ export function registerWorkspaceTools(server: McpServer, client: NotraClient) {
       description:
         "List accepted and pending Notra workspaces available to the authenticated account. Organization API keys only return their current workspace.",
       annotations: { title: "List Workspaces", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listWorkspacesInputSchema,
-      outputSchema: listWorkspacesOutputSchema,
+      inputSchema: shareJsonSchema(listWorkspacesInputSchema),
+      outputSchema: shareJsonSchema(listWorkspacesOutputSchema),
     },
     async () => {
       return handleError(async () => projectWorkspaceContext(await client.getWorkspaceContext(true)));

@@ -63,7 +63,7 @@ test("whoami stays focused on the current workspace", async () => {
 
   assert.equal(tool.annotations.readOnlyHint, true);
   assert.deepEqual(await tool.handler({}), {
-    content: [{ type: "text", text: JSON.stringify(whoami, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(whoami) }],
     structuredContent: whoami,
   });
 });
@@ -87,7 +87,7 @@ test("list_workspaces exposes accepted and pending workspace discovery", async (
 
   assert.equal(tool.annotations.readOnlyHint, true);
   assert.deepEqual(await tool.handler({}), {
-    content: [{ type: "text", text: JSON.stringify(expected, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(expected) }],
     structuredContent: expected,
   });
 });

@@ -158,7 +158,7 @@ async function mapMethodsToTools(registeredTools) {
   ];
   for (const file of files) {
     for (const fn of splitTopLevelFunctions(await readFile(file, "utf8"))) {
-      const blocks = fn.body.split(/registerTool\(\s*"/).slice(1);
+      const blocks = fn.body.split(/\.registerTool\(\s*"/).slice(1);
       if (blocks.length === 0) {
         if (!helpers.has(fn.name)) helpers.set(fn.name, []);
         helpers.get(fn.name).push(fn.body);

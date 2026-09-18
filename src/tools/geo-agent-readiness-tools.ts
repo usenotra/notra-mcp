@@ -1,5 +1,6 @@
 import { getGeoAgentReadinessSchema, startGeoAgentReadinessScanSchema } from "../schemas/geo-agent-readiness.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 
@@ -13,8 +14,8 @@ export function registerGeoAgentReadinessTools(server: McpServer, client: NotraC
       description:
         "Get the latest agent readiness report for the project's website: score, failed/partial checks with recommendations, any scan still in flight, and the score history. Never starts a scan.",
       annotations: { title: "Get Agent Readiness", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: getGeoAgentReadinessSchema,
-      outputSchema: apiOutputSchema("getGeoAgentReadiness"),
+      inputSchema: shareJsonSchema(getGeoAgentReadinessSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoAgentReadiness")),
     },
     ({ projectId }) => handleError(() => client.getGeoAgentReadiness(projectId)),
   );
@@ -30,8 +31,8 @@ export function registerGeoAgentReadinessTools(server: McpServer, client: NotraC
         openWorldHint: true,
         destructiveHint: false,
       },
-      inputSchema: startGeoAgentReadinessScanSchema,
-      outputSchema: apiOutputSchema("startGeoAgentReadinessScan"),
+      inputSchema: shareJsonSchema(startGeoAgentReadinessScanSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("startGeoAgentReadinessScan")),
     },
     ({ projectId }) => handleError(() => client.startGeoAgentReadinessScan(projectId)),
   );

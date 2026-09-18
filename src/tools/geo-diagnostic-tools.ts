@@ -1,4 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 import {
@@ -22,8 +23,8 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
       description:
         "Get a compact GEO diagnosis across visibility, sentiment, scan changes, competitors, content gaps, shelf sources, readiness and AI traffic, with deterministic next actions",
       annotations: { title: "Get GEO Snapshot", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: getGeoSnapshotSchema,
-      outputSchema: geoSnapshotOutputSchema,
+      inputSchema: shareJsonSchema(getGeoSnapshotSchema),
+      outputSchema: shareJsonSchema(geoSnapshotOutputSchema),
     },
     ({ projectId, ...window }) => handleError(() => loadGeoSnapshot(client, projectId, window)),
   );
@@ -33,8 +34,8 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     {
       description: "Compare the two latest GEO scans and list gained or lost mentions, positions and citations",
       annotations: { title: "Get GEO Changes", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: getGeoChangesSchema,
-      outputSchema: apiOutputSchema("listGeoChanges"),
+      inputSchema: shareJsonSchema(getGeoChangesSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoChanges")),
     },
     ({ projectId }) => handleError(() => client.getGeoChanges(projectId)),
   );
@@ -50,8 +51,8 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoPromptHistorySchema,
-      outputSchema: apiOutputSchema("getGeoPromptHistory"),
+      inputSchema: shareJsonSchema(getGeoPromptHistorySchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoPromptHistory")),
     },
     ({ projectId, promptId, scanId }) => handleError(() => client.getGeoPromptHistory(projectId, promptId, scanId)),
   );
@@ -61,8 +62,8 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     {
       description: "Get aggregate GEO sentiment, engine breakdowns, timeseries and previous-period comparison",
       annotations: { title: "Get GEO Sentiment", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: getGeoSentimentSchema,
-      outputSchema: apiOutputSchema("getGeoSentiment"),
+      inputSchema: shareJsonSchema(getGeoSentimentSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoSentiment")),
     },
     ({ projectId, ...window }) => handleError(() => client.getGeoSentiment(projectId, window)),
   );
@@ -77,8 +78,8 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoSentimentAnalysisSchema,
-      outputSchema: apiOutputSchema("getGeoSentimentAnalysis"),
+      inputSchema: shareJsonSchema(getGeoSentimentAnalysisSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoSentimentAnalysis")),
     },
     ({ projectId, ...window }) => handleError(() => client.getGeoSentimentAnalysis(projectId, window)),
   );
@@ -93,8 +94,8 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: listGeoSentimentEvidenceSchema,
-      outputSchema: apiOutputSchema("listGeoSentimentEvidence"),
+      inputSchema: shareJsonSchema(listGeoSentimentEvidenceSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoSentimentEvidence")),
     },
     ({ projectId, ...params }) => handleError(() => client.listGeoSentimentEvidence(projectId, params)),
   );
@@ -109,8 +110,8 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: listGeoShelfSourcesSchema,
-      outputSchema: apiOutputSchema("listGeoShelfSources"),
+      inputSchema: shareJsonSchema(listGeoShelfSourcesSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoShelfSources")),
     },
     ({ projectId, ...params }) => handleError(() => client.listGeoShelfSources(projectId, params)),
   );

@@ -109,6 +109,27 @@ The issuer is `https://{WORKOS_AUTHKIT_DOMAIN}` and must match the `iss` claim i
 
 When `NODE_ENV=development`, the default AuthKit domain is `essential-berry-67-development-2.authkit.app`; production defaults to `oauth.usenotra.com`. `auth.usenotra.com` is the WorkOS Authentication API domain and serves none of the OAuth endpoints, so it does not work here.
 
+Legacy 2025 sessions expire after 30 minutes of inactivity. Each OAuth user or API key can hold `NOTRA_MCP_MAX_SESSIONS_PER_PRINCIPAL` sessions (default `50`); beyond that, its own least recently used session closes. When the server holds `NOTRA_MCP_MAX_SESSIONS` sessions (default `1000`), new sessions are rejected with HTTP 503 and `Retry-After` instead of closing other users' sessions.
+
+## Toolsets
+
+All 97 tools are exposed by default, which costs roughly 20k tokens of agent context. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+
+| Toolset   | Tools                                                                                                           |
+| --------- | --------------------------------------------------------------------------------------------------------------- |
+| `content` | Posts, brand identities, integrations, schedules, event triggers, chats, agent sessions, skills, feedback inbox |
+| `geo`     | Projects and every GEO tool                                                                                     |
+
+Workspace tools and `submit_feedback` are always available.
+
+```bash
+NOTRA_MCP_TOOLSETS=content npx -y @usenotra/mcp
+```
+
+```text
+https://mcp.usenotra.com/mcp?toolsets=geo
+```
+
 ## Tools
 
 ### Workspace

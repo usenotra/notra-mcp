@@ -1,4 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import type { NotraClient } from "../notra-client.js";
 import {
   createEventTriggerSchema,
@@ -17,8 +18,8 @@ export function registerEventTriggerTools(server: McpServer, client: NotraClient
       description:
         "List event triggers that generate content automatically from GitHub releases or pushes. repositoryMap labels each targeted GitHub integration ID with its owner/repo.",
       annotations: { title: "List Event Triggers", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listEventTriggersSchema,
-      outputSchema: apiOutputSchema("listEventTriggers"),
+      inputSchema: shareJsonSchema(listEventTriggersSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listEventTriggers")),
     },
     (params) => handleError(() => client.listEventTriggers(params)),
   );
@@ -28,8 +29,8 @@ export function registerEventTriggerTools(server: McpServer, client: NotraClient
     {
       description: "Get a single event trigger by its ID",
       annotations: { title: "Get Event Trigger", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: getEventTriggerSchema,
-      outputSchema: apiOutputSchema("getEventTrigger"),
+      inputSchema: shareJsonSchema(getEventTriggerSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getEventTrigger")),
     },
     ({ triggerId }) => handleError(() => client.getEventTrigger(triggerId)),
   );
@@ -40,8 +41,8 @@ export function registerEventTriggerTools(server: McpServer, client: NotraClient
       description:
         "Create an event trigger that generates content whenever a GitHub release or push happens in the targeted repositories. Generated content uses AI credits each time the trigger fires.",
       annotations: { title: "Create Event Trigger", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
-      inputSchema: createEventTriggerSchema,
-      outputSchema: apiOutputSchema("createEventTrigger"),
+      inputSchema: shareJsonSchema(createEventTriggerSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("createEventTrigger")),
     },
     (body) => handleError(() => client.createEventTrigger(body)),
   );
@@ -58,8 +59,8 @@ export function registerEventTriggerTools(server: McpServer, client: NotraClient
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: updateEventTriggerSchema,
-      outputSchema: apiOutputSchema("updateEventTrigger"),
+      inputSchema: shareJsonSchema(updateEventTriggerSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("updateEventTrigger")),
     },
     // The API rejects outputConfig: null, which get_event_trigger returns for triggers without one.
     ({ triggerId, outputConfig, ...body }) =>
@@ -77,8 +78,8 @@ export function registerEventTriggerTools(server: McpServer, client: NotraClient
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: deleteEventTriggerSchema,
-      outputSchema: apiOutputSchema("deleteEventTrigger"),
+      inputSchema: shareJsonSchema(deleteEventTriggerSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("deleteEventTrigger")),
     },
     ({ triggerId }) => handleError(() => client.deleteEventTrigger(triggerId)),
   );

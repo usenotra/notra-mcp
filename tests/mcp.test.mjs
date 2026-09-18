@@ -27,7 +27,7 @@ test("every exposed tool explicitly declares all three submission permission hin
 test("object API responses include both MCP text and structured content", async () => {
   const data = { posts: [{ id: "post-1" }] };
   assert.deepEqual(await handleError(async () => data), {
-    content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(data) }],
     structuredContent: data,
   });
 });
@@ -35,7 +35,7 @@ test("object API responses include both MCP text and structured content", async 
 test("non-object responses do not become invalid MCP structured content", async () => {
   for (const data of [[], null, "answer", 0, false]) {
     assert.deepEqual(await handleError(async () => data), {
-      content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+      content: [{ type: "text", text: JSON.stringify(data) }],
     });
   }
 });

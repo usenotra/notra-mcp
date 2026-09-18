@@ -9,6 +9,7 @@ import {
   listGeoPromptResultSummariesSchema,
 } from "../schemas/geo-visibility.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 
@@ -27,8 +28,8 @@ export function registerGeoVisibilityTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoVisibilityOverviewSchema,
-      outputSchema: apiOutputSchema("getGeoVisibilityOverview"),
+      inputSchema: shareJsonSchema(getGeoVisibilityOverviewSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoVisibilityOverview")),
     },
     ({ projectId, ...params }) => handleError(() => client.getGeoVisibilityOverview(projectId, params)),
   );
@@ -43,8 +44,8 @@ export function registerGeoVisibilityTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoVisibilityTimeseriesSchema,
-      outputSchema: apiOutputSchema("getGeoVisibilityTimeseries"),
+      inputSchema: shareJsonSchema(getGeoVisibilityTimeseriesSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoVisibilityTimeseries")),
     },
     ({ projectId, ...params }) => handleError(() => client.getGeoVisibilityTimeseries(projectId, params)),
   );
@@ -60,8 +61,8 @@ export function registerGeoVisibilityTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoPromptResultsSchema,
-      outputSchema: apiOutputSchema("getGeoVisibilityPromptResults"),
+      inputSchema: shareJsonSchema(getGeoPromptResultsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoVisibilityPromptResults")),
     },
     ({ projectId, ...params }) => handleError(() => client.getGeoVisibilityPromptResults(projectId, params)),
   );
@@ -77,8 +78,8 @@ export function registerGeoVisibilityTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: listGeoPromptResultSummariesSchema,
-      outputSchema: apiOutputSchema("listGeoPromptResultSummaries"),
+      inputSchema: shareJsonSchema(listGeoPromptResultSummariesSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoPromptResultSummaries")),
     },
     ({ projectId, ...params }) => handleError(() => client.listGeoPromptResultSummaries(projectId, params)),
   );
@@ -93,8 +94,8 @@ export function registerGeoVisibilityTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoPromptResultDetailSchema,
-      outputSchema: apiOutputSchema("getGeoPromptResultDetail"),
+      inputSchema: shareJsonSchema(getGeoPromptResultDetailSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoPromptResultDetail")),
     },
     ({ projectId, checkId }) => handleError(() => client.getGeoPromptResultDetail(projectId, checkId)),
   );
@@ -110,8 +111,8 @@ export function registerGeoVisibilityTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoCompetitorShareSchema,
-      outputSchema: apiOutputSchema("getGeoVisibilityCompetitorShare"),
+      inputSchema: shareJsonSchema(getGeoCompetitorShareSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoVisibilityCompetitorShare")),
     },
     ({ projectId, ...params }) => handleError(() => client.getGeoVisibilityCompetitorShare(projectId, params)),
   );
@@ -126,8 +127,8 @@ export function registerGeoVisibilityTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoLanguageShareSchema,
-      outputSchema: apiOutputSchema("getGeoVisibilityLanguageShare"),
+      inputSchema: shareJsonSchema(getGeoLanguageShareSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoVisibilityLanguageShare")),
     },
     ({ projectId, ...params }) => handleError(() => client.getGeoVisibilityLanguageShare(projectId, params)),
   );
@@ -143,8 +144,8 @@ export function registerGeoVisibilityTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getGeoCompetitorDetailSchema,
-      outputSchema: apiOutputSchema("getGeoVisibilityCompetitorDetail"),
+      inputSchema: shareJsonSchema(getGeoCompetitorDetailSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoVisibilityCompetitorDetail")),
     },
     ({ projectId, brand, ...params }) =>
       handleError(() => client.getGeoVisibilityCompetitorDetail(projectId, brand, params)),

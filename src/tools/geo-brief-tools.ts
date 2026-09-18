@@ -6,6 +6,7 @@ import {
   approveGeoContentBriefSchema,
 } from "../schemas/geo-brief.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 
@@ -19,8 +20,8 @@ export function registerGeoBriefTools(server: McpServer, client: NotraClient) {
       description:
         "List GEO content gaps: prompts where competitors are mentioned but this brand is not, plus Search Console queries with no tracked prompt. Each gap links to the brief already written for it, when there is one.",
       annotations: { title: "List GEO Content Gaps", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listGeoContentGapsSchema,
-      outputSchema: apiOutputSchema("listGeoContentGaps"),
+      inputSchema: shareJsonSchema(listGeoContentGapsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoContentGaps")),
     },
     ({ projectId }) => handleError(() => client.listGeoContentGaps(projectId)),
   );
@@ -35,8 +36,8 @@ export function registerGeoBriefTools(server: McpServer, client: NotraClient) {
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: listGeoContentBriefsSchema,
-      outputSchema: apiOutputSchema("listGeoContentBriefs"),
+      inputSchema: shareJsonSchema(listGeoContentBriefsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoContentBriefs")),
     },
     ({ projectId }) => handleError(() => client.listGeoContentBriefs(projectId)),
   );
@@ -47,8 +48,8 @@ export function registerGeoBriefTools(server: McpServer, client: NotraClient) {
       description:
         "Research a topic and plan a GEO content brief, saved as a draft. This books AI credits, is billed, and can take a few minutes. Set autoApprove to start the article writer in the same call.",
       annotations: { title: "Plan GEO Content Brief", readOnlyHint: false, openWorldHint: true, destructiveHint: true },
-      inputSchema: planGeoContentBriefSchema,
-      outputSchema: apiOutputSchema("planGeoContentBrief"),
+      inputSchema: shareJsonSchema(planGeoContentBriefSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("planGeoContentBrief")),
     },
     ({ projectId, ...body }) => handleError(() => client.planGeoContentBrief(projectId, body)),
   );
@@ -59,8 +60,8 @@ export function registerGeoBriefTools(server: McpServer, client: NotraClient) {
       description:
         "Get a single GEO content brief including the full brief document, writer status and the resulting post ID",
       annotations: { title: "Get GEO Content Brief", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: getGeoContentBriefSchema,
-      outputSchema: apiOutputSchema("getGeoContentBrief"),
+      inputSchema: shareJsonSchema(getGeoContentBriefSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoContentBrief")),
     },
     ({ projectId, briefId }) => handleError(() => client.getGeoContentBrief(projectId, briefId)),
   );
@@ -76,8 +77,8 @@ export function registerGeoBriefTools(server: McpServer, client: NotraClient) {
         openWorldHint: true,
         destructiveHint: true,
       },
-      inputSchema: approveGeoContentBriefSchema,
-      outputSchema: apiOutputSchema("approveGeoContentBrief"),
+      inputSchema: shareJsonSchema(approveGeoContentBriefSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("approveGeoContentBrief")),
     },
     ({ projectId, briefId }) => handleError(() => client.approveGeoContentBrief(projectId, briefId)),
   );

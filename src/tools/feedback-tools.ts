@@ -1,4 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import {
   buildFeedbackToolDescription,
   createFeedbackToolHandler,
@@ -33,7 +34,7 @@ export function registerFeedbackTools(server: McpServer, options: FeedbackToolOp
         destructiveHint: true,
         idempotentHint: false,
       },
-      inputSchema: submitFeedbackSchema,
+      inputSchema: shareJsonSchema(submitFeedbackSchema),
     },
     // Spread into a fresh object: the SDK's CallToolResult carries an index signature that
     // the package's FeedbackToolResult interface lacks.
@@ -48,8 +49,8 @@ export function registerFeedbackInboxTools(server: McpServer, client: NotraClien
       description:
         "List feedback your organization received through its feedback URL, MCP servers or SDKs, filtered by triage status, kind or project",
       annotations: { title: "List Feedback", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listFeedbackSchema,
-      outputSchema: apiOutputSchema("listFeedback"),
+      inputSchema: shareJsonSchema(listFeedbackSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listFeedback")),
     },
     (params) => handleError(() => client.listFeedback(params)),
   );
@@ -59,8 +60,8 @@ export function registerFeedbackInboxTools(server: McpServer, client: NotraClien
     {
       description: "Get a single feedback entry with its full message, agent metadata and context URL",
       annotations: { title: "Get Feedback", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: getFeedbackSchema,
-      outputSchema: apiOutputSchema("getFeedback"),
+      inputSchema: shareJsonSchema(getFeedbackSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getFeedback")),
     },
     ({ feedbackId }) => handleError(() => client.getFeedback(feedbackId)),
   );
@@ -76,8 +77,8 @@ export function registerFeedbackInboxTools(server: McpServer, client: NotraClien
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: updateFeedbackSchema,
-      outputSchema: apiOutputSchema("updateFeedback"),
+      inputSchema: shareJsonSchema(updateFeedbackSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("updateFeedback")),
     },
     ({ feedbackId, status }) => handleError(() => client.updateFeedback(feedbackId, { status })),
   );

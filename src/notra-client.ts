@@ -133,6 +133,7 @@ import type { WorkspaceContextResponse } from "./types/workspace.js";
 import { apiErrorSchema } from "./schemas/api.js";
 import { parseChatStream } from "./utils/chat-stream.js";
 import { appendQueryParams } from "./utils/query-params.js";
+import { createRequestSignal } from "./utils/request-signal.js";
 
 const NOTRA_API_BASE = process.env.NOTRA_API_BASE ?? "https://api.usenotra.com";
 
@@ -144,6 +145,17 @@ const NOTRA_API_BASE = process.env.NOTRA_API_BASE ?? "https://api.usenotra.com";
 function asTimeoutError(error: unknown, timeoutMs: number): Error | undefined {
   if (error instanceof Error && error.name === "TimeoutError") {
     return new Error(`Notra API request timed out after ${timeoutMs / 1000}s`);
+  }
+  return undefined;
+}
+
+/**
+ * Maps an abort (MCP client disconnect or caller cancellation) to a readable
+ * error, so cancelled calls are not misreported as HTTP or parse failures.
+ */
+function asCancellationError(error: unknown): Error | undefined {
+  if (error instanceof Error && error.name === "AbortError") {
+    return new Error("Notra API request was cancelled");
   }
   return undefined;
 }
@@ -171,7 +183,7 @@ export class NotraClient {
     };
 
     const timeoutMs = options?.timeoutMs ?? 30_000;
-    const fetchOptions: RequestInit = { method, headers, signal: AbortSignal.timeout(timeoutMs) };
+    const fetchOptions: RequestInit = { method, headers, signal: createRequestSignal(timeoutMs, options?.signal) };
     if (options?.body && (method === "POST" || method === "PATCH" || method === "PUT")) {
       fetchOptions.body = JSON.stringify(options.body);
     }
@@ -180,7 +192,7 @@ export class NotraClient {
     try {
       response = await fetch(url.toString(), fetchOptions);
     } catch (error) {
-      throw asTimeoutError(error, timeoutMs) ?? error;
+      throw asTimeoutError(error, timeoutMs) ?? asCancellationError(error) ?? error;
     }
 
     let data: unknown;
@@ -190,6 +202,10 @@ export class NotraClient {
       const timeout = asTimeoutError(error, timeoutMs);
       if (timeout) {
         throw timeout;
+      }
+      const cancelled = asCancellationError(error);
+      if (cancelled) {
+        throw cancelled;
       }
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -224,7 +240,7 @@ export class NotraClient {
     };
 
     const timeoutMs = options?.timeoutMs ?? 180_000;
-    const fetchOptions: RequestInit = { method, headers, signal: AbortSignal.timeout(timeoutMs) };
+    const fetchOptions: RequestInit = { method, headers, signal: createRequestSignal(timeoutMs, options?.signal) };
     if (options?.body && (method === "POST" || method === "PATCH" || method === "PUT")) {
       fetchOptions.body = JSON.stringify(options.body);
     }
@@ -233,14 +249,14 @@ export class NotraClient {
     try {
       response = await fetch(url.toString(), fetchOptions);
     } catch (error) {
-      throw asTimeoutError(error, timeoutMs) ?? error;
+      throw asTimeoutError(error, timeoutMs) ?? asCancellationError(error) ?? error;
     }
 
     let text: string;
     try {
       text = await response.text();
     } catch (error) {
-      throw asTimeoutError(error, timeoutMs) ?? error;
+      throw asTimeoutError(error, timeoutMs) ?? asCancellationError(error) ?? error;
     }
 
     if (!response.ok) {

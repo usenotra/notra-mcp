@@ -5,6 +5,7 @@ import {
   deleteGeoPromptSchema,
 } from "../schemas/geo-prompt.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 
@@ -20,8 +21,8 @@ export function registerGeoPromptTools(server: McpServer, client: NotraClient) {
       description:
         "List the GEO prompts tracked for a project: custom prompts plus the ones derived automatically from the brand context",
       annotations: { title: "List GEO Prompts", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listGeoPromptsSchema,
-      outputSchema: apiOutputSchema("listGeoPrompts"),
+      inputSchema: shareJsonSchema(listGeoPromptsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoPrompts")),
     },
     ({ projectId }) => handleError(() => client.listGeoPrompts(projectId)),
   );
@@ -31,8 +32,8 @@ export function registerGeoPromptTools(server: McpServer, client: NotraClient) {
     {
       description: "Track a new GEO prompt so future scans check it against every configured answer engine",
       annotations: { title: "Create GEO Prompt", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
-      inputSchema: createGeoPromptSchema,
-      outputSchema: apiOutputSchema("createGeoPrompt"),
+      inputSchema: shareJsonSchema(createGeoPromptSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("createGeoPrompt")),
     },
     ({ projectId, prompt }) => handleError(() => client.createGeoPrompt(projectId, prompt)),
   );
@@ -48,8 +49,8 @@ export function registerGeoPromptTools(server: McpServer, client: NotraClient) {
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: updateGeoPromptSchema,
-      outputSchema: apiOutputSchema("updateGeoPrompt"),
+      inputSchema: shareJsonSchema(updateGeoPromptSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("updateGeoPrompt")),
     },
     ({ projectId, promptId, enabled }) => handleError(() => client.updateGeoPrompt(projectId, promptId, enabled)),
   );
@@ -65,8 +66,8 @@ export function registerGeoPromptTools(server: McpServer, client: NotraClient) {
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: deleteGeoPromptSchema,
-      outputSchema: apiOutputSchema("deleteGeoPrompt"),
+      inputSchema: shareJsonSchema(deleteGeoPromptSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("deleteGeoPrompt")),
     },
     ({ projectId, promptId }) => handleError(() => client.deleteGeoPrompt(projectId, promptId)),
   );
@@ -77,8 +78,8 @@ export function registerGeoPromptTools(server: McpServer, client: NotraClient) {
       description:
         "Bulk import GEO prompts from structured rows or raw CSV text. Prompts that already exist are skipped, not duplicated.",
       annotations: { title: "Import GEO Prompts", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
-      inputSchema: geoPromptImportSchema,
-      outputSchema: apiOutputSchema("importGeoPrompts"),
+      inputSchema: shareJsonSchema(geoPromptImportSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("importGeoPrompts")),
     },
     ({ projectId, rows, csv }) => handleError(() => client.importGeoPrompts(projectId, toImportSource(rows, csv))),
   );

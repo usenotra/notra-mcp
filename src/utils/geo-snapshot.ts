@@ -15,7 +15,9 @@ export async function loadGeoSnapshot(
   window: GeoWindowParams,
 ): Promise<GeoSnapshotResponse> {
   const overviewPromise = client.getGeoVisibilityOverview(projectId, window);
-  const timeout = { timeoutMs: GEO_SNAPSHOT_OPTIONAL_TIMEOUT_MS };
+  // Optional sections are useless without the overview, so stop them when it fails.
+  const optionalController = new AbortController();
+  const timeout = { timeoutMs: GEO_SNAPSHOT_OPTIONAL_TIMEOUT_MS, signal: optionalController.signal };
   const optionalResults = Promise.allSettled([
     client.getGeoVisibilityCompetitorShare(projectId, window, timeout),
     client.listGeoContentGaps(projectId, timeout),
@@ -25,7 +27,13 @@ export async function loadGeoSnapshot(
     client.getGeoChanges(projectId, timeout),
     client.listGeoShelfSources(projectId, { limit: SNAPSHOT_ITEM_LIMIT }, timeout),
   ]);
-  const overview = await overviewPromise;
+  let overview: Awaited<typeof overviewPromise>;
+  try {
+    overview = await overviewPromise;
+  } catch (error) {
+    optionalController.abort();
+    throw error;
+  }
   const [competitorResult, gapsResult, readinessResult, trafficResult, sentimentResult, changesResult, shelfResult] =
     await optionalResults;
   const warnings: GeoSnapshotResponse["warnings"] = [];

@@ -5,6 +5,7 @@ import {
   deleteGeoCompetitorSchema,
 } from "../schemas/geo-competitor.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 import { geoCompetitorImportSchema } from "../schemas/geo-import.js";
@@ -19,8 +20,8 @@ export function registerGeoCompetitorTools(server: McpServer, client: NotraClien
     {
       description: "List the competitors tracked for a project's GEO share-of-voice reporting",
       annotations: { title: "List GEO Competitors", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listGeoCompetitorsSchema,
-      outputSchema: apiOutputSchema("listGeoCompetitors"),
+      inputSchema: shareJsonSchema(listGeoCompetitorsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoCompetitors")),
     },
     ({ projectId }) => handleError(() => client.listGeoCompetitors(projectId)),
   );
@@ -37,8 +38,8 @@ export function registerGeoCompetitorTools(server: McpServer, client: NotraClien
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: upsertGeoCompetitorSchema,
-      outputSchema: apiOutputSchema("upsertGeoCompetitor"),
+      inputSchema: shareJsonSchema(upsertGeoCompetitorSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("upsertGeoCompetitor")),
     },
     ({ projectId, ...body }) => handleError(() => client.upsertGeoCompetitor(projectId, body)),
   );
@@ -54,8 +55,8 @@ export function registerGeoCompetitorTools(server: McpServer, client: NotraClien
         openWorldHint: true,
         destructiveHint: false,
       },
-      inputSchema: suggestGeoCompetitorsSchema,
-      outputSchema: apiOutputSchema("suggestGeoCompetitors"),
+      inputSchema: shareJsonSchema(suggestGeoCompetitorsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("suggestGeoCompetitors")),
     },
     ({ projectId, domain }) => handleError(() => client.suggestGeoCompetitors(projectId, domain)),
   );
@@ -71,8 +72,8 @@ export function registerGeoCompetitorTools(server: McpServer, client: NotraClien
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: deleteGeoCompetitorSchema,
-      outputSchema: apiOutputSchema("deleteGeoCompetitor"),
+      inputSchema: shareJsonSchema(deleteGeoCompetitorSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("deleteGeoCompetitor")),
     },
     ({ projectId, name }) => handleError(() => client.deleteGeoCompetitor(projectId, name)),
   );
@@ -88,8 +89,8 @@ export function registerGeoCompetitorTools(server: McpServer, client: NotraClien
         openWorldHint: false,
         destructiveHint: true,
       },
-      inputSchema: geoCompetitorImportSchema,
-      outputSchema: apiOutputSchema("importGeoCompetitors"),
+      inputSchema: shareJsonSchema(geoCompetitorImportSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("importGeoCompetitors")),
     },
     ({ projectId, rows, csv }) => handleError(() => client.importGeoCompetitors(projectId, toImportSource(rows, csv))),
   );

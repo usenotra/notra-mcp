@@ -5,6 +5,7 @@ import {
   deleteScheduleSchema,
 } from "../schemas/schedule.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
@@ -16,8 +17,8 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     {
       description: "List scheduled content generation jobs, optionally filtered by repository IDs",
       annotations: { title: "List Schedules", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listSchedulesSchema,
-      outputSchema: apiOutputSchema("listSchedules"),
+      inputSchema: shareJsonSchema(listSchedulesSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listSchedules")),
     },
     ({ repositoryIds }) => handleError(() => client.listSchedules({ repositoryIds })),
   );
@@ -27,8 +28,8 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     {
       description: "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger",
       annotations: { title: "Create Schedule", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
-      inputSchema: schedulePayloadSchema,
-      outputSchema: apiOutputSchema("createSchedule"),
+      inputSchema: shareJsonSchema(schedulePayloadSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("createSchedule")),
     },
     (params) => handleError(() => client.createSchedule(params)),
   );
@@ -44,8 +45,8 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: updateScheduleSchema,
-      outputSchema: apiOutputSchema("updateSchedule"),
+      inputSchema: shareJsonSchema(updateScheduleSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("updateSchedule")),
     },
     ({ scheduleId, ...body }) => handleError(() => client.updateSchedule(scheduleId, body)),
   );
@@ -61,8 +62,8 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: deleteScheduleSchema,
-      outputSchema: apiOutputSchema("deleteSchedule"),
+      inputSchema: shareJsonSchema(deleteScheduleSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("deleteSchedule")),
     },
     ({ scheduleId }) => handleError(() => client.deleteSchedule(scheduleId)),
   );

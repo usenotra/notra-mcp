@@ -6,6 +6,7 @@ import {
   runGeoSequenceSchema,
 } from "../schemas/geo-sequence.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 
@@ -18,8 +19,8 @@ export function registerGeoSequenceTools(server: McpServer, client: NotraClient)
     {
       description: "List a project's GEO prompt sequences (multi-turn conversations played against answer engines)",
       annotations: { title: "List GEO Sequences", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listGeoSequencesSchema,
-      outputSchema: apiOutputSchema("listGeoSequences"),
+      inputSchema: shareJsonSchema(listGeoSequencesSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoSequences")),
     },
     ({ projectId }) => handleError(() => client.listGeoSequences(projectId)),
   );
@@ -29,8 +30,8 @@ export function registerGeoSequenceTools(server: McpServer, client: NotraClient)
     {
       description: "Create a GEO prompt sequence: an ordered list of prompts played as one conversation",
       annotations: { title: "Create GEO Sequence", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
-      inputSchema: createGeoSequenceSchema,
-      outputSchema: apiOutputSchema("createGeoSequence"),
+      inputSchema: shareJsonSchema(createGeoSequenceSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("createGeoSequence")),
     },
     ({ projectId, ...body }) => handleError(() => client.createGeoSequence(projectId, body)),
   );
@@ -46,8 +47,8 @@ export function registerGeoSequenceTools(server: McpServer, client: NotraClient)
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: updateGeoSequenceSchema,
-      outputSchema: apiOutputSchema("updateGeoSequence"),
+      inputSchema: shareJsonSchema(updateGeoSequenceSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("updateGeoSequence")),
     },
     ({ projectId, sequenceId, ...body }) => handleError(() => client.updateGeoSequence(projectId, sequenceId, body)),
   );
@@ -63,8 +64,8 @@ export function registerGeoSequenceTools(server: McpServer, client: NotraClient)
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: deleteGeoSequenceSchema,
-      outputSchema: apiOutputSchema("deleteGeoSequence"),
+      inputSchema: shareJsonSchema(deleteGeoSequenceSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("deleteGeoSequence")),
     },
     ({ projectId, sequenceId }) => handleError(() => client.deleteGeoSequence(projectId, sequenceId)),
   );
@@ -75,8 +76,8 @@ export function registerGeoSequenceTools(server: McpServer, client: NotraClient)
       description:
         "Run a GEO prompt sequence now, synchronously, against every available answer engine. This uses AI credits and the request can take several minutes; the result reports checks, mentions and engines covered.",
       annotations: { title: "Run GEO Sequence", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
-      inputSchema: runGeoSequenceSchema,
-      outputSchema: apiOutputSchema("runGeoSequence"),
+      inputSchema: shareJsonSchema(runGeoSequenceSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("runGeoSequence")),
     },
     ({ projectId, sequenceId }) => handleError(() => client.runGeoSequence(projectId, sequenceId)),
   );

@@ -4,6 +4,7 @@ import {
   deleteIntegrationSchema,
 } from "../schemas/integration.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
@@ -15,8 +16,8 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
     {
       description: "List all connected integrations (GitHub, Slack, Linear) for your organization",
       annotations: { title: "List Integrations", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listIntegrationsSchema,
-      outputSchema: apiOutputSchema("listIntegrations"),
+      inputSchema: shareJsonSchema(listIntegrationsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listIntegrations")),
     },
     () => handleError(() => client.listIntegrations()),
   );
@@ -31,8 +32,8 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
         openWorldHint: true,
         destructiveHint: false,
       },
-      inputSchema: createGithubIntegrationSchema,
-      outputSchema: apiOutputSchema("createGitHubIntegration"),
+      inputSchema: shareJsonSchema(createGithubIntegrationSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("createGitHubIntegration")),
     },
     ({ owner, repo, branch, token }) =>
       handleError(() =>
@@ -52,8 +53,8 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: deleteIntegrationSchema,
-      outputSchema: apiOutputSchema("deleteIntegration"),
+      inputSchema: shareJsonSchema(deleteIntegrationSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("deleteIntegration")),
     },
     ({ integrationId }) => handleError(() => client.deleteIntegration(integrationId)),
   );

@@ -6,6 +6,7 @@ import {
   deleteSkillSchema,
 } from "../schemas/skill.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
@@ -17,8 +18,8 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     {
       description: "List reusable writing skills for your organization",
       annotations: { title: "List Skills", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listSkillsSchema,
-      outputSchema: apiOutputSchema("listSkills"),
+      inputSchema: shareJsonSchema(listSkillsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listSkills")),
     },
     () => handleError(() => client.listSkills()),
   );
@@ -28,8 +29,8 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     {
       description: "Get a single reusable writing skill by name",
       annotations: { title: "Get Skill", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: getSkillSchema,
-      outputSchema: apiOutputSchema("getSkill"),
+      inputSchema: shareJsonSchema(getSkillSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getSkill")),
     },
     ({ name }) => handleError(() => client.getSkill(name)),
   );
@@ -39,8 +40,8 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     {
       description: "Create a reusable writing skill",
       annotations: { title: "Create Skill", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
-      inputSchema: skillPayloadSchema,
-      outputSchema: apiOutputSchema("createSkill"),
+      inputSchema: shareJsonSchema(skillPayloadSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("createSkill")),
     },
     (params) => handleError(() => client.createSkill(params)),
   );
@@ -56,8 +57,8 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: updateSkillSchema,
-      outputSchema: apiOutputSchema("patchSkill"),
+      inputSchema: shareJsonSchema(updateSkillSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("patchSkill")),
     },
     ({ currentName, ...body }) => handleError(() => client.updateSkill(currentName, body)),
   );
@@ -73,8 +74,8 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: deleteSkillSchema,
-      outputSchema: apiOutputSchema("deleteSkill"),
+      inputSchema: shareJsonSchema(deleteSkillSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("deleteSkill")),
     },
     ({ name }) => handleError(() => client.deleteSkill(name)),
   );

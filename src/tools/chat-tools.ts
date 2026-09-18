@@ -7,6 +7,7 @@ import {
   chatStreamOutputSchema,
 } from "../schemas/chat.js";
 import type { McpServer } from "@modelcontextprotocol/server";
+import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
@@ -18,8 +19,8 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     {
       description: "List chat sessions for your organization",
       annotations: { title: "List Chats", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: listChatsSchema,
-      outputSchema: apiOutputSchema("listChats"),
+      inputSchema: shareJsonSchema(listChatsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listChats")),
     },
     () => handleError(() => client.listChats()),
   );
@@ -29,8 +30,8 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     {
       description: "Get a single chat session with its messages",
       annotations: { title: "Get Chat", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
-      inputSchema: getChatSchema,
-      outputSchema: apiOutputSchema("getChat"),
+      inputSchema: shareJsonSchema(getChatSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getChat")),
     },
     ({ chatId }) => handleError(() => client.getChat(chatId)),
   );
@@ -45,8 +46,8 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
         openWorldHint: false,
         destructiveHint: false,
       },
-      inputSchema: getChatByExternalChannelSchema,
-      outputSchema: apiOutputSchema("getChatByExternalChannel"),
+      inputSchema: shareJsonSchema(getChatByExternalChannelSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getChatByExternalChannel")),
     },
     ({ source, id }) => handleError(() => client.getChatByExternalChannel(source, id)),
   );
@@ -57,8 +58,8 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
       description:
         "Start a new Notra agent chat and return the assistant's reply text with the chat ID when available. Uses AI credits. The agent can research the web, create or update posts, create writing skills, add brand references, and invoke connected MCP tools that may modify or delete data or act on external services.",
       annotations: { title: "Create Chat", readOnlyHint: false, openWorldHint: true, destructiveHint: true },
-      inputSchema: sendChatMessageSchema,
-      outputSchema: chatStreamOutputSchema,
+      inputSchema: shareJsonSchema(sendChatMessageSchema),
+      outputSchema: shareJsonSchema(chatStreamOutputSchema),
     },
     (params) => handleError(() => client.createChat(params)),
   );
@@ -69,8 +70,8 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
       description:
         "Send a message to an existing Notra agent chat and return the assistant's reply text. Uses AI credits. The agent can research the web, create or update posts, create writing skills, add brand references, and invoke connected MCP tools that may modify or delete data or act on external services.",
       annotations: { title: "Post Chat Message", readOnlyHint: false, openWorldHint: true, destructiveHint: true },
-      inputSchema: postChatMessageSchema,
-      outputSchema: chatStreamOutputSchema,
+      inputSchema: shareJsonSchema(postChatMessageSchema),
+      outputSchema: shareJsonSchema(chatStreamOutputSchema),
     },
     ({ chatId, ...body }) => handleError(() => client.postChatMessage(chatId, body)),
   );
