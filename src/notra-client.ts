@@ -256,11 +256,7 @@ export class NotraClient {
       throw new Error(message);
     }
 
-    const parsed = parseChatStream(text);
-    return {
-      chatId: parsed.chatId ?? response.headers.get("x-chat-id"),
-      text: parsed.text,
-    };
+    return parseChatStream(text, response.headers.get("x-chat-id"));
   }
 
   async listPosts(params?: ListPostsParams): Promise<PostListResponse> {

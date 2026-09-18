@@ -116,3 +116,23 @@ test("query serialization preserves false and zero and rejects unsupported value
     assert.throws(() => appendQueryParams(url, { bad: value }), /Unsupported query parameter: bad/);
   }
 });
+
+test("HTTP 200 approval streams become MCP errors with the header chat ID", async () => {
+  const { handleError } = await import("../src/utils/mcp.ts");
+  vi.spyOn(globalThis, "fetch").mockImplementation(
+    async () =>
+      new Response(
+        [
+          'data: {"type":"text-delta","delta":"Creating the skill."}',
+          'data: {"type":"tool-input-start","toolCallId":"save","toolName":"createSkill"}',
+          'data: {"type":"tool-approval-request","toolCallId":"save","approvalId":"approve"}',
+          "data: [DONE]",
+        ].join("\n"),
+        { headers: { "x-chat-id": "blocked-chat" } },
+      ),
+  );
+  const result = await handleError(() => client.createChat({ message: "Save my skill" }));
+  assert.equal(result.isError, true);
+  assert.match(result.content[0].text, /requires approval \(chat blocked-chat\): createSkill/);
+  assert.equal(result.structuredContent, undefined);
+});
