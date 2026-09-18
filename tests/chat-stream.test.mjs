@@ -60,3 +60,23 @@ test("stream errors and aborts cannot be hidden by progress text", () => {
     assert.throws(() => parseChatStream(stream, "header-chat"), /Notra chat failed \(chat header-chat\)/);
   }
 });
+
+test("failed and denied tool outputs cannot turn progress text into success", () => {
+  for (const type of ["tool-output-error", "tool-output-denied"]) {
+    for (const approved of [true, false]) {
+      const stream = [
+        'data: {"type":"text-delta","delta":"Creating the skill."}',
+        'data: {"type":"tool-input-start","toolCallId":"save","toolName":"createSkill"}',
+        ...(approved ? ['data: {"type":"tool-approval-request","toolCallId":"save"}'] : []),
+        `data: ${JSON.stringify({ type, toolCallId: "save", errorText: "Skill was not saved" })}`,
+        'data: {"type":"finish"}',
+        "data: [DONE]",
+      ].join("\n");
+      assert.throws(
+        () => parseChatStream(stream, "chat-1"),
+        /Notra chat failed \(chat chat-1\): createSkill: Skill was not saved/,
+      );
+    }
+    assert.throws(() => parseChatStream(`data: ${JSON.stringify({ type })}`), /Tool execution (failed|denied)/);
+  }
+});

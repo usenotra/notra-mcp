@@ -60,6 +60,10 @@ export function parseChatStream(stream: string, fallbackChatId: string | null = 
     if (frame.type === "error" || frame.type === "abort") {
       streamError = frame.errorText || (frame.type === "abort" ? "Generation stopped" : "Chat stream failed");
     }
+    if (frame.type === "tool-output-error" || frame.type === "tool-output-denied") {
+      const name = frame.toolName ?? toolNames.get(frame.toolCallId ?? "") ?? frame.toolCallId ?? "unknown tool";
+      streamError = `${name}: ${frame.errorText || (frame.type === "tool-output-denied" ? "Tool execution denied" : "Tool execution failed")}`;
+    }
   }
 
   chatId ??= fallbackChatId;
