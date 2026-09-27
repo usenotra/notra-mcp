@@ -203,6 +203,8 @@ test("both protected resource discovery routes request only Connect-supported OA
       authorization_servers: ["https://auth.example.test"],
       bearer_methods_supported: ["header"],
       scopes_supported: scopes,
+      resource_name: "Notra",
+      resource_documentation: "https://docs.usenotra.com",
     });
   }
 });

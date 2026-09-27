@@ -4,3 +4,14 @@ export const SERVER_INSTRUCTIONS = [
   "Scans, sequence runs, and content briefs use billed AI credits. Confirm with the user before starting them.",
   "Use `submit_feedback` to send bugs, feature requests, questions or praise to the Notra team. Call it when a user hits a problem with a Notra tool, asks for something Notra does not support, or explicitly wants to pass feedback along. Include the exact steps, error text or URL when reporting a problem.",
 ].join("\n\n");
+
+export const SERVER_TITLE = "Notra";
+export const SERVER_WEBSITE_URL = "https://www.usenotra.com";
+export const SERVER_DOCUMENTATION_URL = "https://docs.usenotra.com";
+export const SERVER_ICON_SVG_URL = "https://www.usenotra.com/favicon.svg";
+export const SERVER_ICON_PNG_URL = "https://www.usenotra.com/apple-icon.png";
+export const SERVER_FAVICON_URL = "https://www.usenotra.com/favicon.ico";
+export const SERVER_ICONS = [
+  { src: SERVER_ICON_SVG_URL, mimeType: "image/svg+xml", sizes: ["any"] },
+  { src: SERVER_ICON_PNG_URL, mimeType: "image/png", sizes: ["180x180"] },
+];

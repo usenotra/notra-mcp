@@ -15,6 +15,7 @@ import {
 } from "./constants/http.js";
 import { OAUTH_AUTHORIZATION_SERVER_METADATA_PATH, OAUTH_PROTECTED_RESOURCE_METADATA_PATH } from "./constants/oauth.js";
 import { OPENAI_APPS_CHALLENGE_PATH, OPENAI_APPS_CHALLENGE_TOKEN } from "./constants/openai-apps.js";
+import { SERVER_FAVICON_URL, SERVER_ICON_SVG_URL } from "./constants/server.js";
 import { createServer } from "./server.js";
 import type { AuthContext } from "./types/auth.js";
 import type { BodyParserError, Session } from "./types/http.js";
@@ -338,6 +339,14 @@ app.get("/.well-known/oauth-protected-resource/mcp", (_req, res) => {
 
 app.get(OPENAI_APPS_CHALLENGE_PATH, (_req, res) => {
   res.type("text/plain").send(OPENAI_APPS_CHALLENGE_TOKEN);
+});
+
+app.get("/favicon.ico", (_req, res) => {
+  res.redirect(301, SERVER_FAVICON_URL);
+});
+
+app.get("/favicon.svg", (_req, res) => {
+  res.redirect(301, SERVER_ICON_SVG_URL);
 });
 
 app.post("/register", (_req, res) => {
