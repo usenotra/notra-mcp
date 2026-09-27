@@ -1,6 +1,6 @@
 import "zod/compile";
 import { McpServer } from "@modelcontextprotocol/server";
-import { SERVER_INSTRUCTIONS } from "./constants/server.js";
+import { SERVER_ICONS, SERVER_INSTRUCTIONS, SERVER_TITLE, SERVER_WEBSITE_URL } from "./constants/server.js";
 import { NotraClient } from "./notra-client.js";
 import { registerAgentTools } from "./tools/agent-tools.js";
 import { registerBrandIdentityTools } from "./tools/brand-identity-tools.js";
@@ -100,7 +100,10 @@ export function createServer(auth: string | AuthContext, options: CreateServerOp
   const server = new McpServer(
     {
       name: "notra",
+      title: SERVER_TITLE,
       version: SERVER_VERSION,
+      websiteUrl: SERVER_WEBSITE_URL,
+      icons: SERVER_ICONS,
     },
     { instructions: SERVER_INSTRUCTIONS },
   );

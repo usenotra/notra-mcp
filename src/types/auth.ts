@@ -27,4 +27,6 @@ export type OAuthProtectedResourceMetadata = {
   authorization_servers: string[];
   bearer_methods_supported: string[];
   scopes_supported: string[];
+  resource_name: string;
+  resource_documentation: string;
 };

@@ -6,6 +6,7 @@ import {
   OAUTH_SCOPES,
   PRODUCTION_AUTHKIT_DOMAIN,
 } from "../constants/oauth.js";
+import { SERVER_TITLE, SERVER_WEBSITE_URL } from "../constants/server.js";
 import type { OAuthConfig, OAuthProtectedResourceMetadata } from "../types/auth.js";
 
 function buildResourceAudiences(resource: string): string[] {
@@ -63,5 +64,7 @@ export function getProtectedResourceMetadata(
     authorization_servers: [config.issuer],
     bearer_methods_supported: ["header"],
     scopes_supported: [...OAUTH_SCOPES],
+    resource_name: SERVER_TITLE,
+    resource_documentation: SERVER_WEBSITE_URL,
   };
 }
