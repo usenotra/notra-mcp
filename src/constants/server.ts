@@ -7,6 +7,7 @@ export const SERVER_INSTRUCTIONS = [
 
 export const SERVER_TITLE = "Notra";
 export const SERVER_WEBSITE_URL = "https://www.usenotra.com";
+export const SERVER_DOCUMENTATION_URL = "https://docs.usenotra.com";
 export const SERVER_ICON_SVG_URL = "https://www.usenotra.com/favicon.svg";
 export const SERVER_ICON_PNG_URL = "https://www.usenotra.com/apple-icon.png";
 export const SERVER_FAVICON_URL = "https://www.usenotra.com/favicon.ico";
