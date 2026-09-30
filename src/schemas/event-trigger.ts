@@ -6,9 +6,9 @@ import {
   EVENT_TRIGGER_SOURCE_TYPE_VALUES,
 } from "../constants/event-trigger.js";
 
-export const triggerIdSchema = z.string().min(1).describe("The event trigger ID (see list_event_triggers)");
+const triggerIdSchema = z.string().min(1).describe("The event trigger ID (see list_event_triggers)");
 
-export const eventTriggerBodyShape = {
+const eventTriggerBodyShape = {
   sourceType: z.enum(EVENT_TRIGGER_SOURCE_TYPE_VALUES).describe("Event source. Only GitHub webhooks are supported."),
   sourceConfig: z
     .object({

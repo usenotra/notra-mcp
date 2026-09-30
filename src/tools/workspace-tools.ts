@@ -40,7 +40,7 @@ function projectWorkspaceContext(context: WorkspaceContextResponse): WorkspaceCo
   };
 }
 
-export async function getWhoAmI(client: NotraClient): Promise<WhoAmIResponse> {
+async function getWhoAmI(client: NotraClient): Promise<WhoAmIResponse> {
   const context = await client.getWorkspaceContext();
   return {
     workspace: context.currentWorkspace,
