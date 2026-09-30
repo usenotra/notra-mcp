@@ -28,7 +28,7 @@ import type { CreateServerOptions } from "./types/server.js";
 import type { Toolset } from "./types/toolset.js";
 import { parseToolsets } from "./utils/toolsets.js";
 
-export const SERVER_VERSION = "1.1.0";
+const SERVER_VERSION = "1.1.0";
 
 type Registrar = (server: McpServer, client: NotraClient) => void;
 
