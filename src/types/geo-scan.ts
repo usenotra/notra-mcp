@@ -15,7 +15,7 @@ export interface GeoScan {
   retryable: boolean | null;
 }
 
-export interface GeoScanSummary {
+interface GeoScanSummary {
   plannedChecks: number | null;
   completedChecks: number;
   mentionCount: number;
@@ -23,7 +23,7 @@ export interface GeoScanSummary {
   engines: GeoScanEngineSummary[];
 }
 
-export interface GeoScanEngineSummary {
+interface GeoScanEngineSummary {
   engine: string;
   plannedChecks: number | null;
   completedChecks: number;
