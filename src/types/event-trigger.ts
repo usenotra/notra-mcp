@@ -7,9 +7,9 @@ import type {
 import type { Organization } from "./api.js";
 
 export type EventTriggerSourceType = (typeof EVENT_TRIGGER_SOURCE_TYPE_VALUES)[number];
-export type EventTriggerEventType = (typeof EVENT_TRIGGER_EVENT_TYPE_VALUES)[number];
+type EventTriggerEventType = (typeof EVENT_TRIGGER_EVENT_TYPE_VALUES)[number];
 export type EventTriggerOutputType = (typeof EVENT_TRIGGER_OUTPUT_TYPE_VALUES)[number];
-export type EventTriggerPublishDestination = (typeof EVENT_TRIGGER_PUBLISH_DESTINATION_VALUES)[number];
+type EventTriggerPublishDestination = (typeof EVENT_TRIGGER_PUBLISH_DESTINATION_VALUES)[number];
 
 export interface EventTriggerSourceConfig {
   eventTypes: EventTriggerEventType[];

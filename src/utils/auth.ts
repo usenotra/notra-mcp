@@ -66,7 +66,7 @@ function decodeJsonSegment(segment: string): unknown {
   }
 }
 
-export function looksLikeJwt(token: string): boolean {
+function looksLikeJwt(token: string): boolean {
   const parts = token.split(".");
   if (parts.length !== 3) {
     return false;
@@ -128,7 +128,7 @@ export function extractScopes(payload: JWTPayload): string[] {
   return [...new Set([...(scopeClaim ?? []), ...(permissionsClaim ?? [])])];
 }
 
-export function isAllowedAudience(aud: JWTPayload["aud"], config: OAuthConfig): boolean {
+function isAllowedAudience(aud: JWTPayload["aud"], config: OAuthConfig): boolean {
   if (aud === undefined) {
     return false;
   }

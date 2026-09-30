@@ -17,7 +17,7 @@ export function apiOutputSchema(operationId: ApiOperationId): z.ZodType {
   return memoize(operationId, () => z.fromJSONSchema(API_RESPONSE_SCHEMAS[operationId]));
 }
 
-export function apiResponseProperty(operationId: ApiOperationId, ...path: string[]): JSONSchema.BaseSchema {
+function apiResponseProperty(operationId: ApiOperationId, ...path: string[]): JSONSchema.BaseSchema {
   let schema: JSONSchema.BaseSchema = API_RESPONSE_SCHEMAS[operationId];
   for (const property of path) {
     const next = schema.properties?.[property];

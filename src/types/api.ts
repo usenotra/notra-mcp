@@ -13,7 +13,7 @@ export interface Organization {
   logo: string | null;
 }
 
-export interface SourceMetadata {
+interface SourceMetadata {
   triggerId: string;
   lookbackWindow: string;
   triggerSourceType: string;
@@ -105,7 +105,7 @@ export interface GeneratePostRequest {
   };
 }
 
-export type JobStatus = "queued" | "running" | "completed" | "failed" | "skipped";
+type JobStatus = "queued" | "running" | "completed" | "failed" | "skipped";
 
 export interface PostGenerationJob {
   id: string;
@@ -124,7 +124,7 @@ export interface PostGenerationJob {
   completedAt: string | null;
 }
 
-export type PostGenerationEventType =
+type PostGenerationEventType =
   | "queued"
   | "workflow_triggered"
   | "running"
@@ -205,7 +205,7 @@ export interface GenerateBrandIdentityRequest {
   name?: string;
 }
 
-export type BrandIdentityGenerationStep = "scraping" | "extracting" | "saving";
+type BrandIdentityGenerationStep = "scraping" | "extracting" | "saving";
 
 export interface BrandIdentityGenerationJob {
   id: string;
@@ -296,7 +296,7 @@ export interface IntegrationDeleteResponse {
   disabledEvents: DisabledAutomationRef[];
 }
 
-export type ScheduleFrequency = "daily" | "weekly" | "monthly";
+type ScheduleFrequency = "daily" | "weekly" | "monthly";
 export type ScheduleSourceType = "cron";
 export type PublishDestination = "webflow" | "framer" | "custom";
 
