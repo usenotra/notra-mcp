@@ -7,7 +7,7 @@ const deliveryIdSchema = z.string().min(1).describe("The webhook delivery ID (se
 export const listWebhookEndpointsSchema = z.object({});
 
 export const createWebhookEndpointSchema = z.object({
-  url: z.url().max(2048).describe("HTTPS URL that receives event POSTs"),
+  url: z.url({ protocol: /^https$/ }).max(2048).describe("HTTPS URL that receives event POSTs"),
   events: z
     .array(z.enum(WEBHOOK_EVENT_VALUES))
     .min(1)
