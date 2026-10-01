@@ -1,6 +1,7 @@
 import { createServer as createHttpServer } from "node:http";
 import { once } from "node:events";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
+import { McpServer } from "@modelcontextprotocol/server";
 
 const state = vi.hoisted(() => ({ serverCalls: [], upstream: { requests: [], disconnects: [] } }));
 
@@ -98,16 +99,30 @@ async function modern(method, params = {}, { token = "api-key", query = "", sign
   return { status: response.status, contentType: response.headers.get("content-type"), body: JSON.parse(json) };
 }
 
+async function registeredToolNames() {
+  const { createServer } = await import("../src/server.ts");
+  const names = [];
+  const register = vi.spyOn(McpServer.prototype, "registerTool").mockImplementation((name) => names.push(name));
+  createServer("key");
+  register.mockRestore();
+  return names;
+}
+
+const toolNames = (body) => body.result.tools.map((tool) => tool.name);
+
 test("tools/list serves all tools without repeated $schema keys", async () => {
   const { body } = await modern("tools/list");
-  expect(body.result.tools).toHaveLength(103);
+  expect(toolNames(body).sort()).toEqual((await registeredToolNames()).sort());
   expect(JSON.stringify(body)).not.toContain("$schema");
 });
 
 test("toolsets query parameter narrows tools/list", async () => {
   const content = await modern("tools/list", {}, { query: "?toolsets=content" });
   const geo = await modern("tools/list", {}, { query: "?toolsets=geo" });
-  expect(content.body.result.tools.length + geo.body.result.tools.length).toBe(103 + 3);
+  const all = await registeredToolNames();
+  expect(new Set([...toolNames(content.body), ...toolNames(geo.body)])).toEqual(new Set(all));
+  expect(content.body.result.tools.length).toBeLessThan(all.length);
+  expect(geo.body.result.tools.length).toBeLessThan(all.length);
   expect(content.body.result.tools.map((tool) => tool.name)).not.toContain("get_geo_snapshot");
   const invalid = await modern("tools/list", {}, { query: "?toolsets=nope" });
   expect(invalid.status).toBe(400);
