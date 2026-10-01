@@ -22,13 +22,14 @@ import { registerPostTools } from "./tools/post-tools.js";
 import { registerProjectTools } from "./tools/project-tools.js";
 import { registerScheduleTools } from "./tools/schedule-tools.js";
 import { registerSkillTools } from "./tools/skill-tools.js";
+import { registerWebhookTools } from "./tools/webhook-tools.js";
 import { registerWorkspaceTools } from "./tools/workspace-tools.js";
 import type { AuthContext } from "./types/auth.js";
 import type { CreateServerOptions } from "./types/server.js";
 import type { Toolset } from "./types/toolset.js";
 import { parseToolsets } from "./utils/toolsets.js";
 
-export const SERVER_VERSION = "1.1.0";
+export const SERVER_VERSION = "1.2.0";
 
 type Registrar = (server: McpServer, client: NotraClient) => void;
 
@@ -38,6 +39,7 @@ const CONTENT_REGISTRARS: readonly Registrar[] = [
   registerIntegrationTools,
   registerScheduleTools,
   registerEventTriggerTools,
+  registerWebhookTools,
   registerChatTools,
   registerAgentTools,
   registerSkillTools,

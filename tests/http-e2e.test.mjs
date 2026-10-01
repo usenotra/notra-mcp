@@ -100,14 +100,14 @@ async function modern(method, params = {}, { token = "api-key", query = "", sign
 
 test("tools/list serves all tools without repeated $schema keys", async () => {
   const { body } = await modern("tools/list");
-  expect(body.result.tools).toHaveLength(97);
+  expect(body.result.tools).toHaveLength(103);
   expect(JSON.stringify(body)).not.toContain("$schema");
 });
 
 test("toolsets query parameter narrows tools/list", async () => {
   const content = await modern("tools/list", {}, { query: "?toolsets=content" });
   const geo = await modern("tools/list", {}, { query: "?toolsets=geo" });
-  expect(content.body.result.tools.length + geo.body.result.tools.length).toBe(97 + 3);
+  expect(content.body.result.tools.length + geo.body.result.tools.length).toBe(103 + 3);
   expect(content.body.result.tools.map((tool) => tool.name)).not.toContain("get_geo_snapshot");
   const invalid = await modern("tools/list", {}, { query: "?toolsets=nope" });
   expect(invalid.status).toBe(400);
