@@ -14,6 +14,7 @@ export type ApiOperationId =
   | "createProject"
   | "createSchedule"
   | "createSkill"
+  | "createWebhookEndpoint"
   | "deleteBrandIdentity"
   | "deleteEventTrigger"
   | "deleteGeoCompetitor"
@@ -24,6 +25,7 @@ export type ApiOperationId =
   | "deleteProject"
   | "deleteSchedule"
   | "deleteSkill"
+  | "deleteWebhookEndpoint"
   | "getBrandIdentity"
   | "getBrandIdentityGeneration"
   | "getChat"
@@ -53,6 +55,7 @@ export type ApiOperationId =
   | "getProject"
   | "getPublicApiStatus"
   | "getSkill"
+  | "getWebhookDelivery"
   | "getWorkspaces"
   | "importGeoCompetitors"
   | "importGeoPrompts"
@@ -79,8 +82,11 @@ export type ApiOperationId =
   | "listProjects"
   | "listSchedules"
   | "listSkills"
+  | "listWebhookDeliveries"
+  | "listWebhookEndpoints"
   | "patchSkill"
   | "planGeoContentBrief"
+  | "retryWebhookDelivery"
   | "rotateGeoIngestToken"
   | "runGeoSequence"
   | "sendAgentSessionMessage"
@@ -663,6 +669,38 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["skill"],
   },
+  createWebhookEndpoint: {
+    type: "object",
+    properties: {
+      endpoint: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          organizationId: { type: "string" },
+          url: { type: "string" },
+          events: {
+            type: "array",
+            items: {
+              type: "string",
+              enum: [
+                "post.generation.completed",
+                "post.generation.failed",
+                "post.generation.skipped",
+                "brand_identity.generation.completed",
+                "brand_identity.generation.failed",
+                "post.published",
+              ],
+            },
+          },
+          enabled: { type: "boolean" },
+          createdAt: { type: "string" },
+        },
+        required: ["id", "organizationId", "url", "events", "enabled", "createdAt"],
+      },
+      secret: { type: "string" },
+    },
+    required: ["endpoint", "secret"],
+  },
   deleteBrandIdentity: {
     type: "object",
     properties: {
@@ -863,6 +901,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["id", "organization"],
   },
   deleteSkill: { type: "object", properties: { success: { type: "boolean", enum: [true] } }, required: ["success"] },
+  deleteWebhookEndpoint: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
   getBrandIdentity: {
     type: "object",
     properties: {
@@ -2721,6 +2760,79 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["skill"],
   },
+  getWebhookDelivery: {
+    type: "object",
+    properties: {
+      delivery: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          eventId: { type: "string" },
+          endpointId: { type: "string" },
+          url: { type: "string" },
+          eventType: {
+            type: "string",
+            enum: [
+              "post.generation.completed",
+              "post.generation.failed",
+              "post.generation.skipped",
+              "brand_identity.generation.completed",
+              "brand_identity.generation.failed",
+              "post.published",
+            ],
+          },
+          status: { type: "string", enum: ["pending", "sending", "retrying", "succeeded", "failed", "cancelled"] },
+          attemptCount: { type: "number" },
+          nextAttemptAt: { type: "string" },
+          createdAt: { type: "string" },
+          statusCode: { type: ["number", "null"] },
+          error: { type: ["string", "null"] },
+          payload: { type: "string" },
+        },
+        required: [
+          "id",
+          "eventId",
+          "endpointId",
+          "url",
+          "eventType",
+          "status",
+          "attemptCount",
+          "nextAttemptAt",
+          "createdAt",
+          "statusCode",
+          "error",
+          "payload",
+        ],
+      },
+      attempts: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            deliveryId: { type: "string" },
+            attemptNumber: { type: "number" },
+            startedAt: { type: "string" },
+            finishedAt: { type: ["string", "null"] },
+            statusCode: { type: ["number", "null"] },
+            error: { type: ["string", "null"] },
+            durationMs: { type: ["number", "null"] },
+          },
+          required: [
+            "id",
+            "deliveryId",
+            "attemptNumber",
+            "startedAt",
+            "finishedAt",
+            "statusCode",
+            "error",
+            "durationMs",
+          ],
+        },
+      },
+    },
+    required: ["delivery", "attempts"],
+  },
   getWorkspaces: {
     type: "object",
     properties: {
@@ -4233,6 +4345,89 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["skills"],
   },
+  listWebhookDeliveries: {
+    type: "object",
+    properties: {
+      deliveries: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            eventId: { type: "string" },
+            endpointId: { type: "string" },
+            url: { type: "string" },
+            eventType: {
+              type: "string",
+              enum: [
+                "post.generation.completed",
+                "post.generation.failed",
+                "post.generation.skipped",
+                "brand_identity.generation.completed",
+                "brand_identity.generation.failed",
+                "post.published",
+              ],
+            },
+            status: { type: "string", enum: ["pending", "sending", "retrying", "succeeded", "failed", "cancelled"] },
+            attemptCount: { type: "number" },
+            nextAttemptAt: { type: "string" },
+            createdAt: { type: "string" },
+            statusCode: { type: ["number", "null"] },
+            error: { type: ["string", "null"] },
+          },
+          required: [
+            "id",
+            "eventId",
+            "endpointId",
+            "url",
+            "eventType",
+            "status",
+            "attemptCount",
+            "nextAttemptAt",
+            "createdAt",
+            "statusCode",
+            "error",
+          ],
+        },
+      },
+      hasMore: { type: "boolean" },
+    },
+    required: ["deliveries", "hasMore"],
+  },
+  listWebhookEndpoints: {
+    type: "object",
+    properties: {
+      endpoints: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            organizationId: { type: "string" },
+            url: { type: "string" },
+            events: {
+              type: "array",
+              items: {
+                type: "string",
+                enum: [
+                  "post.generation.completed",
+                  "post.generation.failed",
+                  "post.generation.skipped",
+                  "brand_identity.generation.completed",
+                  "brand_identity.generation.failed",
+                  "post.published",
+                ],
+              },
+            },
+            enabled: { type: "boolean" },
+            createdAt: { type: "string" },
+          },
+          required: ["id", "organizationId", "url", "events", "enabled", "createdAt"],
+        },
+      },
+    },
+    required: ["endpoints"],
+  },
   patchSkill: {
     type: "object",
     properties: {
@@ -4380,6 +4575,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["briefId", "brief", "status", "runId", "postId", "organization"],
   },
+  retryWebhookDelivery: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
   rotateGeoIngestToken: {
     type: "object",
     properties: {

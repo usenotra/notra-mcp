@@ -78,7 +78,7 @@ test("toolsets default to everything and filter registered tools", () => {
   const all = registeredToolNames();
   const content = registeredToolNames({ toolsets: parseToolsets("content") });
   const geo = registeredToolNames({ toolsets: parseToolsets("geo") });
-  expect(all).toHaveLength(97);
+  expect(new Set(all).size).toBe(all.length);
   expect(new Set([...content, ...geo])).toEqual(new Set(all));
   expect(content).toContain("create_chat");
   expect(content).not.toContain("list_projects");
@@ -108,7 +108,7 @@ test("onlyTool registers just the owning module, with full registration as fallb
 
   // Unknown names fall back to full registration so the SDK keeps answering
   // its standard not-found error.
-  expect(registeredToolNames({ onlyTool: "does_not_exist" })).toHaveLength(97);
+  expect(registeredToolNames({ onlyTool: "does_not_exist" })).toEqual(all);
 
   // A tool outside the active toolsets falls back too, so the filtered server
   // still answers not-found instead of accidentally registering it.

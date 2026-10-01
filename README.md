@@ -191,6 +191,17 @@ Each MCP connection operates in the workspace bound to its bearer token. To act 
 | `update_event_trigger` | Replace an event trigger's configuration                           |
 | `delete_event_trigger` | Delete an event trigger                                            |
 
+### Webhooks
+
+| Tool                      | Description                                                          |
+| ------------------------- | -------------------------------------------------------------------- |
+| `list_webhook_endpoints`  | List HTTPS endpoints subscribed to Notra events                      |
+| `create_webhook_endpoint` | Subscribe an endpoint to events; returns its one-time signing secret |
+| `delete_webhook_endpoint` | Remove a webhook subscription and cancel unsent deliveries           |
+| `list_webhook_deliveries` | List webhook deliveries, optionally filtered by status               |
+| `get_webhook_delivery`    | Get a delivery's payload and attempt history                         |
+| `retry_webhook_delivery`  | Retry a failed webhook delivery                                      |
+
 ### Chats
 
 | Tool                           | Description                                                      |

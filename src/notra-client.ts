@@ -47,6 +47,15 @@ import type {
   ListEventTriggersParams,
 } from "./types/event-trigger.js";
 import type {
+  CreateWebhookEndpointRequest,
+  CreateWebhookEndpointResponse,
+  ListWebhookDeliveriesParams,
+  WebhookDeliveryListResponse,
+  WebhookDeliveryResponse,
+  WebhookEndpointListResponse,
+  WebhookIdResponse,
+} from "./types/webhook.js";
+import type {
   FeedbackListResponse,
   FeedbackResponse,
   ListFeedbackParams,
@@ -463,6 +472,32 @@ export class NotraClient {
 
   async deleteEventTrigger(triggerId: string): Promise<EventTriggerDeleteResponse> {
     return this.request<EventTriggerDeleteResponse>("DELETE", `/v1/event-triggers/${encodeURIComponent(triggerId)}`);
+  }
+
+  async listWebhookEndpoints(): Promise<WebhookEndpointListResponse> {
+    return this.request<WebhookEndpointListResponse>("GET", "/v1/webhooks");
+  }
+
+  async createWebhookEndpoint(body: CreateWebhookEndpointRequest): Promise<CreateWebhookEndpointResponse> {
+    return this.request<CreateWebhookEndpointResponse, CreateWebhookEndpointRequest>("POST", "/v1/webhooks", {
+      body,
+    });
+  }
+
+  async deleteWebhookEndpoint(endpointId: string): Promise<WebhookIdResponse> {
+    return this.request<WebhookIdResponse>("DELETE", `/v1/webhooks/${encodeURIComponent(endpointId)}`);
+  }
+
+  async listWebhookDeliveries(params?: ListWebhookDeliveriesParams): Promise<WebhookDeliveryListResponse> {
+    return this.request<WebhookDeliveryListResponse>("GET", "/v1/webhooks/deliveries", { params });
+  }
+
+  async getWebhookDelivery(deliveryId: string): Promise<WebhookDeliveryResponse> {
+    return this.request<WebhookDeliveryResponse>("GET", `/v1/webhooks/deliveries/${encodeURIComponent(deliveryId)}`);
+  }
+
+  async retryWebhookDelivery(deliveryId: string): Promise<WebhookIdResponse> {
+    return this.request<WebhookIdResponse>("POST", `/v1/webhooks/deliveries/${encodeURIComponent(deliveryId)}/retry`);
   }
 
   async listFeedback(params?: ListFeedbackParams): Promise<FeedbackListResponse> {
