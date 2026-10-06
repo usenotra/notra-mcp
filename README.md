@@ -1,6 +1,6 @@
 # Notra MCP Server
 
-An MCP (Model Context Protocol) server for the [Notra API](https://docs.usenotra.com). It manages posts, brand identities, integrations, schedules, GEO visibility scans, competitors, content briefs, and AI traffic analytics.
+An MCP (Model Context Protocol) server for the [Notra API](https://www.usenotra.com/docs). It manages posts, brand identities, integrations, schedules, GEO visibility scans, competitors, content briefs, and AI traffic analytics.
 
 ## Setup
 
