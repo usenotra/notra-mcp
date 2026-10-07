@@ -57,10 +57,6 @@ function emitUsage(event: McpUsageEvent): void {
   void delivery.finally(() => pendingDeliveries.delete(delivery));
 }
 
-export async function flushMcpUsage(): Promise<void> {
-  await Promise.all(pendingDeliveries);
-}
-
 export function instrumentMcpUsage(
   server: McpServer,
   auth: AuthContext,
