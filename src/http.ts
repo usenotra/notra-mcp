@@ -54,6 +54,7 @@ const modernHandler = createMcpHandler(
     return createServer(fromMcpAuthInfo(authInfo), {
       toolsets: authInfo.extra?.toolsets as ReadonlySet<Toolset>,
       onlyTool,
+      trackUsage: true,
     });
   },
   {
@@ -411,7 +412,7 @@ async function handleMcpPost(req: Request, res: Response) {
         });
         return;
       }
-      const server = createServer(auth, { toolsets });
+      const server = createServer(auth, { toolsets, trackUsage: true });
 
       transport = new NodeStreamableHTTPServerTransport({
         sessionIdGenerator: randomUUID,
