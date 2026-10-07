@@ -6,8 +6,6 @@ import { flushMcpUsage, instrumentMcpUsage } from "../src/utils/mcp-usage.ts";
 
 beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "");
-  vi.stubEnv("AXIOM_TOKEN", "");
-  vi.stubEnv("AXIOM_MCP_DATASET", "");
   vi.spyOn(console, "log").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
 });
@@ -30,15 +28,14 @@ function harness(client = { name: "claude-code", version: "2.1.3" }) {
     handlers.get("tools/call")({ params: { name: "known" } }, { mcpReq: { signal: new AbortController().signal } });
 }
 
-test("without sink credentials only a structured hosted log is emitted", async () => {
+test("without a PostHog project token tracking is disabled with no usage-log fallback", async () => {
   const fetch = vi.spyOn(globalThis, "fetch");
   await harness()();
   expect(fetch).not.toHaveBeenCalled();
-  expect(console.log).toHaveBeenCalledOnce();
-  expect(JSON.parse(console.log.mock.calls[0][0])).toMatchObject({ event: "mcp_tool_called", outcome: "success" });
+  expect(console.log).not.toHaveBeenCalled();
 });
 
-test("stdio servers do not install usage tracking even when collector credentials exist", async () => {
+test("stdio servers do not install usage tracking even when a PostHog token exists", async () => {
   vi.stubEnv("NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "test-token");
   const registrations = vi.spyOn(McpServer.prototype, "registerTool");
   const fetch = vi
@@ -53,15 +50,18 @@ test("stdio servers do not install usage tracking even when collector credential
 });
 
 test("client-provided strings are bucketed rather than copied into events", async () => {
+  vi.stubEnv("NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "test-token");
+  const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null));
   await harness({ name: "private customer name", version: "private-token" })();
-  const event = JSON.parse(console.log.mock.calls[0][0]);
+  await flushMcpUsage();
+  const event = JSON.parse(fetch.mock.calls[0][1].body).properties;
   expect(event.client_name).toBe("other");
   expect(event.client_version).toBeUndefined();
   expect(JSON.stringify(event)).not.toContain("private");
 });
 
 test.each(["https://posthog.example.test", "http://posthog.example.test", "https://secret@posthog.example.test"])(
-  "collector failures and invalid destinations cannot fail a tool call (%s)",
+  "PostHog failures and invalid destinations cannot fail a tool call (%s)",
   async (host) => {
     vi.stubEnv("NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "test-token");
     vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", host);
@@ -74,7 +74,7 @@ test.each(["https://posthog.example.test", "http://posthog.example.test", "https
   },
 );
 
-test("collector HTTP errors report only their status", async () => {
+test("PostHog HTTP errors report only their status", async () => {
   vi.stubEnv("NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "test-token");
   vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("private failure", { status: 503 }));
   await harness()();
@@ -82,19 +82,7 @@ test("collector HTTP errors report only their status", async () => {
   expect(console.warn).toHaveBeenCalledWith("MCP usage PostHog delivery failed: HTTP 503");
 });
 
-test("Axiom ingestion failures with HTTP 200 are reported without response contents", async () => {
-  vi.stubEnv("AXIOM_TOKEN", "test-token");
-  vi.stubEnv("AXIOM_MCP_DATASET", "mcp-usage");
-  vi.spyOn(globalThis, "fetch").mockResolvedValue(
-    Response.json({ ingested: 0, failed: 1, failures: [{ error: "private ingestion details" }] }),
-  );
-  await harness()();
-  await flushMcpUsage();
-  expect(console.warn).toHaveBeenCalledWith("MCP usage Axiom delivery rejected event");
-  expect(JSON.stringify(console.warn.mock.calls)).not.toContain("private");
-});
-
-test("slow collectors do not block tool results and pending requests stay bounded", async () => {
+test("slow PostHog requests do not block tool results and pending requests stay bounded", async () => {
   vi.stubEnv("NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "test-token");
   let release;
   const blocked = new Promise((resolve) => {

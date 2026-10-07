@@ -1,6 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import {
-  AXIOM_DEFAULT_HOST,
   MCP_CLIENT_PATTERNS,
   POSTHOG_DEFAULT_HOST,
   USAGE_DELIVERY_TIMEOUT_MS,
@@ -12,61 +11,26 @@ import { getRequestSignal } from "./request-signal.js";
 
 const pendingDeliveries = new Set<Promise<void>>();
 
-function deliver(sink: string, host: string, path: string, headers: Record<string, string>, body: unknown): void {
+function emitUsage(event: McpUsageEvent): void {
+  const posthogToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
+  if (!posthogToken) {
+    return;
+  }
   if (pendingDeliveries.size >= USAGE_MAX_PENDING_DELIVERIES) {
-    console.warn(`MCP usage ${sink} delivery dropped: pending delivery limit reached`);
+    console.warn("MCP usage PostHog delivery dropped: pending delivery limit reached");
     return;
   }
   const delivery = (async () => {
     try {
-      const url = new URL(host);
+      const url = new URL(process.env.NEXT_PUBLIC_POSTHOG_HOST || POSTHOG_DEFAULT_HOST);
       if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) {
         throw new Error("Invalid usage destination");
       }
-      url.pathname = `${url.pathname.replace(/\/$/, "")}${path}`;
+      url.pathname = `${url.pathname.replace(/\/$/, "")}/i/v0/e/`;
       const response = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...headers },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(USAGE_DELIVERY_TIMEOUT_MS),
-        redirect: "error",
-      });
-      if (!response.ok) {
-        await response.body?.cancel();
-        console.warn(`MCP usage ${sink} delivery failed: HTTP ${response.status}`);
-        return;
-      }
-      if (sink === "Axiom") {
-        const acknowledgement = await response.json();
-        if (acknowledgement.failed > 0) {
-          console.warn("MCP usage Axiom delivery rejected event");
-        }
-      } else {
-        await response.body?.cancel();
-      }
-    } catch {
-      console.warn(`MCP usage ${sink} delivery failed`);
-    }
-  })();
-  pendingDeliveries.add(delivery);
-  void delivery.finally(() => pendingDeliveries.delete(delivery));
-}
-
-export async function flushMcpUsage(): Promise<void> {
-  await Promise.all(pendingDeliveries);
-}
-
-function emitUsage(event: McpUsageEvent): void {
-  try {
-    console.log(JSON.stringify(event));
-    const posthogToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
-    if (posthogToken) {
-      deliver(
-        "PostHog",
-        process.env.NEXT_PUBLIC_POSTHOG_HOST || POSTHOG_DEFAULT_HOST,
-        "/i/v0/e/",
-        {},
-        {
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           api_key: posthogToken,
           event: event.event,
           timestamp: event.timestamp,
@@ -77,26 +41,24 @@ function emitUsage(event: McpUsageEvent): void {
             $geoip_disable: true,
             ...(event.organization_id && { $groups: { organization: event.organization_id } }),
           },
-        },
-      );
+        }),
+        signal: AbortSignal.timeout(USAGE_DELIVERY_TIMEOUT_MS),
+        redirect: "error",
+      });
+      await response.body?.cancel();
+      if (!response.ok) {
+        console.warn(`MCP usage PostHog delivery failed: HTTP ${response.status}`);
+      }
+    } catch {
+      console.warn("MCP usage PostHog delivery failed");
     }
-    const axiomToken = process.env.AXIOM_TOKEN;
-    const axiomDataset = process.env.AXIOM_MCP_DATASET;
-    if (axiomToken && axiomDataset) {
-      deliver(
-        "Axiom",
-        process.env.AXIOM_URL || AXIOM_DEFAULT_HOST,
-        `/v1/datasets/${encodeURIComponent(axiomDataset)}/ingest`,
-        {
-          Authorization: `Bearer ${axiomToken}`,
-          ...(process.env.AXIOM_ORG_ID && { "X-Axiom-Org-Id": process.env.AXIOM_ORG_ID }),
-        },
-        [{ _time: event.timestamp, ...event }],
-      );
-    }
-  } catch {
-    console.warn("MCP usage event could not be recorded");
-  }
+  })();
+  pendingDeliveries.add(delivery);
+  void delivery.finally(() => pendingDeliveries.delete(delivery));
+}
+
+export async function flushMcpUsage(): Promise<void> {
+  await Promise.all(pendingDeliveries);
 }
 
 export function instrumentMcpUsage(

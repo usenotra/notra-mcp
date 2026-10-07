@@ -113,26 +113,21 @@ Legacy 2025 sessions expire after 30 minutes of inactivity. Each OAuth user or A
 
 ## Hosted usage statistics
 
-The HTTP server emits one structured `mcp_tool_called` JSON log per dispatched tool call, including calls that fail tool input/output validation or return `isError: true` with HTTP 200. Initialization, discovery, health checks, and requests rejected before tool dispatch are not counted. Local stdio servers do not emit usage events or contact collectors.
+The HTTP server tracks usage exclusively in PostHog, sending one `mcp_tool_called` event per dispatched tool call, including calls that fail tool input/output validation or return `isError: true` with HTTP 200. Initialization, discovery, health checks, and requests rejected before tool dispatch are not counted. Local stdio servers do not emit usage events or contact PostHog.
 
-Set these environment variables on the hosted deployment to forward the same events:
+Set the PostHog project token on the hosted deployment to enable tracking:
 
-| Collector | Required variables                  | Optional variables                                              |
-| --------- | ----------------------------------- | --------------------------------------------------------------- |
-| PostHog   | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | `NEXT_PUBLIC_POSTHOG_HOST` (default `https://us.i.posthog.com`) |
-| Axiom     | `AXIOM_TOKEN`, `AXIOM_MCP_DATASET`  | `AXIOM_URL` (default `https://api.axiom.co`), `AXIOM_ORG_ID`    |
+```env
+NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=your-project-token
+```
+
+`NEXT_PUBLIC_POSTHOG_HOST` defaults to `https://us.i.posthog.com`; set it to `https://eu.i.posthog.com` for an EU project. Without a project token, tracking is disabled. There is no alternative collector or JSON usage-log fallback.
 
 Events include `tool_name`, `outcome` (`success`, `error`, or `cancelled`), `duration_ms`, `server_version`, `protocol_version`, `client_name`, `client_version`, and `auth_kind`. OAuth events also include the verified WorkOS `organization_id` and `user_id`; API-key calls have no user/workspace attribution and share the PostHog distinct ID `mcp:api-key`, which must not be counted as a unique user. Client identity is self-reported, bucketed into known client names, and unknown names are recorded as `other`; versions are only retained in numeric `major.minor.patch` form. Unknown tool names are recorded as `unknown`.
 
-Arguments, results, prompts, error messages, headers, IP addresses, tokens, API keys, and token hashes are never included in usage events. Delivery is asynchronous and best-effort, with a five-second timeout and at most 64 pending collector requests per process. Failed or dropped deliveries produce a credential-free warning without failing tool calls. Events are not sampled, but collector delivery is not an audit or billing ledger.
+Arguments, results, prompts, error messages, headers, IP addresses, tokens, API keys, and token hashes are never included in usage events. Delivery is asynchronous and best-effort, with a five-second timeout and at most 64 pending PostHog requests per process. Failed or dropped deliveries produce a credential-free warning without failing tool calls. Events are not sampled, but PostHog delivery is not an audit or billing ledger.
 
-In PostHog, filter on `mcp_tool_called` and break down by `tool_name`, `client_name`, or `outcome`. Count distinct `organization_id`/`user_id` only for OAuth calls. In Axiom, tool volume, error rates, and latency percentiles can be queried with:
-
-```apl
-['mcp-usage']
-| where event == "mcp_tool_called"
-| summarize calls = count(), errors = countif(outcome == "error"), p50_ms = percentile(duration_ms, 50), p95_ms = percentile(duration_ms, 95) by tool_name, bin(_time, 1d)
-```
+In PostHog, filter on `mcp_tool_called` and break down by `tool_name`, `client_name`, or `outcome`. Count distinct `organization_id`/`user_id` only for OAuth calls, and use `duration_ms` for latency percentiles.
 
 ## Toolsets
 

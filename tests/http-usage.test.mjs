@@ -70,15 +70,14 @@ beforeEach(() => {
   invalidOutput = false;
   vi.stubEnv("NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "test-project-token");
   vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://posthog.example.test");
-  vi.stubEnv("AXIOM_TOKEN", "test-ingest-token");
-  vi.stubEnv("AXIOM_MCP_DATASET", "mcp-usage");
-  vi.stubEnv("AXIOM_URL", "https://axiom.example.test");
-  vi.spyOn(console, "log").mockImplementation((message) => events.push(JSON.parse(message)));
+  vi.spyOn(console, "log").mockImplementation(() => {});
   vi.spyOn(globalThis, "fetch").mockImplementation(async (input, options) => {
     const url = new URL(String(input));
-    if (url.hostname.endsWith(".example.test")) {
-      deliveries.push({ url: url.toString(), options, body: JSON.parse(options.body) });
-      return Response.json({ ingested: 1 });
+    if (url.hostname === "posthog.example.test") {
+      const body = JSON.parse(options.body);
+      deliveries.push({ url: url.toString(), options, body });
+      events.push(body.properties);
+      return Response.json({ status: 1 });
     }
     return realFetch(input, options);
   });
@@ -125,7 +124,7 @@ function modern(
   );
 }
 
-test("modern tool calls emit one safe event and deliver it to both configured sinks", async () => {
+test("modern tool calls send exactly one safe event to PostHog without usage logs", async () => {
   const result = await modern();
   expect(result.status).toBe(200);
   expect(result.body.result.isError).toBeUndefined();
@@ -145,16 +144,14 @@ test("modern tool calls emit one safe event and deliver it to both configured si
   expect(events[0].duration_ms).toBeGreaterThanOrEqual(0);
   expect(events[0].server_version).toBe("1.2.0");
   expect(Number.isNaN(Date.parse(events[0].timestamp))).toBe(false);
-  expect(deliveries).toHaveLength(2);
+  expect(deliveries).toHaveLength(1);
   expect(deliveries[0].url).toBe("https://posthog.example.test/i/v0/e/");
-  expect(deliveries[1].url).toBe("https://axiom.example.test/v1/datasets/mcp-usage/ingest");
-  expect(deliveries[1].options.headers.Authorization).toBe("Bearer test-ingest-token");
   expect(deliveries[0].body).toMatchObject({
     event: "mcp_tool_called",
     distinct_id: "mcp:user:user-1",
     properties: { $groups: { organization: "org-1" }, $geoip_disable: true },
   });
-  expect(deliveries[1].body[0]).toEqual({ _time: events[0].timestamp, ...events[0] });
+  expect(console.log).not.toHaveBeenCalled();
   const serialized = JSON.stringify({ events, bodies: deliveries.map(({ body }) => body) });
   for (const secret of ["oauth-1", "private customer prompt", "Private Organization", "Authorization", "arguments"]) {
     expect(serialized).not.toContain(secret);

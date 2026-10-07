@@ -1,7 +1,6 @@
 export const USAGE_DELIVERY_TIMEOUT_MS = 5000;
 export const USAGE_MAX_PENDING_DELIVERIES = 64;
 export const POSTHOG_DEFAULT_HOST = "https://us.i.posthog.com";
-export const AXIOM_DEFAULT_HOST = "https://api.axiom.co";
 
 export const MCP_CLIENT_PATTERNS = [
   { name: "claude-code", pattern: /claude[-_ ]?code/i },
