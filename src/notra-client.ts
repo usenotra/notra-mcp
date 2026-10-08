@@ -39,6 +39,7 @@ import type {
 } from "./types/api.js";
 import type { AgentChatsListResponse, ListAgentChatsParams } from "./types/agent.js";
 import type { AuthContext } from "./types/auth.js";
+import type { CancelPostScheduleResponse, PostScheduleResponse, SchedulePostRequest } from "./types/post-schedule.js";
 import type {
   EventTriggerDeleteResponse,
   EventTriggerListResponse,
@@ -320,6 +321,22 @@ export class NotraClient {
 
   async getPostGenerationStatus(jobId: string): Promise<PostGenerationStatusResponse> {
     return this.request<PostGenerationStatusResponse>("GET", `/v1/posts/generate/${encodeURIComponent(jobId)}`);
+  }
+
+  async getPostSchedule(postId: string): Promise<PostScheduleResponse> {
+    return this.request<PostScheduleResponse>("GET", `/v1/posts/${encodeURIComponent(postId)}/schedule`);
+  }
+
+  async schedulePost(postId: string, body: SchedulePostRequest): Promise<PostScheduleResponse> {
+    return this.request<PostScheduleResponse, SchedulePostRequest>(
+      "POST",
+      `/v1/posts/${encodeURIComponent(postId)}/schedule`,
+      { body },
+    );
+  }
+
+  async cancelPostSchedule(postId: string): Promise<CancelPostScheduleResponse> {
+    return this.request<CancelPostScheduleResponse>("DELETE", `/v1/posts/${encodeURIComponent(postId)}/schedule`);
   }
 
   async listBrandIdentities(): Promise<BrandIdentityListResponse> {

@@ -131,7 +131,7 @@ In PostHog, filter on `mcp_tool_called` and break down by `tool_name`, `client_n
 
 ## Toolsets
 
-All 97 tools are exposed by default, which costs roughly 20k tokens of agent context. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 106 tools are exposed by default, which costs roughly 20k tokens of agent context. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                                           |
 | --------- | --------------------------------------------------------------------------------------------------------------- |
@@ -170,6 +170,11 @@ Each MCP connection operates in the workspace bound to its bearer token. To act 
 | `delete_post`                | Delete a post                                                                                      |
 | `generate_post`              | Queue async post generation from GitHub activity                                                   |
 | `get_post_generation_status` | Check the status of a post generation job                                                          |
+| `get_post_schedule`          | Get a post's publishing schedule and per-destination status                                        |
+| `schedule_post`              | Schedule an existing post for publishing in Notra and optionally GitHub, X, or LinkedIn            |
+| `cancel_post_schedule`       | Cancel pending publishing destinations; already-publishing destinations finish on their own        |
+
+Post publishing schedules are separate from the content-generation schedules below. `schedule_post` requires an ISO 8601 `scheduledAt` timestamp, accepts an optional IANA `timeZone` (default `UTC`), and supports at most two external destinations. GitHub destinations use `repositoryId` from `list_integrations` and an optional `merge` flag (default `true`); social destinations use a connected X or LinkedIn `accountId`. Omitting destinations schedules publishing in Notra only.
 
 ### Brand Identities
 

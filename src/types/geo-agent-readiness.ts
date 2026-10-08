@@ -27,6 +27,14 @@ export interface GeoAgentReadinessReport {
   createdAt: string;
 }
 
+interface GeoAgentReadinessChange {
+  id: string;
+  name: string;
+  tier: "essential" | "recommended" | "bonus";
+  previousResult: "failed" | "partial" | null;
+  result: "failed" | "partial" | null;
+}
+
 export interface GeoAgentReadinessResponse {
   targetUrl: string;
   report: GeoAgentReadinessReport | null;
@@ -38,6 +46,14 @@ export interface GeoAgentReadinessResponse {
     partialCount: number;
     scannedAt: string;
   }>;
+  comparison: {
+    previousScore: number | null;
+    previousScannedAt: string;
+    resolved: GeoAgentReadinessChange[];
+    added: GeoAgentReadinessChange[];
+    improved: GeoAgentReadinessChange[];
+    worsened: GeoAgentReadinessChange[];
+  } | null;
   organization: Organization;
 }
 
