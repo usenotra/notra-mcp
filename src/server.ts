@@ -19,6 +19,7 @@ import { registerGeoTrafficTools } from "./tools/geo-traffic-tools.js";
 import { registerGeoVisibilityTools } from "./tools/geo-visibility-tools.js";
 import { registerIntegrationTools } from "./tools/integration-tools.js";
 import { registerPostTools } from "./tools/post-tools.js";
+import { registerPostScheduleTools } from "./tools/post-schedule-tools.js";
 import { registerProjectTools } from "./tools/project-tools.js";
 import { registerScheduleTools } from "./tools/schedule-tools.js";
 import { registerSkillTools } from "./tools/skill-tools.js";
@@ -36,6 +37,7 @@ type Registrar = (server: McpServer, client: NotraClient) => void;
 
 const CONTENT_REGISTRARS: readonly Registrar[] = [
   registerPostTools,
+  registerPostScheduleTools,
   registerBrandIdentityTools,
   registerIntegrationTools,
   registerScheduleTools,

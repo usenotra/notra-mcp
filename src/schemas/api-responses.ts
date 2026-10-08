@@ -2,6 +2,7 @@ import type { JSONSchema } from "zod/v4/core";
 
 export type ApiOperationId =
   | "approveGeoContentBrief"
+  | "cancelPostSchedule"
   | "createAgentSession"
   | "createBrandIdentity"
   | "createEventTrigger"
@@ -52,6 +53,7 @@ export type ApiOperationId =
   | "getGeoVisibilityTimeseries"
   | "getPost"
   | "getPostGeneration"
+  | "getPostSchedule"
   | "getProject"
   | "getPublicApiStatus"
   | "getSkill"
@@ -89,6 +91,7 @@ export type ApiOperationId =
   | "retryWebhookDelivery"
   | "rotateGeoIngestToken"
   | "runGeoSequence"
+  | "schedulePost"
   | "sendAgentSessionMessage"
   | "startGeoAgentReadinessScan"
   | "submitFeedback"
@@ -122,6 +125,27 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["runId", "organization"],
+  },
+  cancelPostSchedule: {
+    type: "object",
+    properties: {
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+      canceled: { type: "integer", description: "Destinations that were canceled or cleared." },
+      inProgress: {
+        type: "boolean",
+        description: "True when a destination was already publishing; it cannot be stopped and finishes on its own.",
+      },
+    },
+    required: ["organization", "canceled", "inProgress"],
   },
   createAgentSession: {
     type: "object",
@@ -689,6 +713,12 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 "brand_identity.generation.completed",
                 "brand_identity.generation.failed",
                 "post.published",
+                "post.created",
+                "post.updated",
+                "post.deleted",
+                "post.unpublished",
+                "geo.scan.completed",
+                "geo.scan.failed",
               ],
             },
           },
@@ -1359,6 +1389,106 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         },
         description: "Completed scans, oldest first.",
       },
+      comparison: {
+        type: ["object", "null"],
+        properties: {
+          previousScore: { type: ["number", "null"] },
+          previousScannedAt: { type: "string" },
+          resolved: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                name: { type: "string" },
+                tier: { type: "string", enum: ["essential", "recommended", "bonus"] },
+                previousResult: {
+                  type: ["string", "null"],
+                  enum: ["failed", "partial", null],
+                  description: "Result on the previous scan; null when the check passed.",
+                },
+                result: {
+                  type: ["string", "null"],
+                  enum: ["failed", "partial", null],
+                  description: "Result on the latest scan; null when the check passes now.",
+                },
+              },
+              required: ["id", "name", "tier", "previousResult", "result"],
+            },
+          },
+          added: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                name: { type: "string" },
+                tier: { type: "string", enum: ["essential", "recommended", "bonus"] },
+                previousResult: {
+                  type: ["string", "null"],
+                  enum: ["failed", "partial", null],
+                  description: "Result on the previous scan; null when the check passed.",
+                },
+                result: {
+                  type: ["string", "null"],
+                  enum: ["failed", "partial", null],
+                  description: "Result on the latest scan; null when the check passes now.",
+                },
+              },
+              required: ["id", "name", "tier", "previousResult", "result"],
+            },
+          },
+          improved: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                name: { type: "string" },
+                tier: { type: "string", enum: ["essential", "recommended", "bonus"] },
+                previousResult: {
+                  type: ["string", "null"],
+                  enum: ["failed", "partial", null],
+                  description: "Result on the previous scan; null when the check passed.",
+                },
+                result: {
+                  type: ["string", "null"],
+                  enum: ["failed", "partial", null],
+                  description: "Result on the latest scan; null when the check passes now.",
+                },
+              },
+              required: ["id", "name", "tier", "previousResult", "result"],
+            },
+            description: "Checks that went from failed to partial.",
+          },
+          worsened: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                name: { type: "string" },
+                tier: { type: "string", enum: ["essential", "recommended", "bonus"] },
+                previousResult: {
+                  type: ["string", "null"],
+                  enum: ["failed", "partial", null],
+                  description: "Result on the previous scan; null when the check passed.",
+                },
+                result: {
+                  type: ["string", "null"],
+                  enum: ["failed", "partial", null],
+                  description: "Result on the latest scan; null when the check passes now.",
+                },
+              },
+              required: ["id", "name", "tier", "previousResult", "result"],
+            },
+            description: "Checks that went from partial to failed.",
+          },
+        },
+        required: ["previousScore", "previousScannedAt", "resolved", "added", "improved", "worsened"],
+        description:
+          "Checks that changed between the latest completed scan and the one before it. Null until there are two completed scans.",
+      },
       organization: {
         type: "object",
         properties: {
@@ -1370,7 +1500,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         required: ["id", "slug", "name", "logo"],
       },
     },
-    required: ["targetUrl", "report", "scan", "history", "organization"],
+    required: ["targetUrl", "report", "scan", "history", "comparison", "organization"],
   },
   getGeoContentBrief: {
     type: "object",
@@ -2686,6 +2816,90 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["job", "events"],
   },
+  getPostSchedule: {
+    type: "object",
+    properties: {
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+      schedule: {
+        type: ["object", "null"],
+        properties: {
+          postId: { type: "string" },
+          scheduledAt: { type: "string", format: "date-time" },
+          timeZone: { type: "string" },
+          publications: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                destination: { type: "string", enum: ["notra", "github", "social"] },
+                config: {
+                  oneOf: [
+                    {
+                      type: "object",
+                      properties: { destination: { type: "string", enum: ["notra"] } },
+                      required: ["destination"],
+                    },
+                    {
+                      type: "object",
+                      properties: {
+                        destination: { type: "string", enum: ["github"] },
+                        repositoryId: { type: "string" },
+                        merge: { type: "boolean" },
+                      },
+                      required: ["destination", "repositoryId", "merge"],
+                    },
+                    {
+                      type: "object",
+                      properties: { destination: { type: "string", enum: ["social"] }, accountId: { type: "string" } },
+                      required: ["destination", "accountId"],
+                    },
+                  ],
+                },
+                status: {
+                  type: "string",
+                  enum: ["scheduled", "publishing", "published", "failed", "canceled"],
+                  description:
+                    "scheduled → publishing → published or failed. Failed destinations are retried automatically for transient errors before they end up failed.",
+                },
+                scheduledAt: { type: "string", format: "date-time" },
+                timeZone: { type: "string" },
+                attempts: { type: "integer" },
+                errorCode: { type: ["string", "null"] },
+                lastError: { type: ["string", "null"] },
+                resultUrl: { type: ["string", "null"], description: "Pull request or social post URL once published." },
+                publishedAt: { type: ["string", "null"], format: "date-time" },
+              },
+              required: [
+                "id",
+                "destination",
+                "config",
+                "status",
+                "scheduledAt",
+                "timeZone",
+                "attempts",
+                "errorCode",
+                "lastError",
+                "resultUrl",
+                "publishedAt",
+              ],
+            },
+          },
+        },
+        required: ["postId", "scheduledAt", "timeZone", "publications"],
+      },
+    },
+    required: ["organization", "schedule"],
+  },
   getProject: {
     type: "object",
     properties: {
@@ -2779,6 +2993,12 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               "brand_identity.generation.completed",
               "brand_identity.generation.failed",
               "post.published",
+              "post.created",
+              "post.updated",
+              "post.deleted",
+              "post.unpublished",
+              "geo.scan.completed",
+              "geo.scan.failed",
             ],
           },
           status: { type: "string", enum: ["pending", "sending", "retrying", "succeeded", "failed", "cancelled"] },
@@ -3524,7 +3744,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             variants: { type: "array", items: { type: "string" } },
             prompts: { type: "array", items: { type: "string" } },
             engines: { type: "array", items: { type: "string" } },
-            searches: { type: "number", description: "Scan answers in which an engine ran this web search." },
+            searches: {
+              type: "number",
+              description:
+                "Scan answers in which an engine ran this web search without mentioning the brand or citing its site.",
+            },
             ownMentionRate: { type: "number" },
             competitors: { type: "array", items: { type: "string" } },
             discoveredCompetitors: { type: "array", items: { type: "string" } },
@@ -3561,10 +3785,13 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             "brief",
           ],
         },
-        description:
-          "Web searches AI engines run across your scans where you are neither cited nor mentioned in most answers.",
+        description: "Web searches AI engines ran in scan answers without mentioning the brand or citing its site.",
       },
       hasScanData: { type: "boolean", description: "False until the project has at least one scan result." },
+      snapshotReady: {
+        type: "boolean",
+        description: "False while the project's content gaps snapshot is being prepared.",
+      },
       organization: {
         type: "object",
         properties: {
@@ -3576,7 +3803,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         required: ["id", "slug", "name", "logo"],
       },
     },
-    required: ["promptGaps", "searchGaps", "aiSearchGaps", "hasScanData", "organization"],
+    required: ["promptGaps", "searchGaps", "aiSearchGaps", "hasScanData", "snapshotReady", "organization"],
   },
   listGeoPromptResultSummaries: {
     type: "object",
@@ -4366,6 +4593,12 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 "brand_identity.generation.completed",
                 "brand_identity.generation.failed",
                 "post.published",
+                "post.created",
+                "post.updated",
+                "post.deleted",
+                "post.unpublished",
+                "geo.scan.completed",
+                "geo.scan.failed",
               ],
             },
             status: { type: "string", enum: ["pending", "sending", "retrying", "succeeded", "failed", "cancelled"] },
@@ -4416,6 +4649,12 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                   "brand_identity.generation.completed",
                   "brand_identity.generation.failed",
                   "post.published",
+                  "post.created",
+                  "post.updated",
+                  "post.deleted",
+                  "post.unpublished",
+                  "geo.scan.completed",
+                  "geo.scan.failed",
                 ],
               },
             },
@@ -4632,6 +4871,90 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["checks", "mentions", "engines", "organization"],
+  },
+  schedulePost: {
+    type: "object",
+    properties: {
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+      schedule: {
+        type: ["object", "null"],
+        properties: {
+          postId: { type: "string" },
+          scheduledAt: { type: "string", format: "date-time" },
+          timeZone: { type: "string" },
+          publications: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                destination: { type: "string", enum: ["notra", "github", "social"] },
+                config: {
+                  oneOf: [
+                    {
+                      type: "object",
+                      properties: { destination: { type: "string", enum: ["notra"] } },
+                      required: ["destination"],
+                    },
+                    {
+                      type: "object",
+                      properties: {
+                        destination: { type: "string", enum: ["github"] },
+                        repositoryId: { type: "string" },
+                        merge: { type: "boolean" },
+                      },
+                      required: ["destination", "repositoryId", "merge"],
+                    },
+                    {
+                      type: "object",
+                      properties: { destination: { type: "string", enum: ["social"] }, accountId: { type: "string" } },
+                      required: ["destination", "accountId"],
+                    },
+                  ],
+                },
+                status: {
+                  type: "string",
+                  enum: ["scheduled", "publishing", "published", "failed", "canceled"],
+                  description:
+                    "scheduled → publishing → published or failed. Failed destinations are retried automatically for transient errors before they end up failed.",
+                },
+                scheduledAt: { type: "string", format: "date-time" },
+                timeZone: { type: "string" },
+                attempts: { type: "integer" },
+                errorCode: { type: ["string", "null"] },
+                lastError: { type: ["string", "null"] },
+                resultUrl: { type: ["string", "null"], description: "Pull request or social post URL once published." },
+                publishedAt: { type: ["string", "null"], format: "date-time" },
+              },
+              required: [
+                "id",
+                "destination",
+                "config",
+                "status",
+                "scheduledAt",
+                "timeZone",
+                "attempts",
+                "errorCode",
+                "lastError",
+                "resultUrl",
+                "publishedAt",
+              ],
+            },
+          },
+        },
+        required: ["postId", "scheduledAt", "timeZone", "publications"],
+      },
+    },
+    required: ["organization", "schedule"],
   },
   sendAgentSessionMessage: { type: "object" },
   startGeoAgentReadinessScan: {
