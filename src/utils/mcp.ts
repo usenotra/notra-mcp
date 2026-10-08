@@ -1,3 +1,5 @@
+import { formatMcpError } from "./mcp-error.js";
+
 export async function handleError<T>(fn: () => Promise<T>) {
   try {
     const data = await fn();
@@ -11,7 +13,7 @@ export async function handleError<T>(fn: () => Promise<T>) {
 
     return result;
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = formatMcpError(error);
     return {
       isError: true as const,
       content: [{ type: "text" as const, text: message }],

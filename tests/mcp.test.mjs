@@ -48,10 +48,32 @@ test("sync throws and async rejections become MCP tool errors", async () => {
     async () => {
       throw "async failure";
     },
+    async () => {
+      throw new Error("application failure", { cause: new Error("private application details") });
+    },
   ]) {
     const result = await handleError(fn);
     assert.equal(result.isError, true);
     assert.match(result.content[0].text, /failure/);
     assert.equal(result.structuredContent, undefined);
+    assert.ok(!result.content[0].text.includes("private application details"));
+  }
+});
+
+test("fetch failures expose connection details without stacks or raw error objects", async () => {
+  for (const [cause, detail] of [
+    [new Error("getaddrinfo ENOTFOUND oauth.example.test"), "getaddrinfo ENOTFOUND oauth.example.test"],
+    [new Error("self-signed certificate"), "self-signed certificate"],
+    [Object.assign(new AggregateError([], ""), { code: "ECONNREFUSED" }), "ECONNREFUSED"],
+    [new Error("\u001b[31mconnection reset\u001b[0m\n"), "connection reset"],
+  ]) {
+    cause.request = { authorization: "private-token" };
+    const result = await handleError(async () => {
+      throw new TypeError("fetch failed", { cause });
+    });
+    assert.deepEqual(result, {
+      isError: true,
+      content: [{ type: "text", text: `fetch failed: ${detail}` }],
+    });
   }
 });
