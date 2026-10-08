@@ -11,7 +11,9 @@ export function formatMcpError(error: unknown): string {
   const detail = [code, cause.message]
     .filter(Boolean)
     .join(": ")
-    .replace(/\u001b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])/g, "")
+    .replace(/(?:\u001b\]|\u009d)[\s\S]*?(?:\u0007|\u001b\\|\u009c)/g, "")
+    .replace(/(?:\u001b\[|\u009b)[0-?]*[ -/]*[@-~]/g, "")
+    .replace(/\u001b[@-Z\\-_]/g, "")
     .replace(/[\u0000-\u001f\u007f-\u009f]/g, "");
   return detail ? `${message}: ${detail}` : message;
 }

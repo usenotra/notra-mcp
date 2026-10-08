@@ -66,6 +66,10 @@ test("fetch failures expose connection details without stacks or raw error objec
     [new Error("self-signed certificate"), "self-signed certificate"],
     [Object.assign(new AggregateError([], ""), { code: "ECONNREFUSED" }), "ECONNREFUSED"],
     [new Error("\u001b[31mconnection reset\u001b[0m\n"), "connection reset"],
+    [new Error("\u001b]0;window title\u0007connection reset"), "connection reset"],
+    [new Error("\u001b]0;window title\u001b\\connection reset"), "connection reset"],
+    [new Error("\u009d0;window title\u009cconnection reset"), "connection reset"],
+    [new Error("\u009b31mconnection reset\u009b0m"), "connection reset"],
   ]) {
     cause.request = { authorization: "private-token" };
     const result = await handleError(async () => {
