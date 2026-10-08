@@ -32,6 +32,7 @@ export interface GeoContentGapsResponse {
     brief: GeoBriefRef | null;
   }>;
   hasScanData: boolean;
+  snapshotReady: boolean;
   organization: Organization;
 }
 

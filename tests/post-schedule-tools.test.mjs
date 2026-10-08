@@ -6,7 +6,28 @@ import { postScheduleParamsSchema, schedulePostSchema } from "../src/schemas/pos
 import { parseToolsets } from "../src/utils/toolsets.ts";
 
 const organization = { id: "org-1", slug: "org", name: "Org", logo: null };
-const schedule = { postId: "post-1", scheduledAt: "2026-11-01T09:00:00Z", timeZone: "Europe/Berlin", publications: [] };
+const schedule = {
+  postId: "post-1",
+  scheduledAt: "2026-11-01T09:00:00Z",
+  timeZone: "Europe/Berlin",
+  publications: [
+    { destination: "notra" },
+    { destination: "github", repositoryId: "repo-1", merge: false },
+    { destination: "social", accountId: "account-1" },
+  ].map((config) => ({
+    id: `publication-${config.destination}`,
+    destination: config.destination,
+    config,
+    status: "scheduled",
+    scheduledAt: "2026-11-01T09:00:00Z",
+    timeZone: "Europe/Berlin",
+    attempts: 0,
+    errorCode: null,
+    lastError: null,
+    resultUrl: null,
+    publishedAt: null,
+  })),
+};
 const meta = {
   "io.modelcontextprotocol/protocolVersion": "2026-07-28",
   "io.modelcontextprotocol/clientCapabilities": {},
