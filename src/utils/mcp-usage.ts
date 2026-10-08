@@ -12,7 +12,7 @@ import { getRequestSignal } from "./request-signal.js";
 const pendingDeliveries = new Set<Promise<void>>();
 
 function emitUsage(event: McpUsageEvent): void {
-  const posthogToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
+  const posthogToken = process.env.POSTHOG_PROJECT_TOKEN;
   if (!posthogToken) {
     return;
   }
@@ -22,7 +22,7 @@ function emitUsage(event: McpUsageEvent): void {
   }
   const delivery = (async () => {
     try {
-      const url = new URL(process.env.NEXT_PUBLIC_POSTHOG_HOST || POSTHOG_DEFAULT_HOST);
+      const url = new URL(process.env.POSTHOG_HOST || POSTHOG_DEFAULT_HOST);
       if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) {
         throw new Error("Invalid usage destination");
       }

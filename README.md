@@ -118,10 +118,10 @@ The HTTP server tracks usage exclusively in PostHog, sending one `mcp_tool_calle
 Set the PostHog project token on the hosted deployment to enable tracking:
 
 ```env
-NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN=your-project-token
+POSTHOG_PROJECT_TOKEN=your-project-token
 ```
 
-`NEXT_PUBLIC_POSTHOG_HOST` defaults to `https://us.i.posthog.com`; set it to `https://eu.i.posthog.com` for an EU project. Without a project token, tracking is disabled. There is no alternative collector or JSON usage-log fallback.
+`POSTHOG_HOST` defaults to `https://us.i.posthog.com`; set it to `https://eu.i.posthog.com` for an EU project. Without a project token, tracking is disabled. There is no alternative collector or JSON usage-log fallback.
 
 Events include `tool_name`, `outcome` (`success`, `error`, or `cancelled`), `duration_ms`, `server_version`, `protocol_version`, `client_name`, `client_version`, and `auth_kind`. OAuth events also include the verified WorkOS `organization_id` and `user_id`; API-key calls have no user/workspace attribution and share the PostHog distinct ID `mcp:api-key`, which must not be counted as a unique user. Client identity is self-reported, bucketed into known client names, and unknown names are recorded as `other`; versions are only retained in numeric `major.minor.patch` form. Unknown tool names are recorded as `unknown`.
 
