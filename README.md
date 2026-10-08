@@ -111,6 +111,24 @@ When `NODE_ENV=development`, the default AuthKit domain is `essential-berry-67-d
 
 Legacy 2025 sessions expire after 30 minutes of inactivity. Each OAuth user or API key can hold `NOTRA_MCP_MAX_SESSIONS_PER_PRINCIPAL` sessions (default `50`); beyond that, its own least recently used session closes. When the server holds `NOTRA_MCP_MAX_SESSIONS` sessions (default `1000`), new sessions are rejected with HTTP 503 and `Retry-After` instead of closing other users' sessions.
 
+## Hosted usage statistics
+
+The HTTP server tracks usage exclusively in PostHog, sending one `mcp_tool_called` event per dispatched tool call, including calls that fail tool input/output validation or return `isError: true` with HTTP 200. Initialization, discovery, health checks, and requests rejected before tool dispatch are not counted. Local stdio servers do not emit usage events or contact PostHog.
+
+Set the PostHog project token on the hosted deployment to enable tracking:
+
+```env
+POSTHOG_PROJECT_TOKEN=your-project-token
+```
+
+`POSTHOG_HOST` defaults to `https://us.i.posthog.com`; set it to `https://eu.i.posthog.com` for an EU project. Without a project token, tracking is disabled. There is no alternative collector or JSON usage-log fallback.
+
+Events include `tool_name`, `outcome` (`success`, `error`, or `cancelled`), `duration_ms`, `server_version`, `protocol_version`, `client_name`, `client_version`, and `auth_kind`. OAuth events also include the verified WorkOS `organization_id` and `user_id`; API-key calls have no user/workspace attribution and share the PostHog distinct ID `mcp:api-key`, which must not be counted as a unique user. Client identity is self-reported, bucketed into known client names, and unknown names are recorded as `other`; versions are only retained in numeric `major.minor.patch` form. Unknown tool names are recorded as `unknown`.
+
+Arguments, results, prompts, error messages, headers, IP addresses, tokens, API keys, and token hashes are never included in usage events. Delivery is asynchronous and best-effort, with a five-second timeout and at most 64 pending PostHog requests per process. Failed or dropped deliveries produce a credential-free warning without failing tool calls. Events are not sampled, but PostHog delivery is not an audit or billing ledger.
+
+In PostHog, filter on `mcp_tool_called` and break down by `tool_name`, `client_name`, or `outcome`. Count distinct `organization_id`/`user_id` only for OAuth calls, and use `duration_ms` for latency percentiles.
+
 ## Toolsets
 
 All 97 tools are exposed by default, which costs roughly 20k tokens of agent context. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:

@@ -28,6 +28,7 @@ import type { AuthContext } from "./types/auth.js";
 import type { CreateServerOptions } from "./types/server.js";
 import type { Toolset } from "./types/toolset.js";
 import { parseToolsets } from "./utils/toolsets.js";
+import { instrumentMcpUsage } from "./utils/mcp-usage.js";
 
 export const SERVER_VERSION = "1.2.0";
 
@@ -109,6 +110,15 @@ export function createServer(auth: string | AuthContext, options: CreateServerOp
     },
     { instructions: SERVER_INSTRUCTIONS },
   );
+
+  if (options.trackUsage) {
+    instrumentMcpUsage(
+      server,
+      typeof auth === "string" ? { kind: "apiKey", token: auth } : auth,
+      SERVER_VERSION,
+      (name) => TOOL_OWNERS.has(name),
+    );
+  }
 
   // A tools/call needs only the module owning that tool. Unknown or
   // toolset-filtered names fall through to full registration so the SDK
