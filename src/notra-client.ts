@@ -29,6 +29,7 @@ import type {
   ScheduleListResponse,
   ScheduleResponse,
   SendChatMessageRequest,
+  RespondToChatApprovalsRequest,
   ChatSessionSummary,
   ListSkillsResponse,
   SkillResponse,
@@ -283,10 +284,7 @@ export class NotraClient {
     }
 
     const parsed = parseChatStream(text);
-    return {
-      chatId: parsed.chatId ?? response.headers.get("x-chat-id"),
-      text: parsed.text,
-    };
+    return { ...parsed, chatId: parsed.chatId ?? response.headers.get("x-chat-id") };
   }
 
   async listPosts(params?: ListPostsParams): Promise<PostListResponse> {
@@ -445,6 +443,12 @@ export class NotraClient {
 
   async postChatMessage(chatId: string, body: SendChatMessageRequest): Promise<ChatStreamResponse> {
     return this.requestText<SendChatMessageRequest>("POST", `/v1/chats/${encodeURIComponent(chatId)}`, { body });
+  }
+
+  async respondToChatApprovals(chatId: string, body: RespondToChatApprovalsRequest): Promise<ChatStreamResponse> {
+    return this.requestText<RespondToChatApprovalsRequest>("POST", `/v1/chats/${encodeURIComponent(chatId)}`, {
+      body,
+    });
   }
 
   async listSkills(): Promise<ListSkillsResponse> {

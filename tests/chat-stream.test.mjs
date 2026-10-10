@@ -11,7 +11,7 @@ test("chat streams concatenate both delta formats and retain the first chat ID",
     'data: {"messageMetadata":{"chatId":"chat-2"}}',
     "data: [DONE]",
   ].join("\r\n");
-  assert.deepEqual(parseChatStream(stream), { text: "Hello world", chatId: "chat-1" });
+  assert.deepEqual(parseChatStream(stream), { text: "Hello world", chatId: "chat-1", pendingApprovals: [] });
 });
 
 test("malformed and unrelated frames do not swallow valid assistant text", () => {
@@ -24,11 +24,11 @@ test("malformed and unrelated frames do not swallow valid assistant text", () =>
     'data: {"messageMetadata":{"chatId":""}}',
     'data: {"type":"text-delta","delta":"answer"}',
   ].join("\n");
-  assert.deepEqual(parseChatStream(stream), { text: "answer", chatId: null });
+  assert.deepEqual(parseChatStream(stream), { text: "answer", chatId: null, pendingApprovals: [] });
 });
 
 test("empty and unrecognized streams preserve the raw response as fallback text", () => {
   for (const stream of ["", "plain response", 'data: {"type":"new-format"}']) {
-    assert.deepEqual(parseChatStream(stream), { text: stream, chatId: null });
+    assert.deepEqual(parseChatStream(stream), { text: stream, chatId: null, pendingApprovals: [] });
   }
 });
