@@ -142,6 +142,7 @@ import type { RequestOptions, RequestTimeoutOptions } from "./types/request.js";
 import type { WorkspaceContextResponse } from "./types/workspace.js";
 import { apiErrorSchema } from "./schemas/api.js";
 import { parseChatStream } from "./utils/chat-stream.js";
+import { withoutHiddenReadinessChecks } from "./utils/geo-agent-readiness.js";
 import { appendQueryParams } from "./utils/query-params.js";
 import { createRequestSignal } from "./utils/request-signal.js";
 
@@ -861,7 +862,12 @@ export class NotraClient {
   }
 
   async getGeoAgentReadiness(projectId: string, options?: RequestTimeoutOptions): Promise<GeoAgentReadinessResponse> {
-    return this.request<GeoAgentReadinessResponse>("GET", this.geoPath(projectId, "/agent-readiness"), options);
+    const response = await this.request<GeoAgentReadinessResponse>(
+      "GET",
+      this.geoPath(projectId, "/agent-readiness"),
+      options,
+    );
+    return withoutHiddenReadinessChecks(response);
   }
 
   async startGeoAgentReadinessScan(projectId: string): Promise<StartGeoAgentReadinessScanResponse> {
