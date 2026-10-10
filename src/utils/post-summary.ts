@@ -4,7 +4,7 @@ import type { Post, PostListResponse, PostSummary, PostSummaryListResponse } fro
 function excerptOf(markdown: string | null): string | null {
   const text = markdown?.replace(/\s+/g, " ").trim();
   if (!text) return null;
-  return text.length > POST_EXCERPT_LENGTH ? `${text.slice(0, POST_EXCERPT_LENGTH).trimEnd()}…` : text;
+  return text.length > POST_EXCERPT_LENGTH ? `${text.slice(0, POST_EXCERPT_LENGTH - 1).trimEnd()}…` : text;
 }
 
 function toPostSummary(post: Post): PostSummary {
