@@ -141,6 +141,7 @@ import type {
 import type { RequestOptions, RequestTimeoutOptions } from "./types/request.js";
 import type { WorkspaceContextResponse } from "./types/workspace.js";
 import { apiErrorSchema } from "./schemas/api.js";
+import { chatHistoryApprovalPartSchema } from "./schemas/chat-stream.js";
 import { parseChatStream } from "./utils/chat-stream.js";
 import { withoutHiddenReadinessChecks } from "./utils/geo-agent-readiness.js";
 import { appendQueryParams } from "./utils/query-params.js";
@@ -284,7 +285,37 @@ export class NotraClient {
     }
 
     const parsed = parseChatStream(text);
-    return { ...parsed, chatId: parsed.chatId ?? response.headers.get("x-chat-id") };
+    return this.withApprovalDetails({ ...parsed, chatId: parsed.chatId ?? response.headers.get("x-chat-id") });
+  }
+
+  private async withApprovalDetails(response: ChatStreamResponse): Promise<ChatStreamResponse> {
+    if (!response.chatId || response.pendingApprovals.every((approval) => approval.toolName !== null)) {
+      return response;
+    }
+    let messages: unknown[];
+    try {
+      ({ messages } = await this.getChat(response.chatId));
+    } catch {
+      return response;
+    }
+    const known = new Map<string, { toolName: string; input: unknown }>();
+    for (const message of messages) {
+      const parts = (message as { parts?: unknown }).parts;
+      if (!Array.isArray(parts)) continue;
+      for (const part of parts) {
+        const parsed = chatHistoryApprovalPartSchema.safeParse(part);
+        if (!parsed.success) continue;
+        const { type, toolName, input, approval } = parsed.data;
+        const name = toolName ?? (type.startsWith("tool-") ? type.slice("tool-".length) : null);
+        if (name) known.set(approval.id, { toolName: name, input: input ?? null });
+      }
+    }
+    return {
+      ...response,
+      pendingApprovals: response.pendingApprovals.map((approval) =>
+        approval.toolName === null ? { ...approval, ...known.get(approval.approvalId) } : approval,
+      ),
+    };
   }
 
   async listPosts(params?: ListPostsParams): Promise<PostListResponse> {

@@ -15,3 +15,10 @@ export const chatStreamFrameSchema = z.object({
     .optional()
     .catch(undefined),
 });
+
+export const chatHistoryApprovalPartSchema = z.object({
+  type: z.string(),
+  toolName: z.string().min(1).optional().catch(undefined),
+  input: z.unknown().optional(),
+  approval: z.object({ id: z.string().min(1) }),
+});

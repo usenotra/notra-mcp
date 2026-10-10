@@ -86,7 +86,12 @@ export const chatStreamOutputSchema = z.object({
       z.object({
         approvalId: z.string(),
         toolCallId: z.string(),
-        toolName: z.string().nullable().describe("Tool the agent wants to run, including connected MCP tools"),
+        toolName: z
+          .string()
+          .nullable()
+          .describe(
+            "Tool the agent wants to run, including connected MCP tools. Null when the action could not be read; deny it.",
+          ),
         input: z.unknown().describe("Exact input the tool will run with"),
       }),
     )
