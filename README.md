@@ -131,7 +131,7 @@ In PostHog, filter on `mcp_tool_called` and break down by `tool_name`, `client_n
 
 ## Toolsets
 
-All 106 tools are exposed by default, which costs roughly 20k tokens of agent context. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 105 tools are exposed by default, which costs roughly 20k tokens of agent context. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                                           |
 | --------- | --------------------------------------------------------------------------------------------------------------- |
@@ -161,18 +161,18 @@ Each MCP connection operates in the workspace bound to its bearer token. To act 
 
 ### Posts
 
-| Tool                         | Description                                                                                        |
-| ---------------------------- | -------------------------------------------------------------------------------------------------- |
-| `list_posts`                 | List posts with optional filters for sorting, pagination, status, content type, and brand identity |
-| `get_post`                   | Get a single post by ID                                                                            |
-| `create_post`                | Create a post from your own title and markdown                                                     |
-| `update_post`                | Update a post's title, markdown, or status                                                         |
-| `delete_post`                | Delete a post                                                                                      |
-| `generate_post`              | Queue async post generation from GitHub activity                                                   |
-| `get_post_generation_status` | Check the status of a post generation job                                                          |
-| `get_post_schedule`          | Get a post's publishing schedule and per-destination status                                        |
-| `schedule_post`              | Schedule an existing post for publishing in Notra and optionally GitHub, X, or LinkedIn            |
-| `cancel_post_schedule`       | Cancel pending publishing destinations; already-publishing destinations finish on their own        |
+| Tool                         | Description                                                                                                 |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `list_posts`                 | List post summaries with optional filters for sorting, pagination, status, content type, and brand identity |
+| `get_post`                   | Get a single post by ID                                                                                     |
+| `create_post`                | Create a post from your own title and markdown                                                              |
+| `update_post`                | Update a post's title, markdown, or status                                                                  |
+| `delete_post`                | Delete a post                                                                                               |
+| `generate_post`              | Queue async post generation from GitHub activity                                                            |
+| `get_post_generation_status` | Check the status of a post generation job                                                                   |
+| `get_post_schedule`          | Get a post's publishing schedule and per-destination status                                                 |
+| `schedule_post`              | Schedule an existing post for publishing in Notra and optionally GitHub, X, or LinkedIn                     |
+| `cancel_post_schedule`       | Cancel pending publishing destinations; already-publishing destinations finish on their own                 |
 
 Post publishing schedules are separate from the content-generation schedules below. `schedule_post` requires an ISO 8601 `scheduledAt` timestamp, accepts an optional IANA `timeZone` (default `UTC`), and supports at most two external destinations. GitHub destinations use `repositoryId` from `list_integrations` and an optional `merge` flag (default `true`); social destinations use a connected X or LinkedIn `accountId`. Omitting destinations schedules publishing in Notra only.
 
@@ -304,12 +304,11 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `list_geo_prompt_result_summaries` | Filtered, paginated results without full answers or URLs    |
 | `get_geo_prompt_result_detail`     | Full answer and sources for one check                       |
 | `get_geo_prompt_history`           | Compact historical checks for one prompt                    |
-| `get_geo_prompt_results`           | All latest answers; prefer summaries for large projects     |
 | `get_geo_sentiment`                | Sentiment metrics and previous-period comparison            |
 | `get_geo_sentiment_analysis`       | Stored thematic sentiment analysis                          |
 | `list_geo_sentiment_evidence`      | Paginated answers behind sentiment metrics                  |
 | `list_geo_shelf_sources`           | Paginated citation shelf and opportunity state              |
-| `get_geo_competitor_share`         | Share of voice across tracked brands                        |
+| `get_geo_competitor_share`         | Top brands by share of voice, with brand filter and limit   |
 | `get_geo_language_share`           | Mention rates per tracked language                          |
 | `get_geo_competitor_detail`        | One competitor's mention history and the prompts driving it |
 

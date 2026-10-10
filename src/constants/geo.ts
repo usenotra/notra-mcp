@@ -13,3 +13,5 @@ export const GEO_CSV_IMPORT_MAX_LENGTH = 1024 * 1024;
 export const GEO_LONG_RUNNING_TIMEOUT_MS = 300_000;
 export const GEO_SNAPSHOT_OPTIONAL_TIMEOUT_MS = 5_000;
 export const GEO_AGENT_READINESS_HIDDEN_CHECK_IDS: ReadonlySet<string> = new Set(["notra-feedback-md"]);
+export const GEO_COMPETITOR_SHARE_DEFAULT_LIMIT = 10;
+export const GEO_COMPETITOR_SHARE_MAX_LIMIT = 50;

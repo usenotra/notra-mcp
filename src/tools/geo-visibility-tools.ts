@@ -1,9 +1,9 @@
 import {
   getGeoVisibilityOverviewSchema,
   getGeoVisibilityTimeseriesSchema,
-  getGeoPromptResultsSchema,
   getGeoPromptResultDetailSchema,
   getGeoCompetitorShareSchema,
+  geoCompetitorShareOutputSchema,
   getGeoLanguageShareSchema,
   getGeoCompetitorDetailSchema,
   listGeoPromptResultSummariesSchema,
@@ -13,6 +13,7 @@ import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 
+import { summarizeCompetitorShare } from "../utils/geo-competitor-share.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
@@ -48,23 +49,6 @@ export function registerGeoVisibilityTools(server: McpServer, client: NotraClien
       outputSchema: shareJsonSchema(apiOutputSchema("getGeoVisibilityTimeseries")),
     },
     ({ projectId, ...params }) => handleError(() => client.getGeoVisibilityTimeseries(projectId, params)),
-  );
-
-  server.registerTool(
-    "get_geo_prompt_results",
-    {
-      description:
-        "Get every latest stored answer per tracked prompt and engine. This can be large; prefer list_geo_prompt_result_summaries and targeted detail.",
-      annotations: {
-        title: "Get GEO Prompt Results",
-        readOnlyHint: true,
-        openWorldHint: false,
-        destructiveHint: false,
-      },
-      inputSchema: shareJsonSchema(getGeoPromptResultsSchema),
-      outputSchema: shareJsonSchema(apiOutputSchema("getGeoVisibilityPromptResults")),
-    },
-    ({ projectId, ...params }) => handleError(() => client.getGeoVisibilityPromptResults(projectId, params)),
   );
 
   server.registerTool(
@@ -104,7 +88,7 @@ export function registerGeoVisibilityTools(server: McpServer, client: NotraClien
     "get_geo_competitor_share",
     {
       description:
-        "Get GEO share of voice across tracked brands: mention counts per brand with per-brand trends and the daily timeseries behind them",
+        "Get GEO share of voice: the top brands by mentions with their share of all mentions, plus a summary of the remaining brands. Filter with brands, cap with limit, and set includeTrends for daily trends of the returned brands.",
       annotations: {
         title: "Get GEO Competitor Share",
         readOnlyHint: true,
@@ -112,9 +96,16 @@ export function registerGeoVisibilityTools(server: McpServer, client: NotraClien
         destructiveHint: false,
       },
       inputSchema: shareJsonSchema(getGeoCompetitorShareSchema),
-      outputSchema: shareJsonSchema(apiOutputSchema("getGeoVisibilityCompetitorShare")),
+      outputSchema: shareJsonSchema(geoCompetitorShareOutputSchema),
     },
-    ({ projectId, ...params }) => handleError(() => client.getGeoVisibilityCompetitorShare(projectId, params)),
+    ({ projectId, brands, limit, includeTrends, ...window }) =>
+      handleError(async () =>
+        summarizeCompetitorShare(await client.getGeoVisibilityCompetitorShare(projectId, window), {
+          brands,
+          limit,
+          includeTrends,
+        }),
+      ),
   );
 
   server.registerTool(

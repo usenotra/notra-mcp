@@ -6,6 +6,7 @@ import {
   deletePostSchema,
   generatePostSchema,
   getPostGenerationStatusSchema,
+  postSummaryListOutputSchema,
 } from "../schemas/post.js";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
@@ -13,6 +14,7 @@ import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import type { NotraClient } from "../notra-client.js";
 
 import { handleError } from "../utils/mcp.js";
+import { toPostSummaryList } from "../utils/post-summary.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
 export function registerPostTools(server: McpServer, client: NotraClient) {
@@ -20,12 +22,12 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
     "list_posts",
     {
       description:
-        "List posts from Notra with optional filters for sorting, pagination, status, content type, and brand identity",
+        "List post summaries from Notra (title, status, type, short excerpt) with optional filters for sorting, pagination, status, content type, and brand identity. Use get_post for full content.",
       annotations: { title: "List Posts", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: shareJsonSchema(listPostsSchema),
-      outputSchema: shareJsonSchema(apiOutputSchema("listPosts")),
+      outputSchema: shareJsonSchema(postSummaryListOutputSchema),
     },
-    (params) => handleError(() => client.listPosts(params)),
+    (params) => handleError(async () => toPostSummaryList(await client.listPosts(params))),
   );
 
   server.registerTool(
