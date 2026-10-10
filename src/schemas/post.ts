@@ -1,9 +1,11 @@
 import * as z from "zod";
 import {
+  CONTENT_TYPE_VALUES,
   CREATABLE_CONTENT_TYPE_VALUES,
   GENERATABLE_CONTENT_TYPE_VALUES,
   POST_STATUS_VALUES,
 } from "../constants/post.js";
+import { apiResponsePropertySchema } from "../utils/output-schema.js";
 import { brandIdentityIdFilterSchema, contentTypeFilterSchema, statusFilterSchema } from "./post-filters.js";
 
 export const listPostsSchema = z.object({
@@ -13,6 +15,24 @@ export const listPostsSchema = z.object({
   status: statusFilterSchema,
   contentType: contentTypeFilterSchema,
   brandIdentityId: brandIdentityIdFilterSchema,
+});
+
+export const postSummaryListOutputSchema = z.object({
+  organization: apiResponsePropertySchema("listPosts", "organization"),
+  posts: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      slug: z.string().nullable(),
+      excerpt: z.string().nullable().describe("Start of the post's markdown. Use get_post for the full content."),
+      imageUrl: z.string().nullable().describe("Rendered image URL for image posts, null otherwise"),
+      contentType: z.enum(CONTENT_TYPE_VALUES),
+      status: z.enum(POST_STATUS_VALUES),
+      createdAt: z.string(),
+      updatedAt: z.string(),
+    }),
+  ),
+  pagination: apiResponsePropertySchema("listPosts", "pagination"),
 });
 
 export const getPostSchema = z.object({

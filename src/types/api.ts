@@ -50,6 +50,24 @@ export interface PostListResponse {
   pagination: Pagination;
 }
 
+export interface PostSummary {
+  id: string;
+  title: string;
+  slug: string | null;
+  excerpt: string | null;
+  imageUrl: string | null;
+  contentType: ContentType;
+  status: "draft" | "published";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PostSummaryListResponse {
+  organization: Organization;
+  posts: PostSummary[];
+  pagination: Pagination;
+}
+
 export interface PostResponse {
   organization: Organization;
   post: Post | null;
