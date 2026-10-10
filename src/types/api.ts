@@ -418,9 +418,29 @@ export interface SendChatMessageRequest {
   externalChannelId?: ExternalChannelId | null;
 }
 
+export interface ChatToolApprovalResponse {
+  id: string;
+  approved: boolean;
+  reason?: string;
+}
+
+export interface RespondToChatApprovalsRequest {
+  approvals: ChatToolApprovalResponse[];
+  model?: ChatModel;
+  timezone?: string;
+}
+
+export interface ChatPendingApproval {
+  approvalId: string;
+  toolCallId: string;
+  toolName: string | null;
+  input: unknown;
+}
+
 export interface ChatStreamResponse {
   chatId: string | null;
   text: string;
+  pendingApprovals: ChatPendingApproval[];
 }
 
 export interface GetChatsResponse {

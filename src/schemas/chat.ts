@@ -58,10 +58,39 @@ export const postChatMessageSchema = z.object({
   ...sendChatMessageSchema.shape,
 });
 
+export const respondToChatApprovalsSchema = z.object({
+  chatId: z.string().min(1).describe("The chat ID whose latest reply is waiting for approval"),
+  approvals: z
+    .array(
+      z.object({
+        approvalId: z.string().min(1).max(500).describe("approvalId from pendingApprovals"),
+        approved: z.boolean().describe("The user's decision: true to run the action, false to deny it"),
+        reason: z.string().max(2000).optional().describe("Optional note from the user, passed to the agent"),
+      }),
+    )
+    .min(1)
+    .max(50)
+    .describe("One decision per pending approval in the latest reply"),
+  model: chatModelSchema.optional().describe("Model to use for the continued reply"),
+  timezone: z.string().min(1).max(100).optional().describe("IANA timezone for contextual responses"),
+});
+
 export const chatStreamOutputSchema = z.object({
   chatId: z
     .string()
     .nullable()
     .describe("ID of the chat the reply belongs to, null when the stream did not report one"),
   text: z.string().describe("Assistant reply text"),
+  pendingApprovals: z
+    .array(
+      z.object({
+        approvalId: z.string(),
+        toolCallId: z.string(),
+        toolName: z.string().nullable().describe("Tool the agent wants to run, including connected MCP tools"),
+        input: z.unknown().describe("Exact input the tool will run with"),
+      }),
+    )
+    .describe(
+      "Actions the agent paused on. None of them has run. Empty when the reply is complete. Show each one to the user and send their decision with respond_to_chat_approvals.",
+    ),
 });

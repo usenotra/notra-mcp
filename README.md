@@ -131,7 +131,7 @@ In PostHog, filter on `mcp_tool_called` and break down by `tool_name`, `client_n
 
 ## Toolsets
 
-All 106 tools are exposed by default, which costs roughly 20k tokens of agent context. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 107 tools are exposed by default, which costs roughly 20k tokens of agent context. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                                           |
 | --------- | --------------------------------------------------------------------------------------------------------------- |
@@ -227,14 +227,15 @@ Post publishing schedules are separate from the content-generation schedules bel
 
 ### Chats
 
-| Tool                           | Description                                                      |
-| ------------------------------ | ---------------------------------------------------------------- |
-| `list_chats`                   | List chat sessions                                               |
-| `get_chat`                     | Get a single chat with messages                                  |
-| `get_chat_by_external_channel` | Get a chat by Discord or Slack channel ID                        |
-| `create_chat`                  | Start a new chat and return the streamed reply                   |
-| `post_chat_message`            | Post a message to an existing chat and return the streamed reply |
-| `list_agent_chats`             | List durable agent sessions and their status                     |
+| Tool                           | Description                                                                |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| `list_chats`                   | List chat sessions                                                         |
+| `get_chat`                     | Get a single chat with messages                                            |
+| `get_chat_by_external_channel` | Get a chat by Discord or Slack channel ID                                  |
+| `create_chat`                  | Start a new chat and return the streamed reply                             |
+| `post_chat_message`            | Post a message to an existing chat and return the streamed reply           |
+| `respond_to_chat_approvals`    | Approve or deny the actions a chat reply paused on, after the user decides |
+| `list_agent_chats`             | List durable agent sessions and their status                               |
 
 ### Skills
 
