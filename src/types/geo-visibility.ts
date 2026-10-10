@@ -131,3 +131,27 @@ export interface GeoVisibilityCompetitorDetailResponse {
   }>;
   organization: Organization;
 }
+
+export interface GeoCompetitorShareParams {
+  days?: number;
+  from?: string;
+  to?: string;
+  brands?: string[];
+  limit: number;
+  includeTrends: boolean;
+}
+
+interface GeoBrandShare {
+  mentions: number;
+  share: number;
+}
+
+export interface GeoCompetitorShareSummary {
+  configured: boolean;
+  totalBrands: number;
+  totalMentions: number;
+  points: Array<GeoBrandShare & { brand: string; trend?: GeoSparklinePoint[] }>;
+  otherBrands: GeoBrandShare & { count: number };
+  timeseries?: GeoVisibilityCompetitorShareResponse["timeseries"];
+  organization: Organization;
+}

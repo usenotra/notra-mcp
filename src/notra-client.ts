@@ -127,7 +127,6 @@ import type {
   GeoVisibilityCompetitorShareResponse,
   GeoVisibilityLanguageShareResponse,
   GeoVisibilityOverviewResponse,
-  GeoVisibilityPromptResultsResponse,
   GeoVisibilityTimeseriesResponse,
 } from "./types/geo-visibility.js";
 import type { GeoShelfListResponse } from "./types/geo-shelf.js";
@@ -715,17 +714,6 @@ export class NotraClient {
     return this.request<GeoVisibilityTimeseriesResponse>("GET", this.geoPath(projectId, "/visibility/timeseries"), {
       params,
     });
-  }
-
-  async getGeoVisibilityPromptResults(
-    projectId: string,
-    params?: GeoWindowParams,
-  ): Promise<GeoVisibilityPromptResultsResponse> {
-    return this.request<GeoVisibilityPromptResultsResponse>(
-      "GET",
-      this.geoPath(projectId, "/visibility/prompt-results"),
-      { params },
-    );
   }
 
   async listGeoPromptResultSummaries(

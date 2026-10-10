@@ -18,3 +18,5 @@ export const GENERATABLE_CONTENT_TYPE_VALUES = [
 ] as const;
 
 export const CREATABLE_CONTENT_TYPE_VALUES = ["blog_post", "changelog", "linkedin_post", "twitter_post"] as const;
+
+export const POST_EXCERPT_LENGTH = 280;

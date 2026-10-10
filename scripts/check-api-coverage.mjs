@@ -35,6 +35,8 @@ const EXCLUDED_SPEC_ROUTES = {
     "eve session protocol needs the NDJSON event stream to read replies; create_chat covers conversational use",
   "POST /v2/eve/v1/session/{sessionId}":
     "eve session protocol needs the NDJSON event stream to read replies; post_chat_message covers conversational use",
+  "GET /v1/projects/{projectId}/geo/visibility/prompt-results":
+    "unbounded full answers; list_geo_prompt_result_summaries and get_geo_prompt_result_detail cover it",
   "GET /v2/eve/v1/session/{sessionId}/stream":
     "NDJSON event stream, cannot be surfaced through a request/response tool",
 };
