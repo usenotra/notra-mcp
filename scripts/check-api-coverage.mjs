@@ -24,7 +24,7 @@ import { loadSpec } from "./load-openapi-spec.mjs";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PLACEHOLDER = "__P__";
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
-const CLIENT_INTERNALS = new Set(["constructor", "request", "requestText", "geoPath"]);
+const CLIENT_INTERNALS = new Set(["constructor", "request", "requestText", "withApprovalDetails", "geoPath"]);
 
 /** Spec routes deliberately not exposed as MCP tools. */
 const EXCLUDED_SPEC_ROUTES = {
