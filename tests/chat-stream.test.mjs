@@ -32,3 +32,51 @@ test("empty and unrecognized streams preserve the raw response as fallback text"
     assert.deepEqual(parseChatStream(stream), { text: stream, chatId: null });
   }
 });
+
+test("pending skill approval is a failure even after reassuring progress text", () => {
+  const stream = [
+    'data: {"type":"text-delta","delta":"Creating marketplace-review-voice now."}',
+    'data: {"type":"tool-input-available","toolCallId":"save-1","toolName":"createSkill"}',
+    'data: {"type":"tool-approval-request","toolCallId":"save-1","approvalId":"approval-1"}',
+    'data: {"messageMetadata":{"chatId":"chat-1"}}',
+    'data: {"type":"finish"}',
+    "data: [DONE]",
+  ].join("\n");
+  assert.throws(() => parseChatStream(stream), /requires approval \(chat chat-1\): createSkill.*have not executed/);
+});
+
+test("completed approvals do not block successful tool results", () => {
+  const stream = [
+    'data: {"type":"tool-approval-request","toolCallId":"save-1"}',
+    'data: {"type":"tool-output-available","toolCallId":"save-1","output":{"status":"created"}}',
+    'data: {"type":"text-delta","delta":"Saved."}',
+  ].join("\n");
+  assert.deepEqual(parseChatStream(stream), { text: "Saved.", chatId: null });
+});
+
+test("stream errors and aborts cannot be hidden by progress text", () => {
+  for (const frame of [{ type: "error", errorText: "Save failed" }, { type: "abort" }]) {
+    const stream = 'data: {"type":"text-delta","delta":"Creating the skill"}\n' + `data: ${JSON.stringify(frame)}`;
+    assert.throws(() => parseChatStream(stream, "header-chat"), /Notra chat failed \(chat header-chat\)/);
+  }
+});
+
+test("failed and denied tool outputs cannot turn progress text into success", () => {
+  for (const type of ["tool-output-error", "tool-output-denied"]) {
+    for (const approved of [true, false]) {
+      const stream = [
+        'data: {"type":"text-delta","delta":"Creating the skill."}',
+        'data: {"type":"tool-input-start","toolCallId":"save","toolName":"createSkill"}',
+        ...(approved ? ['data: {"type":"tool-approval-request","toolCallId":"save"}'] : []),
+        `data: ${JSON.stringify({ type, toolCallId: "save", errorText: "Skill was not saved" })}`,
+        'data: {"type":"finish"}',
+        "data: [DONE]",
+      ].join("\n");
+      assert.throws(
+        () => parseChatStream(stream, "chat-1"),
+        /Notra chat failed \(chat chat-1\): createSkill: Skill was not saved/,
+      );
+    }
+    assert.throws(() => parseChatStream(`data: ${JSON.stringify({ type })}`), /Tool execution (failed|denied)/);
+  }
+});

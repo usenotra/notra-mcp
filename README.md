@@ -238,6 +238,8 @@ Post publishing schedules are separate from the content-generation schedules bel
 
 ### Skills
 
+Use `create_skill` to save writing instructions directly, then `get_skill` to retrieve or verify the saved content. A chat agent's progress text is not evidence that a skill was saved. Chat tools return an error if the stream fails or a tool is still waiting for approval; sending another chat message does not approve that call.
+
 | Tool           | Description                     |
 | -------------- | ------------------------------- |
 | `list_skills`  | List reusable writing skills    |
