@@ -78,13 +78,18 @@ test("chat replies prefer stream metadata and fall back to response headers", as
         headers: { "x-chat-id": "header-id" },
       }),
   );
-  assert.deepEqual(await client.createChat({ message: "hello" }), { text: "Hi", chatId: "stream-id" });
+  assert.deepEqual(await client.createChat({ message: "hello" }), {
+    text: "Hi",
+    chatId: "stream-id",
+    pendingApprovals: [],
+  });
   vi.spyOn(globalThis, "fetch").mockImplementation(
     async () => new Response("plain reply", { headers: { "x-chat-id": "header-id" } }),
   );
   assert.deepEqual(await client.postChatMessage("chat", { message: "hello" }), {
     text: "plain reply",
     chatId: "header-id",
+    pendingApprovals: [],
   });
 });
 

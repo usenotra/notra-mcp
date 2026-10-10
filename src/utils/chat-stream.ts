@@ -1,4 +1,4 @@
-import type { ChatStreamResponse } from "../types/api.js";
+import type { ChatPendingApproval, ChatStreamResponse } from "../types/api.js";
 import { chatStreamFrameSchema } from "../schemas/chat-stream.js";
 
 /**
@@ -6,13 +6,15 @@ import { chatStreamFrameSchema } from "../schemas/chat-stream.js";
  * frames terminated by `data: [DONE]`) into the assistant's reply text.
  *
  * Tolerant by design: unknown frame types and unparseable lines are skipped.
- * If no text can be extracted from a non-empty stream, the raw stream is
- * returned as `text` so a protocol change degrades to the previous behavior,
- * never to an empty reply.
+ * If no text and no pending tool approvals can be extracted from a non-empty
+ * stream, the raw stream is returned as `text` so a protocol change degrades
+ * to the previous behavior, never to an empty reply.
  */
 export function parseChatStream(stream: string): ChatStreamResponse {
   let text = "";
   let chatId: string | null = null;
+  const toolCalls = new Map<string, { toolName: string | null; input: unknown }>();
+  const approvalRequests: Array<{ approvalId: string; toolCallId: string }> = [];
 
   for (const line of stream.split(/\r?\n/)) {
     if (!line.startsWith("data: ")) {
@@ -39,8 +41,20 @@ export function parseChatStream(stream: string): ChatStreamResponse {
       text += fragment;
     }
 
+    if (frame.type === "tool-input-available" && frame.toolCallId) {
+      toolCalls.set(frame.toolCallId, { toolName: frame.toolName ?? null, input: frame.input });
+    }
+    if (frame.type === "tool-approval-request" && frame.approvalId && frame.toolCallId && !frame.isAutomatic) {
+      approvalRequests.push({ approvalId: frame.approvalId, toolCallId: frame.toolCallId });
+    }
+
     chatId ??= frame.messageMetadata?.chatId ?? null;
   }
 
-  return { text: text || stream, chatId };
+  const pendingApprovals = approvalRequests.map(({ approvalId, toolCallId }): ChatPendingApproval => {
+    const call = toolCalls.get(toolCallId);
+    return { approvalId, toolCallId, toolName: call?.toolName ?? null, input: call?.input ?? null };
+  });
+
+  return { text: text || (pendingApprovals.length ? "" : stream), chatId, pendingApprovals };
 }
