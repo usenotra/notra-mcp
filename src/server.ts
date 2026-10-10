@@ -69,6 +69,8 @@ const SHARED_REGISTRARS: readonly Registrar[] = [
     registerFeedbackTools(server, {
       url: "https://api.usenotra.com/v1/feedback/notra",
       productName: "Notra",
+      description:
+        "Send feedback to the Notra team. Only call this when the user explicitly asks to send feedback, and only include content the user wants shared. Do not call it proactively after errors or unsupported requests.",
       defaults: { agentClient: "notra-mcp", toolVersion: SERVER_VERSION },
     }),
 ];
