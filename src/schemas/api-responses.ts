@@ -1663,6 +1663,13 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         },
         required: ["next", "nuxt", "netlify", "tanstack", "astro", "sveltekit"],
       },
+      drainUrls: {
+        type: "object",
+        properties: { vercel: { type: "string" }, cloudflare: { type: "string" } },
+        required: ["vercel", "cloudflare"],
+        description:
+          "Endpoints a Vercel log drain or Cloudflare Logpush job posts request logs to, authenticated with the tracking token.",
+      },
       organization: {
         type: "object",
         properties: {
@@ -1674,7 +1681,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         required: ["id", "slug", "name", "logo"],
       },
     },
-    required: ["ingestUrl", "snippet", "snippets", "organization"],
+    required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization"],
   },
   getGeoPromptHistory: {
     type: "object",
@@ -3186,6 +3193,13 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         },
         required: ["next", "nuxt", "netlify", "tanstack", "astro", "sveltekit"],
       },
+      drainUrls: {
+        type: "object",
+        properties: { vercel: { type: "string" }, cloudflare: { type: "string" } },
+        required: ["vercel", "cloudflare"],
+        description:
+          "Endpoints a Vercel log drain or Cloudflare Logpush job posts request logs to, authenticated with the tracking token.",
+      },
       organization: {
         type: "object",
         properties: {
@@ -3201,7 +3215,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         description: "Tracking token. Shown once per request; rotating invalidates every previously issued token.",
       },
     },
-    required: ["ingestUrl", "snippet", "snippets", "organization", "token"],
+    required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization", "token"],
   },
   listAgentChats: {
     type: "object",
@@ -4832,6 +4846,13 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         },
         required: ["next", "nuxt", "netlify", "tanstack", "astro", "sveltekit"],
       },
+      drainUrls: {
+        type: "object",
+        properties: { vercel: { type: "string" }, cloudflare: { type: "string" } },
+        required: ["vercel", "cloudflare"],
+        description:
+          "Endpoints a Vercel log drain or Cloudflare Logpush job posts request logs to, authenticated with the tracking token.",
+      },
       organization: {
         type: "object",
         properties: {
@@ -4847,7 +4868,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         description: "Tracking token. Shown once per request; rotating invalidates every previously issued token.",
       },
     },
-    required: ["ingestUrl", "snippet", "snippets", "organization", "token"],
+    required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization", "token"],
   },
   runGeoSequence: {
     type: "object",
