@@ -127,7 +127,7 @@ Add a workspace id or slug to the URL to pin a connection to one workspace: `htt
 On a scoped URL:
 
 - API keys act in that workspace. The URL wins over an `X-Notra-Organization-Id` header. An organization key only works on its own workspace's URL; any other workspace is rejected with HTTP 403 by the Notra API.
-- OAuth works the same as on `/mcp`, but the workspace you authorize must be the one in the URL. Otherwise requests are rejected with HTTP 403 instead of silently acting on another workspace. Protected resource metadata is served at `https://mcp.usenotra.com/.well-known/oauth-protected-resource/mcp/<workspace>`.
+- OAuth works the same as on `/mcp`, but the workspace you authorize must be the one in the URL. Otherwise requests are rejected with HTTP 403 instead of silently acting on another workspace. The OAuth challenge announces the same resource as `/mcp`, so clients get a normal Notra token; the workspace in the URL is enforced through the workspace you authorize.
 - `list_workspaces` is hidden, since the connection can't switch workspaces. `whoami` still shows the current one.
 - Legacy 2025 sessions belong to the URL they were opened on; using the session id on another URL returns HTTP 401.
 

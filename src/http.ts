@@ -24,12 +24,7 @@ import type { Toolset } from "./types/toolset.js";
 import { authenticateBearerToken, parseBearerToken } from "./utils/auth.js";
 import { readPositiveIntEnv } from "./utils/env.js";
 import { readOrganizationScope, selectRequestOrganization } from "./utils/organization.js";
-import {
-  getMcpResourceUrl,
-  getOAuthConfig,
-  getProtectedResourceMetadata,
-  getScopedMcpResourceUrl,
-} from "./utils/oauth-config.js";
+import { getMcpResourceUrl, getOAuthConfig, getProtectedResourceMetadata } from "./utils/oauth-config.js";
 import { oauthTokenMatchesScope } from "./utils/oauth-scope.js";
 import { runWithRequestSignal } from "./utils/request-signal.js";
 import { parseToolsets } from "./utils/toolsets.js";
@@ -192,13 +187,13 @@ function evictForSessionQuota(principal: string) {
   }
 }
 
-function setBearerChallenge(res: Response, scope: string | undefined, error?: string, description?: string) {
-  const resource = scope === undefined ? oauthConfig.resource : getScopedMcpResourceUrl(oauthConfig, scope);
-  const metadataPath =
-    scope === undefined
-      ? OAUTH_PROTECTED_RESOURCE_METADATA_PATH
-      : `${OAUTH_PROTECTED_RESOURCE_METADATA_PATH}${new URL(resource).pathname}`;
-  const metadataUrl = new URL(metadataPath, oauthConfig.resource).toString();
+// Workspace-scoped URLs announce the same registered resource as /mcp: AuthKit
+// rejects unregistered resource indicators (`invalid_target`), and MCP clients
+// accept a resource whose path is a prefix of the server URL. The workspace is
+// still enforced through the token's consent claim.
+function setBearerChallenge(res: Response, error?: string, description?: string) {
+  const resource = oauthConfig.resource;
+  const metadataUrl = new URL(OAUTH_PROTECTED_RESOURCE_METADATA_PATH, oauthConfig.resource).toString();
   const params = [`resource_metadata="${metadataUrl}"`, `resource="${resource}"`];
 
   if (error) {
@@ -212,8 +207,8 @@ function setBearerChallenge(res: Response, scope: string | undefined, error?: st
   res.setHeader("WWW-Authenticate", `Bearer ${params.join(", ")}`);
 }
 
-function sendUnauthorizedJson(res: Response, scope: string | undefined, description = "Unauthorized") {
-  setBearerChallenge(res, scope, "invalid_token", description);
+function sendUnauthorizedJson(res: Response, description = "Unauthorized") {
+  setBearerChallenge(res, "invalid_token", description);
   res.status(401).json({
     jsonrpc: "2.0",
     error: { code: -32001, message: "Unauthorized" },
@@ -221,8 +216,8 @@ function sendUnauthorizedJson(res: Response, scope: string | undefined, descript
   });
 }
 
-function sendUnauthorizedText(res: Response, scope: string | undefined, description = "Unauthorized") {
-  setBearerChallenge(res, scope, "invalid_token", description);
+function sendUnauthorizedText(res: Response, description = "Unauthorized") {
+  setBearerChallenge(res, "invalid_token", description);
   res.status(401).send("Unauthorized");
 }
 
@@ -315,7 +310,7 @@ async function authenticateRequest(
 ): Promise<AuthContext | undefined> {
   const token = parseBearerToken(req.headers["authorization"]);
   if (!token) {
-    sendUnauthorizedJson(res, scope, "Missing bearer token");
+    sendUnauthorizedJson(res, "Missing bearer token");
     return undefined;
   }
 
@@ -324,7 +319,7 @@ async function authenticateRequest(
     auth = await authenticateBearerToken(token, oauthConfig);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Invalid bearer token";
-    sendUnauthorizedJson(res, scope, message);
+    sendUnauthorizedJson(res, message);
     return undefined;
   }
 
@@ -434,7 +429,7 @@ app.get("/.well-known/oauth-protected-resource/mcp", (_req, res) => {
 app.get("/.well-known/oauth-protected-resource/mcp/:organization", (req, res) => {
   const scope = requestScope(req, res);
   if (scope) {
-    res.json(getProtectedResourceMetadata(oauthConfig, getScopedMcpResourceUrl(oauthConfig, scope)));
+    res.json(getProtectedResourceMetadata(oauthConfig));
   }
 });
 
@@ -491,7 +486,7 @@ async function handleMcpPost(req: Request, res: Response) {
     if (sessionId) {
       const session = await getAuthenticatedSession(req, scope);
       if (!session) {
-        sendUnauthorizedJson(res, scope);
+        sendUnauthorizedJson(res);
         return;
       }
       transport = session.transport;
@@ -580,7 +575,7 @@ app.get(MCP_PATHS, async (req, res) => {
   }
   const session = await getAuthenticatedSession(req, scope);
   if (!session) {
-    sendUnauthorizedText(res, scope);
+    sendUnauthorizedText(res);
     return;
   }
   await session.transport.handleRequest(req, res);
@@ -593,7 +588,7 @@ app.delete(MCP_PATHS, async (req, res) => {
   }
   const session = await getAuthenticatedSession(req, scope);
   if (!session) {
-    sendUnauthorizedText(res, scope);
+    sendUnauthorizedText(res);
     return;
   }
   try {

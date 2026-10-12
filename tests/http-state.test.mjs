@@ -537,20 +537,20 @@ test("malformed workspace segments are rejected before authentication", async ()
   expect(authenticateBearerToken).not.toHaveBeenCalled();
 });
 
-test("scoped 401 challenges and discovery point at the scoped resource", async () => {
+test("scoped 401 challenges and discovery announce the registered base resource", async () => {
   const res = response();
   await state.routes.get("GET /mcp/:organization")({ headers: {}, params: { organization: "acme" } }, res);
   expect(res.status).toHaveBeenCalledWith(401);
   expect(res.setHeader.mock.calls[0][1]).toContain(
-    'resource_metadata="https://mcp.example.test/.well-known/oauth-protected-resource/mcp/acme"',
+    'resource_metadata="https://mcp.example.test/.well-known/oauth-protected-resource"',
   );
-  expect(res.setHeader.mock.calls[0][1]).toContain('resource="https://mcp.example.test/mcp/acme"');
+  expect(res.setHeader.mock.calls[0][1]).toContain('resource="https://mcp.example.test"');
   const metadata = response();
   await state.routes.get("GET /.well-known/oauth-protected-resource/mcp/:organization")(
     { params: { organization: "acme" } },
     metadata,
   );
-  expect(metadata.json.mock.calls[0][0].resource).toBe("https://mcp.example.test/mcp/acme");
+  expect(metadata.json.mock.calls[0][0].resource).toBe("https://mcp.example.test");
 });
 
 async function postOAuthInitialize(organization) {

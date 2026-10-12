@@ -55,11 +55,6 @@ export function getMcpResourceUrl(config: OAuthConfig): string {
   }
 }
 
-/** Resource identifier of a workspace-scoped connection URL (`/mcp/{organization}`). */
-export function getScopedMcpResourceUrl(config: OAuthConfig, organization: string): string {
-  return `${getMcpResourceUrl(config).replace(/\/$/, "")}/${encodeURIComponent(organization)}`;
-}
-
 export function getProtectedResourceMetadata(
   config: OAuthConfig,
   resource: string = config.resource,
