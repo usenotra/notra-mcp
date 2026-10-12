@@ -9,7 +9,7 @@ export type OAuthAuthContext = {
 export type ApiKeyAuthContext = {
   kind: "apiKey";
   token: string;
-  /** Workspace an account API key acts on, sent as `X-Notra-Organization-Id`. Organization keys ignore it. */
+  /** Workspace an account API key acts on, sent as `X-Notra-Organization-Id`. Organization keys only accept their own workspace. */
   organizationId?: string;
 };
 
