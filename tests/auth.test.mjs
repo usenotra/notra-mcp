@@ -103,6 +103,15 @@ test("OAuth verifies signatures and claims; API keys remain delegated to the API
   });
   for (const aud of ["client-1", config.resource, ["other", config.resource]])
     assert.equal((await authenticateBearerToken(await sign({ aud }), config)).kind, "oauth");
+  // Workspace-scoped connection URLs (/mcp/{organization}) are valid audiences of the MCP resource.
+  const scopedConfig = { ...config, resourceAudiences: [config.resource, `${config.resource}/mcp`] };
+  assert.equal(
+    (await authenticateBearerToken(await sign({ aud: `${config.resource}/mcp/acme` }), scopedConfig)).kind,
+    "oauth",
+  );
+  for (const aud of [`${config.resource}/mcp/a/b`, `${config.resource}/mcp/`, `${config.resource}/other/acme`]) {
+    await assert.rejects(authenticateBearerToken(await sign({ aud }), scopedConfig), AuthError);
+  }
   for (const claims of [
     { aud: "wrong" },
     { aud: undefined },

@@ -13,9 +13,9 @@ vi.mock("@modelcontextprotocol/express", () => ({
   createMcpExpressApp: (options) => {
     state.appOptions = options;
     return {
-      get: (path, handler) => state.routes.set(`GET ${path}`, handler),
-      post: (path, handler) => state.routes.set(`POST ${path}`, handler),
-      delete: (path, handler) => state.routes.set(`DELETE ${path}`, handler),
+      get: (paths, handler) => [paths].flat().forEach((path) => state.routes.set(`GET ${path}`, handler)),
+      post: (paths, handler) => [paths].flat().forEach((path) => state.routes.set(`POST ${path}`, handler)),
+      delete: (paths, handler) => [paths].flat().forEach((path) => state.routes.set(`DELETE ${path}`, handler)),
       use: (handler) => state.middleware.push(handler),
       listen: () => ({ address: () => ({ port: 0 }) }),
     };
@@ -435,4 +435,165 @@ test.each(["-1", "0", "abc"])("invalid session caps (%s) fall back to the defaul
     expect(transport.close).not.toHaveBeenCalled();
     expect(await sessionStatus(transport)).toBe(200);
   }
+});
+
+async function initializeApiKeySession(headers = {}, params) {
+  authenticateBearerToken.mockResolvedValueOnce({ kind: "apiKey", token: "account-key" });
+  const before = state.transports.length;
+  await state.routes.get("POST /mcp")(
+    {
+      headers: { authorization: "Bearer account-key", ...headers },
+      params,
+      query: {},
+      body: {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "test", version: "1" } },
+      },
+    },
+    response(),
+  );
+  expect(state.transports).toHaveLength(before + 1);
+  return state.transports[before];
+}
+
+async function apiKeySessionStatus(transport, headers = {}, params) {
+  const res = response();
+  await state.routes.get("GET /mcp")(
+    { headers: { authorization: "Bearer account-key", "mcp-session-id": transport.sessionId, ...headers }, params },
+    res,
+  );
+  return res.status.mock.calls[0]?.[0] ?? 200;
+}
+
+test("API-key sessions forward the selected workspace and stay pinned to it", async () => {
+  await reloadHttp({ NOTRA_MCP_MAX_SESSIONS: "10", NOTRA_MCP_MAX_SESSIONS_PER_PRINCIPAL: "4" });
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(async () => Response.json({ posts: [] }));
+  const orgA = await initializeApiKeySession({ "x-notra-organization-id": "org-a" });
+  await state.tools.get("list_posts")({});
+  const orgB = await initializeApiKeySession({ "x-organization-id": "org-b" });
+  await state.tools.get("list_posts")({});
+  const unselected = await initializeApiKeySession();
+  await state.tools.get("list_posts")({});
+  expect(fetch.mock.calls.map(([, options]) => options.headers["X-Notra-Organization-Id"])).toEqual([
+    "org-a",
+    "org-b",
+    undefined,
+  ]);
+
+  expect(await apiKeySessionStatus(orgA, { "x-notra-organization-id": "org-a" })).toBe(200);
+  expect(await apiKeySessionStatus(orgA)).toBe(200);
+  expect(await apiKeySessionStatus(orgA, { "x-notra-organization-id": "org-b" })).toBe(401);
+  expect(await apiKeySessionStatus(orgB, { "x-organization-id": "org-a" })).toBe(401);
+  expect(await apiKeySessionStatus(unselected, { "x-notra-organization-id": "org-a" })).toBe(401);
+  for (const transport of [orgA, orgB, unselected]) {
+    expect(transport.close).not.toHaveBeenCalled();
+  }
+});
+
+test("OAuth sessions ignore the workspace header", async () => {
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(async () => Response.json({ posts: [] }));
+  authenticateBearerToken.mockResolvedValueOnce(oauthIdentity());
+  await state.routes.get("POST /mcp")(
+    {
+      headers: { authorization: "Bearer original", "x-notra-organization-id": "org-other" },
+      query: {},
+      body: {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "test", version: "1" } },
+      },
+    },
+    response(),
+  );
+  await state.tools.get("list_posts")({});
+  expect(fetch.mock.calls[0][1].headers).not.toHaveProperty("X-Notra-Organization-Id");
+});
+
+test("a workspace-scoped URL wins over the header, pins the session, and hides list_workspaces", async () => {
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(async () => Response.json({ posts: [] }));
+  const scoped = await initializeApiKeySession({ "x-notra-organization-id": "org-b" }, { organization: "acme" });
+  await state.tools.get("list_posts")({});
+  expect(fetch.mock.calls[0][1].headers["X-Notra-Organization-Id"]).toBe("acme");
+  expect(state.tools.has("whoami")).toBe(true);
+  expect(state.tools.has("list_workspaces")).toBe(false);
+
+  expect(await apiKeySessionStatus(scoped, {}, { organization: "acme" })).toBe(200);
+  expect(await apiKeySessionStatus(scoped, { "x-notra-organization-id": "org-b" }, { organization: "acme" })).toBe(200);
+  expect(await apiKeySessionStatus(scoped, {}, { organization: "beta" })).toBe(401);
+  expect(await apiKeySessionStatus(scoped)).toBe(401);
+  expect(scoped.close).not.toHaveBeenCalled();
+});
+
+test("malformed workspace segments are rejected before authentication", async () => {
+  const res = response();
+  await state.routes.get("POST /mcp/:organization")(
+    { headers: { authorization: "Bearer account-key" }, params: { organization: "a b" }, query: {}, body: {} },
+    res,
+  );
+  expect(res.status).toHaveBeenCalledWith(404);
+  expect(authenticateBearerToken).not.toHaveBeenCalled();
+});
+
+test("scoped 401 challenges and discovery point at the scoped resource", async () => {
+  const res = response();
+  await state.routes.get("GET /mcp/:organization")({ headers: {}, params: { organization: "acme" } }, res);
+  expect(res.status).toHaveBeenCalledWith(401);
+  expect(res.setHeader.mock.calls[0][1]).toContain(
+    'resource_metadata="https://mcp.example.test/.well-known/oauth-protected-resource/mcp/acme"',
+  );
+  expect(res.setHeader.mock.calls[0][1]).toContain('resource="https://mcp.example.test/mcp/acme"');
+  const metadata = response();
+  await state.routes.get("GET /.well-known/oauth-protected-resource/mcp/:organization")(
+    { params: { organization: "acme" } },
+    metadata,
+  );
+  expect(metadata.json.mock.calls[0][0].resource).toBe("https://mcp.example.test/mcp/acme");
+});
+
+async function postOAuthInitialize(organization) {
+  authenticateBearerToken.mockResolvedValueOnce(oauthIdentity());
+  const res = response();
+  await state.routes.get("POST /mcp/:organization")(
+    {
+      headers: { authorization: "Bearer original" },
+      params: { organization },
+      query: {},
+      body: {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: { protocolVersion: "2025-03-26", capabilities: {}, clientInfo: { name: "test", version: "1" } },
+      },
+    },
+    res,
+  );
+  return res;
+}
+
+test("OAuth tokens on a scoped URL must belong to that workspace (id or slug)", async () => {
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
+    Response.json({
+      currentWorkspace: { id: "org-1", slug: "acme", name: "Acme", logo: null },
+      workspaces: [],
+      authentication: { type: "oauth", accountId: "user-1", scopes: [] },
+    }),
+  );
+  expect((await postOAuthInitialize("org-1")).status).not.toHaveBeenCalled();
+  expect(fetch).not.toHaveBeenCalled();
+  expect((await postOAuthInitialize("acme")).status).not.toHaveBeenCalled();
+  expect((await postOAuthInitialize("acme")).status).not.toHaveBeenCalled();
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(fetch.mock.calls[0][1].headers).not.toHaveProperty("X-Notra-Organization-Id");
+  expect(state.tools.has("list_workspaces")).toBe(false);
+
+  const mismatch = await postOAuthInitialize("beta");
+  expect(mismatch.status).toHaveBeenCalledWith(403);
+  expect(mismatch.json.mock.calls[0][0].error.message).toContain('scoped to workspace "beta"');
+
+  fetch.mockRejectedValueOnce(new Error("down"));
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  expect((await postOAuthInitialize("gamma")).status).toHaveBeenCalledWith(502);
 });

@@ -83,6 +83,19 @@ Run `amp config edit` and add the following to your settings, or place it in `.a
 
 Set `NOTRA_API_KEY` in the environment before launching Amp. Workspace MCP servers may require approval with `amp mcp approve notra`.
 
+### Account API keys
+
+An account API key belongs to you rather than one workspace, so it works in every workspace you're a member of. If you belong to more than one, choose the workspace this server acts on with `NOTRA_ORGANIZATION_ID`:
+
+```json
+"env": {
+  "NOTRA_API_KEY": "your-account-api-key",
+  "NOTRA_ORGANIZATION_ID": "your-workspace-id"
+}
+```
+
+Without it, tools fail with a message asking you to pick a workspace. `list_workspaces` works without a selection and shows the ids. Organization API keys ignore `NOTRA_ORGANIZATION_ID`.
+
 ## Remote MCP (OAuth)
 
 The hosted streamable HTTP server at `https://mcp.usenotra.com/mcp` uses OAuth as the primary authentication method. It supports the current `2026-07-28` MCP protocol as well as legacy 2025 clients. MCP clients should discover protected resource metadata at:
@@ -93,9 +106,34 @@ https://mcp.usenotra.com/.well-known/oauth-protected-resource
 
 That metadata points to the Notra authorization server (WorkOS AuthKit) at `https://oauth.usenotra.com`, which supports dynamic client registration (RFC 7591). The MCP server also mirrors the authorization server metadata at `https://mcp.usenotra.com/.well-known/oauth-authorization-server`.
 
+### Workspace-scoped URL
+
+Add a workspace id or slug to the URL to pin a connection to one workspace: `https://mcp.usenotra.com/mcp/<workspace>`. This is the way to pick a workspace in clients that only accept a URL and can't send custom headers.
+
+- Claude: Settings > Connectors > Add custom connector, URL `https://mcp.usenotra.com/mcp/acme`
+- Claude Code: `claude mcp add --transport http notra https://mcp.usenotra.com/mcp/acme`
+- Cursor (`~/.cursor/mcp.json`):
+
+  ```json
+  {
+    "mcpServers": {
+      "notra": { "url": "https://mcp.usenotra.com/mcp/acme" }
+    }
+  }
+  ```
+
+On a scoped URL:
+
+- API keys act in that workspace. The URL wins over an `X-Notra-Organization-Id` header.
+- OAuth works the same as on `/mcp`, but the workspace you authorize must be the one in the URL. Otherwise requests are rejected with HTTP 403 instead of silently acting on another workspace. Protected resource metadata is served at `https://mcp.usenotra.com/.well-known/oauth-protected-resource/mcp/<workspace>`.
+- `list_workspaces` is hidden, since the connection can't switch workspaces. `whoami` still shows the current one.
+- Legacy 2025 sessions belong to the URL they were opened on; using the session id on another URL returns HTTP 401.
+
 ### API key alternative
 
 Remote connections also accept a Notra API key as a static `Authorization: Bearer …` header. Generate one from your [Notra workspace dashboard](https://app.usenotra.com) under Developer > API Keys. OAuth-capable clients should prefer the OAuth flow instead of manual key configuration.
+
+With an [account API key](#account-api-keys) that can reach several workspaces, use a [workspace-scoped URL](#workspace-scoped-url) or add an `X-Notra-Organization-Id: <workspace-id-or-slug>` header (`X-Organization-Id` also works). The server forwards it to the Notra API on every call. A legacy 2025 session stays bound to the workspace it was initialized with; a request on that session that names a different workspace is rejected with HTTP 401, so open a new session to switch. OAuth connections ignore the header because each token is bound to the workspace chosen at consent.
 
 For self-hosted HTTP deployments, OAuth validation can be configured with:
 
@@ -157,7 +195,7 @@ https://mcp.usenotra.com/mcp?toolsets=geo
 | `whoami`          | Show the current workspace and authenticated account information            |
 | `list_workspaces` | List accepted and pending workspaces available to the authenticated account |
 
-Each MCP connection operates in the workspace bound to its bearer token. To act in another workspace, authorize a separate connection for that workspace; `list_workspaces` discovers access but does not switch credentials.
+Each MCP connection operates in the workspace bound to its bearer token, or for account API keys the workspace selected with `NOTRA_ORGANIZATION_ID` or the `X-Notra-Organization-Id` header. To act in another workspace, authorize or configure a separate connection for that workspace; `list_workspaces` discovers access but does not switch workspaces.
 
 ### Posts
 

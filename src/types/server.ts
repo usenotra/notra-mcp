@@ -10,4 +10,9 @@ export type CreateServerOptions = {
    * to full registration so error semantics stay intact.
    */
   onlyTool?: string;
+  /**
+   * The connection URL is scoped to one workspace (`/mcp/{organization}`), so
+   * workspace discovery is hidden like Sentry's org-scoped MCP URLs.
+   */
+  organizationScoped?: boolean;
 };

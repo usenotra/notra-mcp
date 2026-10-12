@@ -7,6 +7,8 @@ export type Session = {
   auth: AuthContext;
   /** Who owns the session: an OAuth user in an organization, or an API key digest. */
   principal: string;
+  /** Workspace named by the connection URL (`/mcp/{organization}`), if any. */
+  organizationScope: string | undefined;
   lastSeen: number;
 };
 

@@ -89,7 +89,7 @@ export function instrumentMcpUsage(
             client_version:
               client?.version && /^\d{1,9}\.\d{1,9}\.\d{1,9}$/.test(client.version) ? client.version : undefined,
             auth_kind: auth.kind,
-            organization_id: auth.kind === "oauth" ? auth.organizationId : undefined,
+            organization_id: auth.organizationId,
             user_id: auth.kind === "oauth" ? auth.userId : undefined,
             outcome: context.mcpReq.signal.aborted || getRequestSignal()?.aborted ? "cancelled" : outcome,
             duration_ms: Math.round(performance.now() - startedAt),

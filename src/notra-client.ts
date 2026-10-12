@@ -1,4 +1,5 @@
 import { GEO_LONG_RUNNING_TIMEOUT_MS } from "./constants/geo.js";
+import { ORGANIZATION_ID_HEADER } from "./constants/organization.js";
 import type {
   BrandIdentityDeleteResponse,
   BrandIdentityGenerationStatusResponse,
@@ -145,6 +146,7 @@ import { chatHistoryApprovalPartSchema } from "./schemas/chat-stream.js";
 import { parseChatStream } from "./utils/chat-stream.js";
 import { withoutHiddenReadinessChecks } from "./utils/geo-agent-readiness.js";
 import { appendQueryParams } from "./utils/query-params.js";
+import { describeOrganizationError } from "./utils/organization.js";
 import { createRequestSignal } from "./utils/request-signal.js";
 
 const NOTRA_API_BASE = process.env.NOTRA_API_BASE ?? "https://api.usenotra.com";
@@ -172,6 +174,19 @@ function asCancellationError(error: unknown): Error | undefined {
   return undefined;
 }
 
+function requestHeaders(auth: AuthContext, accept: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${auth.token}`,
+    "Content-Type": "application/json",
+    Accept: accept,
+  };
+  // OAuth tokens are bound to their consent workspace; only API keys select one per request.
+  if (auth.kind === "apiKey" && auth.organizationId) {
+    headers[ORGANIZATION_ID_HEADER] = auth.organizationId;
+  }
+  return headers;
+}
+
 export class NotraClient {
   private auth: AuthContext;
   private baseUrl: string;
@@ -188,11 +203,7 @@ export class NotraClient {
       appendQueryParams(url, options.params);
     }
 
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.auth.token}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    };
+    const headers = requestHeaders(this.auth, "application/json");
 
     const timeoutMs = options?.timeoutMs ?? 30_000;
     const fetchOptions: RequestInit = { method, headers, signal: createRequestSignal(timeoutMs, options?.signal) };
@@ -228,7 +239,7 @@ export class NotraClient {
     if (!response.ok) {
       const errorBody = apiErrorSchema.safeParse(data).data;
       const message = errorBody?.message ?? errorBody?.error ?? `HTTP ${response.status}: ${response.statusText}`;
-      throw new Error(message);
+      throw new Error(describeOrganizationError(message, this.auth));
     }
 
     return data as T;
@@ -245,11 +256,7 @@ export class NotraClient {
       appendQueryParams(url, options.params);
     }
 
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.auth.token}`,
-      "Content-Type": "application/json",
-      Accept: "text/event-stream, application/json",
-    };
+    const headers = requestHeaders(this.auth, "text/event-stream, application/json");
 
     const timeoutMs = options?.timeoutMs ?? 180_000;
     const fetchOptions: RequestInit = { method, headers, signal: createRequestSignal(timeoutMs, options?.signal) };
@@ -281,7 +288,7 @@ export class NotraClient {
       const errorBody = apiErrorSchema.safeParse(data).data;
       const message =
         errorBody?.message ?? errorBody?.error ?? (text || `HTTP ${response.status}: ${response.statusText}`);
-      throw new Error(message);
+      throw new Error(describeOrganizationError(message, this.auth));
     }
 
     const parsed = parseChatStream(text);

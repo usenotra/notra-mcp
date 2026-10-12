@@ -5,6 +5,7 @@ import {
   OAUTH_PERMISSION_CLAIM_PREFIX,
   OAUTH_PERMISSION_RESOURCES,
 } from "../constants/oauth.js";
+import { ORGANIZATION_SCOPE_PATTERN } from "../constants/organization.js";
 import type { AuthContext, OAuthConfig } from "../types/auth.js";
 
 const remoteJwksByUrl = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
@@ -128,6 +129,27 @@ export function extractScopes(payload: JWTPayload): string[] {
   return [...new Set([...(scopeClaim ?? []), ...(permissionsClaim ?? [])])];
 }
 
+/**
+ * Clients connecting to `/mcp/{organization}` may request a token for that
+ * scoped resource. The workspace itself is still enforced by the token's
+ * consent claim, so any well-formed scope of an allowed MCP resource is fine.
+ */
+function isScopedResourceAudience(audience: string, config: OAuthConfig): boolean {
+  return config.resourceAudiences.some((resource) => {
+    const base = resource.replace(/\/$/, "");
+    if (!base.endsWith("/mcp") || !audience.startsWith(`${base}/`)) {
+      return false;
+    }
+    let segment: string;
+    try {
+      segment = decodeURIComponent(audience.slice(base.length + 1));
+    } catch {
+      return false;
+    }
+    return ORGANIZATION_SCOPE_PATTERN.test(segment);
+  });
+}
+
 function isAllowedAudience(aud: JWTPayload["aud"], config: OAuthConfig): boolean {
   if (aud === undefined) {
     return false;
@@ -139,7 +161,7 @@ function isAllowedAudience(aud: JWTPayload["aud"], config: OAuthConfig): boolean
   }
 
   const audiences = Array.isArray(aud) ? aud : [aud];
-  return audiences.some((audience) => allowed.has(audience));
+  return audiences.some((audience) => allowed.has(audience) || isScopedResourceAudience(audience, config));
 }
 
 export async function authenticateBearerToken(token: string, config: OAuthConfig): Promise<AuthContext> {

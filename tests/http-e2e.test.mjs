@@ -35,7 +35,7 @@ beforeAll(async () => {
     const started = Date.now();
     let bytes = 0;
     for await (const chunk of req) bytes += chunk.length;
-    state.upstream.requests.push({ url: req.url, bytes });
+    state.upstream.requests.push({ url: req.url, bytes, organizationId: req.headers["x-notra-organization-id"] });
     res.on("close", () => {
       if (!res.writableEnded) state.upstream.disconnects.push({ url: req.url, afterMs: Date.now() - started });
     });
@@ -75,8 +75,8 @@ afterAll(() => {
   upstream.close();
 });
 
-async function modern(method, params = {}, { token = "api-key", query = "", signal } = {}) {
-  const response = await fetch(`${mcpUrl}${query}`, {
+async function modern(method, params = {}, { token = "api-key", query = "", signal, headers = {}, path = "" } = {}) {
+  const response = await fetch(`${mcpUrl}${path}${query}`, {
     method: "POST",
     signal,
     headers: {
@@ -86,6 +86,7 @@ async function modern(method, params = {}, { token = "api-key", query = "", sign
       "mcp-protocol-version": "2026-07-28",
       "mcp-method": method,
       ...(params.name && { "mcp-name": params.name }),
+      ...headers,
     },
     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params: { ...params, _meta: META } }),
   });
@@ -190,4 +191,34 @@ test("an MCP client disconnect cancels the in-flight chat request upstream", asy
   controller.abort();
   await expect(call).rejects.toThrow();
   await vi.waitFor(() => expect(state.upstream.disconnects.map((entry) => entry.url)).toContain("/v1/chats"));
+});
+
+test("modern requests forward the selected workspace for API keys but not OAuth tokens", async () => {
+  const call = (options) =>
+    modern("tools/call", { name: "import_geo_prompts", arguments: { projectId: "p1", csv: "prompt" } }, options);
+  await call({ headers: { "x-notra-organization-id": "org-b" } });
+  expect(state.upstream.requests.at(-1).organizationId).toBe("org-b");
+  await call({ headers: { "x-organization-id": "org-c" } });
+  expect(state.upstream.requests.at(-1).organizationId).toBe("org-c");
+  await call();
+  expect(state.upstream.requests.at(-1).organizationId).toBeUndefined();
+  await call({ token: "oauth-token", headers: { "x-notra-organization-id": "org-b" } });
+  expect(state.upstream.requests.at(-1).organizationId).toBeUndefined();
+});
+
+test("the workspace-scoped URL forwards its workspace, wins over the header, and hides list_workspaces", async () => {
+  await modern(
+    "tools/call",
+    { name: "import_geo_prompts", arguments: { projectId: "p1", csv: "prompt" } },
+    { path: "/acme", headers: { "x-notra-organization-id": "org-b" } },
+  );
+  expect(state.upstream.requests.at(-1).organizationId).toBe("acme");
+
+  const scoped = await modern("tools/list", {}, { path: "/acme" });
+  expect(toolNames(scoped.body)).toContain("whoami");
+  expect(toolNames(scoped.body)).not.toContain("list_workspaces");
+  expect(toolNames((await modern("tools/list")).body)).toContain("list_workspaces");
+  const hidden = await modern("tools/call", { name: "list_workspaces", arguments: {} }, { path: "/acme" });
+  expect(hidden.body.error?.message).toContain("Tool list_workspaces not found");
+  expect((await modern("tools/list", {}, { path: "/a%20b" })).status).toBe(404);
 });

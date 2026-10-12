@@ -24,7 +24,7 @@ import { registerProjectTools } from "./tools/project-tools.js";
 import { registerScheduleTools } from "./tools/schedule-tools.js";
 import { registerSkillTools } from "./tools/skill-tools.js";
 import { registerWebhookTools } from "./tools/webhook-tools.js";
-import { registerWorkspaceTools } from "./tools/workspace-tools.js";
+import { registerListWorkspacesTool, registerWhoAmITool } from "./tools/workspace-tools.js";
 import type { AuthContext } from "./types/auth.js";
 import type { CreateServerOptions } from "./types/server.js";
 import type { Toolset } from "./types/toolset.js";
@@ -64,7 +64,8 @@ const GEO_REGISTRARS: readonly Registrar[] = [
 ];
 
 const SHARED_REGISTRARS: readonly Registrar[] = [
-  registerWorkspaceTools,
+  registerWhoAmITool,
+  registerListWorkspacesTool,
   (server) =>
     registerFeedbackTools(server, {
       url: "https://api.usenotra.com/v1/feedback/notra",
@@ -127,8 +128,11 @@ export function createServer(auth: string | AuthContext, options: CreateServerOp
   // A tools/call needs only the module owning that tool. Unknown or
   // toolset-filtered names fall through to full registration so the SDK
   // answers with its standard "tool not found" error.
+  const isRegistered = (registrar: Registrar) =>
+    !(options.organizationScoped && registrar === registerListWorkspacesTool);
+
   const owner = options.onlyTool ? TOOL_OWNERS.get(options.onlyTool) : undefined;
-  if (owner && (owner.toolset === undefined || toolsets.has(owner.toolset))) {
+  if (owner && (owner.toolset === undefined || toolsets.has(owner.toolset)) && isRegistered(owner.registrar)) {
     owner.registrar(server, client);
     return server;
   }
@@ -139,7 +143,9 @@ export function createServer(auth: string | AuthContext, options: CreateServerOp
   if (toolsets.has("geo")) {
     for (const registrar of GEO_REGISTRARS) registrar(server, client);
   }
-  for (const registrar of SHARED_REGISTRARS) registrar(server, client);
+  for (const registrar of SHARED_REGISTRARS) {
+    if (isRegistered(registrar)) registrar(server, client);
+  }
 
   return server;
 }

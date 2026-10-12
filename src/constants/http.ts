@@ -5,6 +5,8 @@ export const SESSION_SWEEP_INTERVAL_MS = 60 * 1000;
 export const DEFAULT_MAX_SESSIONS = 1000;
 export const DEFAULT_MAX_SESSIONS_PER_PRINCIPAL = 50;
 export const SESSION_RETRY_AFTER_SECONDS = 60;
+/** The MCP endpoint, plus its workspace-scoped form (`/mcp/{organization}`: id or slug). */
+export const MCP_PATHS = ["/mcp", "/mcp/:organization"];
 
 // CSV imports allow 1,048,576 UTF-16 code units, which take up to 3 bytes each in
 // UTF-8 (for example CJK text). Leave room for that plus the JSON-RPC envelope.

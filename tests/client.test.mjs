@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { test, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 import { NotraClient } from "../src/notra-client.ts";
 import { appendQueryParams } from "../src/utils/query-params.ts";
 
@@ -120,4 +120,47 @@ test("query serialization preserves false and zero and rejects unsupported value
   for (const value of [null, {}, [1], ["a", false]]) {
     assert.throws(() => appendQueryParams(url, { bad: value }), /Unsupported query parameter: bad/);
   }
+});
+
+test("account API keys send the selected workspace on JSON and chat requests", async () => {
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(async () => Response.json({ posts: [] }));
+  const accountClient = new NotraClient(
+    { kind: "apiKey", token: "account-key", organizationId: "org_b" },
+    "https://api.example.test",
+  );
+  await accountClient.listPosts();
+  await accountClient.createChat({ message: "Hello" }).catch(() => {});
+  expect(fetch.mock.calls.map(([, options]) => options.headers["X-Notra-Organization-Id"])).toEqual(["org_b", "org_b"]);
+});
+
+test("no workspace header is sent without a selection or for OAuth tokens", async () => {
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(async () => Response.json({ posts: [] }));
+  await client.listPosts();
+  await new NotraClient(
+    { kind: "oauth", token: "jwt", userId: "user-1", organizationId: "org_a", scopes: [] },
+    "https://api.example.test",
+  ).listPosts();
+  for (const [, options] of fetch.mock.calls) {
+    expect(options.headers).not.toHaveProperty("X-Notra-Organization-Id");
+  }
+});
+
+test("workspace selection errors for account API keys explain how to pick a workspace", async () => {
+  const selectionRequired =
+    "Organization selection required: send X-Notra-Organization-Id for the workspace this request should act on";
+  vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
+    Response.json({ error: selectionRequired }, { status: 403 }),
+  );
+  await assert.rejects(client.listPosts(), /list_workspaces.*NOTRA_ORGANIZATION_ID.*X-Notra-Organization-Id/);
+  await assert.rejects(client.createChat({ message: "Hello" }), /list_workspaces/);
+
+  vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
+    Response.json({ error: "Workspace access revoked" }, { status: 403 }),
+  );
+  await assert.rejects(client.listPosts(), { message: "Workspace access revoked" });
+  const selected = new NotraClient(
+    { kind: "apiKey", token: "account-key", organizationId: "org_gone" },
+    "https://api.example.test",
+  );
+  await assert.rejects(selected.listPosts(), /workspace "org_gone".*not a member/);
 });

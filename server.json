@@ -42,10 +42,48 @@
                 "description": "Bearer Notra API key from Developer > API Keys",
                 "isRequired": true,
                 "isSecret": true
+              },
+              {
+                "name": "X-Notra-Organization-Id",
+                "description": "Workspace ID for an account API key that can access several workspaces",
+                "isRequired": false,
+                "isSecret": false
               }
             ]
           }
         ]
+      }
+    },
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.usenotra.com/mcp/{organization}",
+      "auth": {
+        "posture": "required",
+        "preferred": "oauth",
+        "methods": [
+          {
+            "type": "oauth",
+            "registration": "dynamic",
+            "clientCredential": "none"
+          },
+          {
+            "type": "headers",
+            "headers": [
+              {
+                "name": "Authorization",
+                "description": "Bearer Notra API key from Developer > API Keys",
+                "isRequired": true,
+                "isSecret": true
+              }
+            ]
+          }
+        ]
+      },
+      "variables": {
+        "organization": {
+          "description": "Workspace ID or slug this connection acts on",
+          "isRequired": true
+        }
       }
     }
   ]
