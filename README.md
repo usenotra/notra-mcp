@@ -88,9 +88,11 @@ Set `NOTRA_API_KEY` in the environment before launching Amp. Workspace MCP serve
 An account API key belongs to you rather than one workspace, so it works in every workspace you're a member of. If you belong to more than one, choose the workspace this server acts on with `NOTRA_ORGANIZATION_ID`:
 
 ```json
-"env": {
-  "NOTRA_API_KEY": "your-account-api-key",
-  "NOTRA_ORGANIZATION_ID": "your-workspace-id"
+{
+  "env": {
+    "NOTRA_API_KEY": "your-account-api-key",
+    "NOTRA_ORGANIZATION_ID": "your-workspace-id"
+  }
 }
 ```
 

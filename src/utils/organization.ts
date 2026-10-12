@@ -63,7 +63,7 @@ export function describeOrganizationError(message: string, auth: AuthContext): s
     return `This Notra account API key can access several workspaces, so each request must name one. Call \`list_workspaces\` to find the workspace id, then set ${ORGANIZATION_ID_ENV} (stdio), or connect to /mcp/<workspace> or send the ${ORGANIZATION_ID_HEADER} header (HTTP), and reconnect.`;
   }
   if (message === WORKSPACE_ACCESS_REVOKED_ERROR && auth.organizationId) {
-    return `This API key cannot act in workspace "${auth.organizationId}": the account is not a member of it. Check ${ORGANIZATION_ID_ENV} or the ${ORGANIZATION_ID_HEADER} header; remove it to list the workspaces the key can use with \`list_workspaces\`.`;
+    return `This API key cannot act in workspace "${auth.organizationId}": the account is not a member of it. Call \`list_workspaces\` to see the workspaces the key can use, then fix ${ORGANIZATION_ID_ENV} (stdio, restart the server afterwards), the /mcp/<workspace> URL or the ${ORGANIZATION_ID_HEADER} header.`;
   }
   return message;
 }

@@ -174,14 +174,14 @@ function asCancellationError(error: unknown): Error | undefined {
   return undefined;
 }
 
-function requestHeaders(auth: AuthContext, accept: string): Record<string, string> {
+function requestHeaders(auth: AuthContext, accept: string, withoutOrganization = false): Record<string, string> {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${auth.token}`,
     "Content-Type": "application/json",
     Accept: accept,
   };
   // OAuth tokens are bound to their consent workspace; only API keys select one per request.
-  if (auth.kind === "apiKey" && auth.organizationId) {
+  if (auth.kind === "apiKey" && auth.organizationId && !withoutOrganization) {
     headers[ORGANIZATION_ID_HEADER] = auth.organizationId;
   }
   return headers;
@@ -203,7 +203,7 @@ export class NotraClient {
       appendQueryParams(url, options.params);
     }
 
-    const headers = requestHeaders(this.auth, "application/json");
+    const headers = requestHeaders(this.auth, "application/json", options?.withoutOrganization);
 
     const timeoutMs = options?.timeoutMs ?? 30_000;
     const fetchOptions: RequestInit = { method, headers, signal: createRequestSignal(timeoutMs, options?.signal) };
@@ -587,9 +587,10 @@ export class NotraClient {
     return this.request<ProjectListResponse>("GET", "/v1/projects");
   }
 
-  async getWorkspaceContext(includePending = false): Promise<WorkspaceContextResponse> {
+  async getWorkspaceContext(includePending = false, withoutOrganization = false): Promise<WorkspaceContextResponse> {
     return this.request<WorkspaceContextResponse>("GET", "/v1/me/workspaces", {
       params: includePending ? { includePending: true } : undefined,
+      withoutOrganization,
     });
   }
 

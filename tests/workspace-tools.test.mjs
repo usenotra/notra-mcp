@@ -115,3 +115,20 @@ test("whoami never includes the bearer token in its result", async () => {
 
   assert.doesNotMatch(JSON.stringify(result), /secret/);
 });
+
+test("list_workspaces still lists workspaces when the selected workspace is no longer accessible", async () => {
+  const sent = [];
+  vi.spyOn(globalThis, "fetch").mockImplementation(async (_url, options) => {
+    const selected = options.headers["X-Notra-Organization-Id"];
+    sent.push(selected ?? null);
+    return selected
+      ? Response.json({ error: "Workspace access revoked" }, { status: 403 })
+      : Response.json({ ...response, authentication: { type: "apiKey" } });
+  });
+  const server = createServer({ kind: "apiKey", token: "account-key", organizationId: "org_gone" });
+  const result = await server._registeredTools.list_workspaces.handler({});
+
+  assert.notEqual(result.isError, true);
+  assert.equal(result.structuredContent.workspaces[0].id, "org_123");
+  assert.deepEqual(sent, ["org_gone", null]);
+});

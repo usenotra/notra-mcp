@@ -76,7 +76,19 @@ export function registerListWorkspacesTool(server: McpServer, client: NotraClien
       outputSchema: shareJsonSchema(listWorkspacesOutputSchema),
     },
     async () => {
-      return handleError(async () => projectWorkspaceContext(await client.getWorkspaceContext(true)));
+      return handleError(async () => {
+        try {
+          return projectWorkspaceContext(await client.getWorkspaceContext(true));
+        } catch (error) {
+          // A stale workspace selection (e.g. NOTRA_ORGANIZATION_ID read at stdio startup) must not block the
+          // listing users need to pick a valid one; the endpoint works without the header.
+          try {
+            return projectWorkspaceContext(await client.getWorkspaceContext(true, true));
+          } catch {
+            throw error;
+          }
+        }
+      });
     },
   );
 }

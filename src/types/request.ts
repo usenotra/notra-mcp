@@ -8,6 +8,8 @@ export interface RequestOptions<
 > extends RequestTimeoutOptions {
   params?: object;
   body?: B;
+  /** Skip the selected workspace header, for endpoints that work without one. */
+  withoutOrganization?: boolean;
 }
 
 export type RequestScope = {
