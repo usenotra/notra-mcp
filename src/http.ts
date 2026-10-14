@@ -602,7 +602,7 @@ app.delete(MCP_PATHS, async (req, res) => {
 });
 
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+  res.json({ status: "ok", commit: process.env.UNKEY_GIT_COMMIT_SHA ?? null });
 });
 
 // Body parser failures (oversized or malformed JSON) would otherwise be answered
