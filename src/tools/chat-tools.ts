@@ -57,7 +57,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     "create_chat",
     {
       description:
-        "Start a new Notra agent chat and return the assistant's reply text with the chat ID when available. Uses AI credits. The agent can research the web, create or update posts, create writing skills, add brand references, and invoke connected MCP tools that may modify or delete data or act on external services. Actions Notra requires approval for (creating posts, schedules and skills, scheduling or cancelling posts, and connected MCP tools not marked read-only) pause before they run and are returned in pendingApprovals with the exact tool and input; show them to the user and only continue with respond_to_chat_approvals once the user has decided. Other actions run without pausing.",
+        "Start a new Notra agent chat and return the assistant's reply text with the chat ID when available. Uses AI credits. The agent can research the web, create or update posts, create writing skills, add brand references, and invoke connected MCP tools that may modify or delete data or act on external services. Actions with side effects (creating, editing or updating posts, creating images, schedules and skills, scheduling or cancelling posts, adding brand references, and connected MCP tools not marked read-only) pause before they run and are returned in pendingApprovals with the exact tool and input; show them to the user and only continue with respond_to_chat_approvals once the user has decided.",
       annotations: { title: "Create Chat", readOnlyHint: false, openWorldHint: true, destructiveHint: true },
       inputSchema: shareJsonSchema(sendChatMessageSchema),
       outputSchema: shareJsonSchema(chatStreamOutputSchema),
@@ -69,7 +69,7 @@ export function registerChatTools(server: McpServer, client: NotraClient) {
     "post_chat_message",
     {
       description:
-        "Send a message to an existing Notra agent chat and return the assistant's reply text. Uses AI credits. The agent can research the web, create or update posts, create writing skills, add brand references, and invoke connected MCP tools that may modify or delete data or act on external services. Actions Notra requires approval for (creating posts, schedules and skills, scheduling or cancelling posts, and connected MCP tools not marked read-only) pause before they run and are returned in pendingApprovals with the exact tool and input; show them to the user and only continue with respond_to_chat_approvals once the user has decided. Other actions run without pausing.",
+        "Send a message to an existing Notra agent chat and return the assistant's reply text. Uses AI credits. The agent can research the web, create or update posts, create writing skills, add brand references, and invoke connected MCP tools that may modify or delete data or act on external services. Actions with side effects (creating, editing or updating posts, creating images, schedules and skills, scheduling or cancelling posts, adding brand references, and connected MCP tools not marked read-only) pause before they run and are returned in pendingApprovals with the exact tool and input; show them to the user and only continue with respond_to_chat_approvals once the user has decided.",
       annotations: { title: "Post Chat Message", readOnlyHint: false, openWorldHint: true, destructiveHint: true },
       inputSchema: shareJsonSchema(postChatMessageSchema),
       outputSchema: shareJsonSchema(chatStreamOutputSchema),

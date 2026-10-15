@@ -9,13 +9,7 @@ export const CONTENT_TYPE_VALUES = [
   "image",
 ] as const;
 
-export const GENERATABLE_CONTENT_TYPE_VALUES = [
-  "changelog",
-  "blog_post",
-  "linkedin_post",
-  "twitter_post",
-  "image",
-] as const;
+export const GENERATABLE_CONTENT_TYPE_VALUES = ["changelog", "blog_post", "linkedin_post", "twitter_post"] as const;
 
 export const CREATABLE_CONTENT_TYPE_VALUES = ["blog_post", "changelog", "linkedin_post", "twitter_post"] as const;
 
