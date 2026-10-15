@@ -5,8 +5,6 @@ import {
   getGeoTrafficJourneySchema,
   listGeoTrafficPagesSchema,
   getGeoIngestSetupSchema,
-  issueGeoIngestTokenSchema,
-  rotateGeoIngestTokenSchema,
 } from "../schemas/geo-traffic.js";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
@@ -96,7 +94,7 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
     "get_geo_ingest_setup",
     {
       description:
-        "Get the AI traffic tracking install snippets (Next.js, Nuxt, Netlify) and the ingest endpoint. The snippets read the token from an environment variable; issue the token itself with issue_geo_ingest_token.",
+        "Get the AI traffic tracking install snippets (Next.js, Nuxt, Netlify) and the ingest endpoint. The snippets read the token from an environment variable; manage tracking credentials in the Notra dashboard.",
       annotations: {
         title: "Get AI Traffic Ingest Setup",
         readOnlyHint: true,
@@ -107,39 +105,5 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
       outputSchema: shareJsonSchema(apiOutputSchema("getGeoIngestSetup")),
     },
     () => handleError(() => client.getGeoIngestSetup()),
-  );
-
-  server.registerTool(
-    "issue_geo_ingest_token",
-    {
-      description:
-        "Issue the AI traffic tracking token together with the install snippets. Issuing does not invalidate previously issued tokens; use rotate_geo_ingest_token for that. Requires a write scope.",
-      annotations: {
-        title: "Issue AI Traffic Ingest Token",
-        readOnlyHint: false,
-        openWorldHint: false,
-        destructiveHint: false,
-      },
-      inputSchema: shareJsonSchema(issueGeoIngestTokenSchema),
-      outputSchema: shareJsonSchema(apiOutputSchema("issueGeoIngestToken")),
-    },
-    ({ projectId }) => handleError(() => client.issueGeoIngestToken(projectId)),
-  );
-
-  server.registerTool(
-    "rotate_geo_ingest_token",
-    {
-      description:
-        "Rotate the AI traffic tracking token. This invalidates all tokens previously issued for the organization. Deployments using an old token will be rejected.",
-      annotations: {
-        title: "Rotate AI Traffic Ingest Token",
-        readOnlyHint: false,
-        openWorldHint: false,
-        destructiveHint: true,
-      },
-      inputSchema: shareJsonSchema(rotateGeoIngestTokenSchema),
-      outputSchema: shareJsonSchema(apiOutputSchema("rotateGeoIngestToken")),
-    },
-    ({ projectId }) => handleError(() => client.rotateGeoIngestToken(projectId)),
   );
 }

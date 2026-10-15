@@ -39,7 +39,7 @@ beforeAll(async () => {
     res.on("close", () => {
       if (!res.writableEnded) state.upstream.disconnects.push({ url: req.url, afterMs: Date.now() - started });
     });
-    if (req.url === "/v1/chats") return; // Never answers; only a disconnect ends it.
+    if (req.url === "/v1/posts/wait-for-disconnect") return; // Never answers; only a disconnect ends it.
     // Tools now advertise output schemas from the OpenAPI spec, so the mock must
     // answer the CSV import with a spec-conformant body or the SDK flags isError.
     if (req.url.endsWith("/prompts/import")) {
@@ -180,17 +180,21 @@ test("an unknown tool on the modern path gets a clean not-found without touching
   expect(state.upstream.requests.length).toBe(before);
 });
 
-test("an MCP client disconnect cancels the in-flight chat request upstream", async () => {
+test("an MCP client disconnect cancels the in-flight post request upstream", async () => {
   const controller = new AbortController();
   const call = modern(
     "tools/call",
-    { name: "create_chat", arguments: { message: "hi" } },
+    { name: "get_post", arguments: { postId: "wait-for-disconnect" } },
     { signal: controller.signal },
   );
-  await vi.waitFor(() => expect(state.upstream.requests.some((request) => request.url === "/v1/chats")).toBe(true));
+  await vi.waitFor(() =>
+    expect(state.upstream.requests.some((request) => request.url === "/v1/posts/wait-for-disconnect")).toBe(true),
+  );
   controller.abort();
   await expect(call).rejects.toThrow();
-  await vi.waitFor(() => expect(state.upstream.disconnects.map((entry) => entry.url)).toContain("/v1/chats"));
+  await vi.waitFor(() =>
+    expect(state.upstream.disconnects.map((entry) => entry.url)).toContain("/v1/posts/wait-for-disconnect"),
+  );
 });
 
 test("modern requests forward the selected workspace for API keys but not OAuth tokens", async () => {
@@ -221,4 +225,29 @@ test("the workspace-scoped URL forwards its workspace, wins over the header, and
   const hidden = await modern("tools/call", { name: "list_workspaces", arguments: {} }, { path: "/acme" });
   expect(hidden.body.error?.message).toContain("Tool list_workspaces not found");
   expect((await modern("tools/list", {}, { path: "/a%20b" })).status).toBe(404);
+});
+
+test("removed executors and credential fields cannot reach the upstream API", async () => {
+  const before = state.upstream.requests.length;
+  for (const name of [
+    "list_chats",
+    "get_chat",
+    "get_chat_by_external_channel",
+    "list_agent_chats",
+    "create_chat",
+    "post_chat_message",
+    "respond_to_chat_approvals",
+    "create_webhook_endpoint",
+    "issue_geo_ingest_token",
+    "rotate_geo_ingest_token",
+  ]) {
+    const { body } = await modern("tools/call", { name, arguments: {} });
+    expect(body.error?.code).toBe(-32602);
+  }
+  const { body } = await modern("tools/call", {
+    name: "create_github_integration",
+    arguments: { owner: "example", repo: "public", token: "must-not-be-forwarded" },
+  });
+  expect(body.result?.isError ?? Boolean(body.error)).toBe(true);
+  expect(state.upstream.requests.length).toBe(before);
 });

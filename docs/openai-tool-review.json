@@ -1,0 +1,1465 @@
+[
+  {
+    "name": "approve_geo_content_brief",
+    "description": "Approve a GEO content brief and start the article writer. Only briefs in draft or failed status can be approved. Poll get_geo_content_brief for writer progress; the finished article appears as a post.",
+    "annotations": {
+      "title": "Approve GEO Content Brief",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Updates brief approval state and starts the writer, which writes the associated article draft.",
+      "destructiveHint": "Updates brief approval state and starts the writer, which writes the associated article draft.",
+      "openWorldHint": "Updates brief approval state and starts the writer, which writes the associated article draft. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "cancel_post_schedule",
+    "description": "Cancel pending publishing destinations and clear failed ones. Already-publishing destinations cannot be interrupted; inProgress reports whether any are still running.",
+    "annotations": {
+      "title": "Cancel Post Schedule",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Cancels pending publications and clears failed destinations; publishing already in progress continues.",
+      "destructiveHint": "Cancels pending publications and clears failed destinations; publishing already in progress continues.",
+      "openWorldHint": "Cancels pending publications and clears failed destinations; publishing already in progress continues. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "create_event_trigger",
+    "description": "Create an event trigger that generates content whenever a GitHub release or push happens in the targeted repositories. Generated content uses AI credits each time the trigger fires.",
+    "annotations": {
+      "title": "Create Event Trigger",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Creates a trigger that generates content from subsequent GitHub push or release events.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Creates a trigger that generates content from subsequent GitHub push or release events. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "create_geo_prompt",
+    "description": "Track a new GEO prompt so future scans check it against every configured answer engine",
+    "annotations": {
+      "title": "Create GEO Prompt",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Adds a prompt to the project’s stored tracking configuration; does not run a scan.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "create_geo_scan",
+    "description": "Trigger a GEO visibility scan. The scan runs asynchronously and checks every enabled prompt against every configured answer engine; poll get_geo_scan with the returned scanId for status, progress, mentions, and safe failure details. This uses AI credits.",
+    "annotations": {
+      "title": "Create GEO Scan",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Queues a scan against configured answer engines, consumes AI credits, and stores results.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Queues a scan against configured answer engines, consumes AI credits, and stores results. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "create_geo_sequence",
+    "description": "Create a GEO prompt sequence: an ordered list of prompts played as one conversation",
+    "annotations": {
+      "title": "Create GEO Sequence",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Stores a new ordered sequence of prompts; does not execute it.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "create_github_integration",
+    "description": "Connect a public GitHub repository for content generation. For private repositories, configure access in the Notra dashboard; never request or send a personal access token in chat.",
+    "annotations": {
+      "title": "Create GitHub Integration",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Checks a public GitHub repository and stores a new integration with changelog generation enabled.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Checks a public GitHub repository and stores a new integration with changelog generation enabled. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "create_post",
+    "description": "Create a post directly from your own title and markdown, without AI generation. Omit markdown to create an empty draft to fill in later with update_post. Slugs are only accepted for blog posts and changelogs. Setting status to published can expose the post on a hosted site and request a visibility rescan.",
+    "annotations": {
+      "title": "Create Post",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Creates a post; published status can expose it on a hosted site and start a visibility rescan.",
+      "destructiveHint": "Creates a post; published status can expose it on a hosted site and start a visibility rescan.",
+      "openWorldHint": "Creates a post; published status can expose it on a hosted site and start a visibility rescan. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "create_project",
+    "description": "Create a new GEO project, optionally linked to a brand identity",
+    "annotations": {
+      "title": "Create Project",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Adds a project in the authenticated organization.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "create_schedule",
+    "description": "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger",
+    "annotations": {
+      "title": "Create Schedule",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Persists a new recurring content-generation schedule that reads connected sources when it runs.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Persists a new recurring content-generation schedule that reads connected sources when it runs. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "create_skill",
+    "description": "Create a reusable writing skill",
+    "annotations": {
+      "title": "Create Skill",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Stores a new reusable writing skill.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "delete_brand_identity",
+    "description": "Delete a brand identity. Returns any schedules or events that were disabled as a result.",
+    "annotations": {
+      "title": "Delete Brand Identity",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Deletes a brand identity and can disable dependent schedules and events.",
+      "destructiveHint": "Deletes a brand identity and can disable dependent schedules and events.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "delete_event_trigger",
+    "description": "Delete an event trigger",
+    "annotations": {
+      "title": "Delete Event Trigger",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Deletes a content generation trigger.",
+      "destructiveHint": "Deletes a content generation trigger.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "delete_geo_competitor",
+    "description": "Stop tracking a GEO competitor. The name is matched case-insensitively.",
+    "annotations": {
+      "title": "Delete GEO Competitor",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Removes a tracked competitor.",
+      "destructiveHint": "Removes a tracked competitor.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "delete_geo_prompt",
+    "description": "Stop tracking a GEO prompt",
+    "annotations": {
+      "title": "Delete GEO Prompt",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Removes a tracked prompt.",
+      "destructiveHint": "Removes a tracked prompt.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "delete_geo_sequence",
+    "description": "Delete a GEO prompt sequence",
+    "annotations": {
+      "title": "Delete GEO Sequence",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Deletes a stored prompt sequence.",
+      "destructiveHint": "Deletes a stored prompt sequence.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "delete_integration",
+    "description": "Delete a GitHub or Linear integration. Returns any schedules or events that were disabled as a result.",
+    "annotations": {
+      "title": "Delete Integration",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Deletes a connection and can disable dependent schedules and events.",
+      "destructiveHint": "Deletes a connection and can disable dependent schedules and events.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "delete_post",
+    "description": "Delete a post by its ID, including content that may be published on a hosted site.",
+    "annotations": {
+      "title": "Delete Post",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Deletes stored post content, including content served on a public hosted site.",
+      "destructiveHint": "Deletes stored post content, including content served on a public hosted site.",
+      "openWorldHint": "Deletes stored post content, including content served on a public hosted site. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "delete_project",
+    "description": "Delete a GEO project and its settings, prompts, sequences, competitors, scans, checks, and reports. This cannot be undone. The organization's last project cannot be deleted.",
+    "annotations": {
+      "title": "Delete Project",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Deletes a project and its settings, prompts, sequences, competitors, scans, checks, and reports.",
+      "destructiveHint": "Deletes a project and its settings, prompts, sequences, competitors, scans, checks, and reports.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "delete_schedule",
+    "description": "Delete a content generation schedule by its ID",
+    "annotations": {
+      "title": "Delete Schedule",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Deletes a recurring generation schedule.",
+      "destructiveHint": "Deletes a recurring generation schedule.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "delete_skill",
+    "description": "Delete a reusable writing skill by name",
+    "annotations": {
+      "title": "Delete Skill",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Deletes an existing writing skill.",
+      "destructiveHint": "Deletes an existing writing skill.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "delete_webhook_endpoint",
+    "description": "Remove a webhook subscription and cancel its unsent deliveries",
+    "annotations": {
+      "title": "Delete Webhook Endpoint",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Deletes a stored subscription and cancels its unsent deliveries.",
+      "destructiveHint": "Deletes a stored subscription and cancels its unsent deliveries.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "generate_brand_identity",
+    "description": "Queue async brand identity generation from a website URL. Notra will scrape the site and extract brand info. Use get_brand_identity_generation_status to poll for completion.",
+    "annotations": {
+      "title": "Generate Brand Identity",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Fetches a user-selected website and queues creation of a brand identity.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Fetches a user-selected website and queues creation of a brand identity. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "generate_post",
+    "description": "Queue an async post generation job. Notra will analyze your GitHub activity and generate content. Use get_post_generation_status to poll for completion.",
+    "annotations": {
+      "title": "Generate Post",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Queues content generation from connected source activity and stores a new post.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Queues content generation from connected source activity and stores a new post. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "get_brand_identity",
+    "description": "Get a single brand identity by its ID, including tone, audience, and language settings",
+    "annotations": {
+      "title": "Get Brand Identity",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get Brand Identity retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_brand_identity_generation_status",
+    "description": "Check the status of an async brand identity generation job",
+    "annotations": {
+      "title": "Get Brand Identity Generation Status",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get Brand Identity Generation Status retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_event_trigger",
+    "description": "Get a single event trigger by its ID",
+    "annotations": {
+      "title": "Get Event Trigger",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get Event Trigger retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_feedback",
+    "description": "Get a single feedback entry with its full message, agent metadata and context URL",
+    "annotations": {
+      "title": "Get Feedback",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get Feedback retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_agent_readiness",
+    "description": "Get the latest agent readiness report for the project's website: score, failed/partial checks with recommendations, any scan still in flight, and the score history. Never starts a scan.",
+    "annotations": {
+      "title": "Get Agent Readiness",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get Agent Readiness retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_changes",
+    "description": "Compare the two latest GEO scans and list gained or lost mentions, positions and citations",
+    "annotations": {
+      "title": "Get GEO Changes",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Changes retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_competitor_detail",
+    "description": "Get one competitor's GEO mention history: daily mentions and the prompts that produced them. Use the brand names reported by get_geo_competitor_share.",
+    "annotations": {
+      "title": "Get GEO Competitor Detail",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Competitor Detail retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_competitor_share",
+    "description": "Get GEO share of voice: the top brands by mentions with their share of all mentions, plus a summary of the remaining brands. Filter with brands, cap with limit, and set includeTrends for daily trends of the returned brands.",
+    "annotations": {
+      "title": "Get GEO Competitor Share",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Competitor Share retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_content_brief",
+    "description": "Get a single GEO content brief including the full brief document, writer status and the resulting post ID",
+    "annotations": {
+      "title": "Get GEO Content Brief",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Content Brief retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_ingest_setup",
+    "description": "Get the AI traffic tracking install snippets (Next.js, Nuxt, Netlify) and the ingest endpoint. The snippets read the token from an environment variable; manage tracking credentials in the Notra dashboard.",
+    "annotations": {
+      "title": "Get AI Traffic Ingest Setup",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get AI Traffic Ingest Setup retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_language_share",
+    "description": "Get GEO mention rates broken down by tracked language",
+    "annotations": {
+      "title": "Get GEO Language Share",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Language Share retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_prompt_history",
+    "description": "Get compact historical checks for one prompt. Use a returned check id with get_geo_prompt_result_detail for the full answer.",
+    "annotations": {
+      "title": "Get GEO Prompt History",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Prompt History retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_prompt_result_detail",
+    "description": "Get the full answer, grounding sources and token metadata for one GEO check",
+    "annotations": {
+      "title": "Get GEO Prompt Result Detail",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Prompt Result Detail retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_scan",
+    "description": "Get a GEO scan's status, planned and completed checks, mentions and explicit failures by engine, plus safe failure details when the scan failed",
+    "annotations": {
+      "title": "Get GEO Scan",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Scan retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_sentiment",
+    "description": "Get aggregate GEO sentiment, engine breakdowns, timeseries and previous-period comparison",
+    "annotations": {
+      "title": "Get GEO Sentiment",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Sentiment retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_sentiment_analysis",
+    "description": "Get the stored thematic GEO sentiment analysis without starting a billed analysis run",
+    "annotations": {
+      "title": "Get GEO Sentiment Analysis",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Sentiment Analysis retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_settings",
+    "description": "Get a project's GEO settings: tracked company name, aliases, languages, answer engines and the recurring scan configuration",
+    "annotations": {
+      "title": "Get GEO Settings",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Settings retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_snapshot",
+    "description": "Get a compact GEO diagnosis across visibility, sentiment, scan changes, competitors, content gaps, shelf sources, readiness and AI traffic, with deterministic next actions",
+    "annotations": {
+      "title": "Get GEO Snapshot",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Snapshot retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_traffic_journey",
+    "description": "Get every event in one AI traffic journey",
+    "annotations": {
+      "title": "Get AI Traffic Journey",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get AI Traffic Journey retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_traffic_log",
+    "description": "Get the most recent individual requests from AI crawlers and referrals. This endpoint has no time window; use limit to bound it.",
+    "annotations": {
+      "title": "Get AI Traffic Log",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get AI Traffic Log retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_traffic_overview",
+    "description": "Get AI traffic totals for a project's website: crawler and AI-referral visit totals, a per-source breakdown and the daily timeseries behind it",
+    "annotations": {
+      "title": "Get AI Traffic Overview",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get AI Traffic Overview retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_visibility_overview",
+    "description": "Get GEO mention rates per answer engine: checks, mentions and average position for every engine the project tracks",
+    "annotations": {
+      "title": "Get GEO Visibility Overview",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Visibility Overview retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_geo_visibility_timeseries",
+    "description": "Get daily GEO mention counts per answer engine, one point per day and engine",
+    "annotations": {
+      "title": "Get GEO Visibility Timeseries",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get GEO Visibility Timeseries retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_post",
+    "description": "Get a single post by its ID, including full content in HTML and markdown",
+    "annotations": {
+      "title": "Get Post",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get Post retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_post_generation_status",
+    "description": "Check the status of an async post generation job. Returns job status and event log.",
+    "annotations": {
+      "title": "Get Post Generation Status",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get Post Generation Status retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_post_schedule",
+    "description": "Get a post's publishing schedule and the state of every destination. Returns a null schedule when nothing is scheduled.",
+    "annotations": {
+      "title": "Get Post Schedule",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get Post Schedule retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_project",
+    "description": "Get a single GEO project by its ID",
+    "annotations": {
+      "title": "Get Project",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get Project retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_skill",
+    "description": "Get a single reusable writing skill by name",
+    "annotations": {
+      "title": "Get Skill",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get Skill retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "get_webhook_delivery",
+    "description": "Get a webhook delivery's payload and attempt history",
+    "annotations": {
+      "title": "Get Webhook Delivery",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Get Webhook Delivery retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "import_geo_competitors",
+    "description": "Bulk import GEO competitors from structured rows or raw CSV text. Existing competitors are updated in place rather than duplicated.",
+    "annotations": {
+      "title": "Import GEO Competitors",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Imports competitors and overwrites matching records.",
+      "destructiveHint": "Imports competitors and overwrites matching records.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "import_geo_prompts",
+    "description": "Bulk import GEO prompts from structured rows or raw CSV text. Prompts that already exist are skipped, not duplicated.",
+    "annotations": {
+      "title": "Import GEO Prompts",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Adds prompts from rows or CSV; existing prompts are skipped.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_brand_identities",
+    "description": "List all brand identities configured for your organization",
+    "annotations": {
+      "title": "List Brand Identities",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List Brand Identities retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_event_triggers",
+    "description": "List event triggers that generate content automatically from GitHub releases or pushes. repositoryMap labels each targeted GitHub integration ID with its owner/repo.",
+    "annotations": {
+      "title": "List Event Triggers",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List Event Triggers retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_feedback",
+    "description": "List feedback your organization received through its feedback URL, MCP servers or SDKs, filtered by triage status, kind or project",
+    "annotations": {
+      "title": "List Feedback",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List Feedback retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_geo_competitors",
+    "description": "List the competitors tracked for a project's GEO share-of-voice reporting",
+    "annotations": {
+      "title": "List GEO Competitors",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List GEO Competitors retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_geo_content_briefs",
+    "description": "List a project's GEO content briefs and their statuses",
+    "annotations": {
+      "title": "List GEO Content Briefs",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List GEO Content Briefs retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_geo_content_gaps",
+    "description": "List GEO content gaps: prompts where competitors are mentioned but this brand is not, plus Search Console queries with no tracked prompt. Each gap links to the brief already written for it, when there is one.",
+    "annotations": {
+      "title": "List GEO Content Gaps",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List GEO Content Gaps retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_geo_prompt_result_summaries",
+    "description": "List filtered, paginated GEO prompt results without full answer text or sources. Use checkId with get_geo_prompt_result_detail.",
+    "annotations": {
+      "title": "List GEO Prompt Result Summaries",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List GEO Prompt Result Summaries retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_geo_prompts",
+    "description": "List the GEO prompts tracked for a project: custom prompts plus the ones derived automatically from the brand context",
+    "annotations": {
+      "title": "List GEO Prompts",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List GEO Prompts retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_geo_scans",
+    "description": "List a project's GEO scans, newest first, with pagination, check totals by engine, and safe failure details",
+    "annotations": {
+      "title": "List GEO Scans",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List GEO Scans retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_geo_sentiment_evidence",
+    "description": "List a bounded page of full answers used as sentiment evidence",
+    "annotations": {
+      "title": "List GEO Sentiment Evidence",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List GEO Sentiment Evidence retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_geo_sequences",
+    "description": "List a project's GEO prompt sequences (multi-turn conversations played against answer engines)",
+    "annotations": {
+      "title": "List GEO Sequences",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List GEO Sequences retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_geo_shelf_sources",
+    "description": "List cited and manually tracked GEO shelf sources, including placements and opportunity state",
+    "annotations": {
+      "title": "List GEO Shelf Sources",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List GEO Shelf Sources retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_geo_traffic_journeys",
+    "description": "List AI traffic journeys: sessions grouped by agent, showing how many pages one agent read, over what span, with sample paths",
+    "annotations": {
+      "title": "List AI Traffic Journeys",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List AI Traffic Journeys retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_geo_traffic_pages",
+    "description": "List the pages AI crawlers and referrals read most, with the previous window's count for comparison",
+    "annotations": {
+      "title": "List AI Traffic Pages",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List AI Traffic Pages retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_integrations",
+    "description": "List all connected integrations (GitHub, Slack, Linear) for your organization",
+    "annotations": {
+      "title": "List Integrations",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List Integrations retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_posts",
+    "description": "List post summaries from Notra (title, status, type, short excerpt) with optional filters for sorting, pagination, status, content type, and brand identity. Use get_post for full content.",
+    "annotations": {
+      "title": "List Posts",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List Posts retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_projects",
+    "description": "List the organization's GEO projects. Most GEO tools take a projectId; call this first to find it.",
+    "annotations": {
+      "title": "List Projects",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List Projects retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_schedules",
+    "description": "List scheduled content generation jobs, optionally filtered by repository IDs",
+    "annotations": {
+      "title": "List Schedules",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List Schedules retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_skills",
+    "description": "List reusable writing skills for your organization",
+    "annotations": {
+      "title": "List Skills",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List Skills retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_webhook_deliveries",
+    "description": "List webhook deliveries across all endpoints, newest first. Page with offset while hasMore is true.",
+    "annotations": {
+      "title": "List Webhook Deliveries",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List Webhook Deliveries retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_webhook_endpoints",
+    "description": "List HTTPS endpoints subscribed to Notra events. Signing secrets are not returned.",
+    "annotations": {
+      "title": "List Webhook Endpoints",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List Webhook Endpoints retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "list_workspaces",
+    "description": "List accepted and pending Notra workspaces available to the authenticated account. Organization API keys only return their current workspace. Account API keys return every workspace their user belongs to; the user picks the one other tools act on with NOTRA_ORGANIZATION_ID (stdio), or the /mcp/<workspace> URL or X-Notra-Organization-Id header (HTTP).",
+    "annotations": {
+      "title": "List Workspaces",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "List Workspaces retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "plan_geo_content_brief",
+    "description": "Research a topic and plan a GEO content brief, saved as a draft. This books AI credits, is billed, and can take a few minutes. Set autoApprove to start the article writer in the same call.",
+    "annotations": {
+      "title": "Plan GEO Content Brief",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Researches a topic, saves a draft brief/article, and optionally starts the writer against that draft.",
+      "destructiveHint": "Researches a topic, saves a draft brief/article, and optionally starts the writer against that draft.",
+      "openWorldHint": "Researches a topic, saves a draft brief/article, and optionally starts the writer against that draft. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "retry_webhook_delivery",
+    "description": "Queue a failed webhook delivery to be sent again, keeping its attempt history. This sends data to the subscribed external endpoint again and may repeat downstream effects",
+    "annotations": {
+      "title": "Retry Webhook Delivery",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Queues another outbound send to the subscribed endpoint; downstream effects may repeat.",
+      "destructiveHint": "Queues another outbound send to the subscribed endpoint; downstream effects may repeat.",
+      "openWorldHint": "Queues another outbound send to the subscribed endpoint; downstream effects may repeat. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "run_geo_sequence",
+    "description": "Run a GEO prompt sequence now, synchronously, against every available answer engine. This uses AI credits and the request can take several minutes; the result reports checks, mentions and engines covered.",
+    "annotations": {
+      "title": "Run GEO Sequence",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Runs prompts against external answer engines, consumes AI credits, and persists results.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Runs prompts against external answer engines, consumes AI credits, and persists results. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "schedule_post",
+    "description": "Schedule an existing post for publishing in Notra and optionally GitHub, X, or LinkedIn. Replaces a schedule that has not started; later post edits are included when publishing runs, within about a minute of scheduledAt.",
+    "annotations": {
+      "title": "Schedule Post",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Replaces pending publishing schedules and queues publication to Notra and selected external destinations.",
+      "destructiveHint": "Replaces pending publishing schedules and queues publication to Notra and selected external destinations.",
+      "openWorldHint": "Replaces pending publishing schedules and queues publication to Notra and selected external destinations. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "start_geo_agent_readiness_scan",
+    "description": "Queue an agent readiness scan of the project's website. A scan already running against the same URL is reused (alreadyRunning is true). Poll get_geo_agent_readiness for the result. Requires the agent readiness feature for the organization.",
+    "annotations": {
+      "title": "Start Agent Readiness Scan",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Queues a website scan and stores a readiness report; reuses an existing running scan for the URL.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Queues a website scan and stores a readiness report; reuses an existing running scan for the URL. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "submit_feedback",
+    "description": "Send feedback to the Notra team. Only call this when the user explicitly asks to send feedback, and only include content the user wants shared. Do not call it proactively after errors or unsupported requests.",
+    "annotations": {
+      "title": "Submit feedback",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Sends the user-approved message to the fixed Notra feedback inbox; the send cannot be recalled.",
+      "destructiveHint": "Sends the user-approved message to the fixed Notra feedback inbox; the send cannot be recalled.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "suggest_geo_competitors",
+    "description": "Discover likely competitors for a website domain using AI. Results are cached per organization and domain.",
+    "annotations": {
+      "title": "Suggest GEO Competitors",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Researches a website domain using AI and caches suggestions.",
+      "destructiveHint": "Adds records or generation/scan work without overwriting existing user content, cancelling work, revoking access, or publishing/sending user content. AI credit consumption, where applicable, is disclosed separately.",
+      "openWorldHint": "Researches a website domain using AI and caches suggestions. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "update_brand_identity",
+    "description": "Update a brand identity's settings including name, tone, audience, language, and more",
+    "annotations": {
+      "title": "Update Brand Identity",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Overwrites the selected brand settings.",
+      "destructiveHint": "Overwrites the selected brand settings.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "update_event_trigger",
+    "description": "Replace an event trigger's configuration. The API takes the full definition, so read it with get_event_trigger first and send every field back.",
+    "annotations": {
+      "title": "Update Event Trigger",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Replaces an existing GitHub event trigger configuration.",
+      "destructiveHint": "Replaces an existing GitHub event trigger configuration.",
+      "openWorldHint": "Replaces an existing GitHub event trigger configuration. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "update_feedback",
+    "description": "Set the triage status of a feedback entry: new, triaged, resolved or archived",
+    "annotations": {
+      "title": "Update Feedback",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Replaces the triage status of an existing feedback entry.",
+      "destructiveHint": "Replaces the triage status of an existing feedback entry.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "update_geo_prompt",
+    "description": "Enable or disable a tracked GEO prompt",
+    "annotations": {
+      "title": "Update GEO Prompt",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Changes whether an existing prompt is enabled.",
+      "destructiveHint": "Changes whether an existing prompt is enabled.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "update_geo_sequence",
+    "description": "Update a GEO prompt sequence's name, steps or enabled state",
+    "annotations": {
+      "title": "Update GEO Sequence",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Overwrites sequence fields or its enabled state.",
+      "destructiveHint": "Overwrites sequence fields or its enabled state.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "update_geo_settings",
+    "description": "Replace all GEO settings and restart the recurring scan schedule. Send every field from get_geo_settings; this endpoint does not merge partial updates. Use model catalog IDs for engines and languages listed in the current settings response.",
+    "annotations": {
+      "title": "Update GEO Settings",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Replaces tracking settings and restarts recurring scans against external answer engines.",
+      "destructiveHint": "Replaces tracking settings and restarts recurring scans against external answer engines.",
+      "openWorldHint": "Replaces tracking settings and restarts recurring scans against external answer engines. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "update_post",
+    "description": "Update a post’s title, slug, markdown, or publication status. Changes to title, slug, or markdown also sync an existing linked GitHub pull request. Publishing can expose content on a hosted site and request a visibility rescan. A sync failure can occur after the post is saved; check the post and linked PR before retrying.",
+    "annotations": {
+      "title": "Update Post",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Overwrites post fields; may sync a linked GitHub PR or publish content and start a rescan.",
+      "destructiveHint": "Overwrites post fields; may sync a linked GitHub PR or publish content and start a rescan.",
+      "openWorldHint": "Overwrites post fields; may sync a linked GitHub PR or publish content and start a rescan. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "update_project",
+    "description": "Rename a GEO project or relink its brand identity",
+    "annotations": {
+      "title": "Update Project",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Overwrites a project name or brand identity link.",
+      "destructiveHint": "Overwrites a project name or brand identity link.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "update_schedule",
+    "description": "Update an existing content generation schedule",
+    "annotations": {
+      "title": "Update Schedule",
+      "readOnlyHint": false,
+      "openWorldHint": true,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Overwrites an existing recurring generation schedule that reads connected sources when it runs.",
+      "destructiveHint": "Overwrites an existing recurring generation schedule that reads connected sources when it runs.",
+      "openWorldHint": "Overwrites an existing recurring generation schedule that reads connected sources when it runs. It can interact with public websites, external answer engines, or publishing/delivery destinations."
+    }
+  },
+  {
+    "name": "update_skill",
+    "description": "Update a reusable writing skill by name",
+    "annotations": {
+      "title": "Update Skill",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Overwrites an existing writing skill.",
+      "destructiveHint": "Overwrites an existing writing skill.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "upsert_geo_competitor",
+    "description": "Create or update a tracked GEO competitor. Matches on name, case-insensitively; send previousName to rename an existing competitor. Returns the full competitor list.",
+    "annotations": {
+      "title": "Upsert GEO Competitor",
+      "readOnlyHint": false,
+      "openWorldHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
+    "justification": {
+      "readOnlyHint": "Adds or overwrites a tracked competitor, including renaming an existing record.",
+      "destructiveHint": "Adds or overwrites a tracked competitor, including renaming an existing record.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  },
+  {
+    "name": "whoami",
+    "description": "Show the current Notra workspace and authenticated account. Use this to confirm which workspace this MCP connection operates against.",
+    "annotations": {
+      "title": "Who Am I",
+      "readOnlyHint": true,
+      "openWorldHint": false,
+      "destructiveHint": false
+    },
+    "justification": {
+      "readOnlyHint": "Who Am I retrieves existing data without starting a job or changing stored state.",
+      "destructiveHint": "Retrieval does not overwrite, delete, cancel, or send anything.",
+      "openWorldHint": "Confined to the authenticated Notra account/workspace or, for feedback, the fixed Notra inbox; no arbitrary external destination."
+    }
+  }
+]

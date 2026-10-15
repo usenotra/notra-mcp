@@ -2,7 +2,6 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import type { NotraClient } from "../notra-client.js";
 import {
-  createWebhookEndpointSchema,
   deleteWebhookEndpointSchema,
   getWebhookDeliverySchema,
   listWebhookDeliveriesSchema,
@@ -27,23 +26,6 @@ export function registerWebhookTools(server: McpServer, client: NotraClient) {
       outputSchema: shareJsonSchema(apiOutputSchema("listWebhookEndpoints")),
     },
     () => handleError(() => client.listWebhookEndpoints()),
-  );
-
-  server.registerTool(
-    "create_webhook_endpoint",
-    {
-      description:
-        "Subscribe an HTTPS endpoint to Notra events such as post generation and publishing. The response includes the signing secret, which is shown only once; pass it to the user to store.",
-      annotations: {
-        title: "Create Webhook Endpoint",
-        readOnlyHint: false,
-        openWorldHint: true,
-        destructiveHint: false,
-      },
-      inputSchema: shareJsonSchema(createWebhookEndpointSchema),
-      outputSchema: shareJsonSchema(apiOutputSchema("createWebhookEndpoint")),
-    },
-    (body) => handleError(() => client.createWebhookEndpoint(body)),
   );
 
   server.registerTool(
@@ -94,12 +76,13 @@ export function registerWebhookTools(server: McpServer, client: NotraClient) {
   server.registerTool(
     "retry_webhook_delivery",
     {
-      description: "Queue a failed webhook delivery to be sent again, keeping its attempt history",
+      description:
+        "Queue a failed webhook delivery to be sent again, keeping its attempt history. This sends data to the subscribed external endpoint again and may repeat downstream effects",
       annotations: {
         title: "Retry Webhook Delivery",
         readOnlyHint: false,
         openWorldHint: true,
-        destructiveHint: false,
+        destructiveHint: true,
       },
       inputSchema: shareJsonSchema(retryWebhookDeliverySchema),
       outputSchema: shareJsonSchema(apiOutputSchema("retryWebhookDelivery")),

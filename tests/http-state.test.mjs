@@ -125,7 +125,7 @@ async function sessionStatus(transport) {
   return res.status.mock.calls[0]?.[0] ?? 200;
 }
 
-test("OAuth refresh updates credentials used by subsequent JSON and chat requests", async () => {
+test("OAuth refresh updates credentials used by subsequent read and write requests", async () => {
   const transport = await initializeSession();
   const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(async () => Response.json({ posts: [] }));
   await state.tools.get("list_posts")({});
@@ -135,7 +135,7 @@ test("OAuth refresh updates credentials used by subsequent JSON and chat request
     token: "refreshed",
     userId: "user-1",
     organizationId: "org-1",
-    scopes: ["posts.read", "chats.write"],
+    scopes: ["posts.read", "posts.write"],
   });
   const res = response();
   await state.routes.get("POST /mcp")(
@@ -144,7 +144,7 @@ test("OAuth refresh updates credentials used by subsequent JSON and chat request
   );
   expect(res.status).not.toHaveBeenCalled();
   await state.tools.get("list_posts")({});
-  await state.tools.get("create_chat")({ message: "Hello" });
+  await state.tools.get("create_post")({ title: "Hello", contentType: "blog_post" });
   expect(fetch.mock.calls.slice(1).map(([, options]) => options.headers.Authorization)).toEqual([
     "Bearer refreshed",
     "Bearer refreshed",

@@ -2,7 +2,13 @@ import * as z from "zod";
 import { feedbackToolInputSchema } from "@usenotra/geo/feedback";
 import { FEEDBACK_KIND_VALUES, FEEDBACK_STATUS_VALUES } from "../constants/feedback.js";
 
-export const submitFeedbackSchema = z.object(feedbackToolInputSchema);
+export const submitFeedbackSchema = z.strictObject({
+  message: feedbackToolInputSchema.message.describe(
+    "Task-specific product feedback approved by the user. Exclude conversation history, personal records, payment data, and credentials.",
+  ),
+  title: feedbackToolInputSchema.title,
+  kind: feedbackToolInputSchema.kind,
+});
 
 export const listFeedbackSchema = z.object({
   status: z.enum(FEEDBACK_STATUS_VALUES).optional().describe("Only entries with this triage status"),

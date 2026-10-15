@@ -80,6 +80,7 @@ export type ApiOperationId =
   | "listGeoTrafficJourneys"
   | "listGeoTrafficPages"
   | "listIntegrations"
+  | "listPostAuthors"
   | "listPosts"
   | "listProjects"
   | "listSchedules"
@@ -420,6 +421,65 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             enum: ["changelog", "linkedin_post", "twitter_post", "blog_post", "investor_update", "image"],
           },
           sourceMetadata: {},
+          metadata: {
+            type: ["object", "null"],
+            properties: {
+              coverImage: {
+                type: ["object", "null"],
+                properties: {
+                  url: {
+                    type: "string",
+                    description:
+                      "Absolute https URL, or a path to an image uploaded in Notra (starting with /api/uploads/).",
+                  },
+                  alt: { type: "string", description: "Alt text. Empty string when none is set." },
+                },
+                required: ["url", "alt"],
+                description: "Cover image shown on post cards and social previews.",
+              },
+              tags: { type: "array", items: { type: "string" } },
+              excerpt: {
+                type: ["string", "null"],
+                description:
+                  "Summary shown on post cards and in meta descriptions. Null means it is derived from the first paragraph.",
+              },
+              authors: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    slug: {
+                      type: "string",
+                      description: "Stable author handle; hosted sites list the author's posts at /author/{slug}.",
+                    },
+                    name: { type: "string" },
+                    title: { type: ["string", "null"] },
+                    avatarUrl: { type: ["string", "null"] },
+                  },
+                  required: ["id", "slug", "name", "title", "avatarUrl"],
+                },
+                description: "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+              },
+              featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
+              noindex: {
+                type: "boolean",
+                description: "Asks search engines not to index the post and leaves it out of the sitemap.",
+              },
+              hidden: {
+                type: "boolean",
+                description:
+                  "Reachable by direct link, but excluded from hosted site listings, feeds, search engine indexing, sitemaps and generated AI indexes. Not private.",
+              },
+              displayDate: {
+                type: ["string", "null"],
+                description: "Date shown on the post as YYYY-MM-DD. Null means the publish date is used.",
+              },
+            },
+            required: ["coverImage", "tags", "excerpt", "authors", "featured", "noindex", "hidden", "displayDate"],
+            description:
+              "Cover image, tags, excerpt, authors and other site metadata. Set for blog posts and changelogs, null for every other content type.",
+          },
           status: { type: "string", enum: ["draft", "published"] },
           createdAt: { type: "string" },
           updatedAt: { type: "string" },
@@ -434,6 +494,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "rawHtml",
           "recommendations",
           "contentType",
+          "metadata",
           "status",
           "createdAt",
           "updatedAt",
@@ -2367,7 +2428,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             visits: { type: "integer" },
             previousVisits: { type: "integer" },
             markdownVisits: { type: "integer" },
+            previousMarkdownVisits: { type: "integer" },
             paths: { type: "integer" },
+            previousPaths: { type: "integer" },
             lastSeenAt: { type: "string" },
           },
           required: [
@@ -2722,6 +2785,65 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             enum: ["changelog", "linkedin_post", "twitter_post", "blog_post", "investor_update", "image"],
           },
           sourceMetadata: {},
+          metadata: {
+            type: ["object", "null"],
+            properties: {
+              coverImage: {
+                type: ["object", "null"],
+                properties: {
+                  url: {
+                    type: "string",
+                    description:
+                      "Absolute https URL, or a path to an image uploaded in Notra (starting with /api/uploads/).",
+                  },
+                  alt: { type: "string", description: "Alt text. Empty string when none is set." },
+                },
+                required: ["url", "alt"],
+                description: "Cover image shown on post cards and social previews.",
+              },
+              tags: { type: "array", items: { type: "string" } },
+              excerpt: {
+                type: ["string", "null"],
+                description:
+                  "Summary shown on post cards and in meta descriptions. Null means it is derived from the first paragraph.",
+              },
+              authors: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    slug: {
+                      type: "string",
+                      description: "Stable author handle; hosted sites list the author's posts at /author/{slug}.",
+                    },
+                    name: { type: "string" },
+                    title: { type: ["string", "null"] },
+                    avatarUrl: { type: ["string", "null"] },
+                  },
+                  required: ["id", "slug", "name", "title", "avatarUrl"],
+                },
+                description: "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+              },
+              featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
+              noindex: {
+                type: "boolean",
+                description: "Asks search engines not to index the post and leaves it out of the sitemap.",
+              },
+              hidden: {
+                type: "boolean",
+                description:
+                  "Reachable by direct link, but excluded from hosted site listings, feeds, search engine indexing, sitemaps and generated AI indexes. Not private.",
+              },
+              displayDate: {
+                type: ["string", "null"],
+                description: "Date shown on the post as YYYY-MM-DD. Null means the publish date is used.",
+              },
+            },
+            required: ["coverImage", "tags", "excerpt", "authors", "featured", "noindex", "hidden", "displayDate"],
+            description:
+              "Cover image, tags, excerpt, authors and other site metadata. Set for blog posts and changelogs, null for every other content type.",
+          },
           status: { type: "string", enum: ["draft", "published"] },
           createdAt: { type: "string" },
           updatedAt: { type: "string" },
@@ -2736,6 +2858,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "rawHtml",
           "recommendations",
           "contentType",
+          "metadata",
           "status",
           "createdAt",
           "updatedAt",
@@ -4315,6 +4438,41 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["github", "slack", "linear", "organization"],
   },
+  listPostAuthors: {
+    type: "object",
+    properties: {
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+      authors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Pass this ID in metadata.authorIds when updating a post." },
+            slug: { type: "string" },
+            name: { type: "string" },
+            title: { type: ["string", "null"] },
+            bio: { type: ["string", "null"] },
+            avatarUrl: { type: ["string", "null"] },
+            url: { type: ["string", "null"] },
+            x: { type: ["string", "null"] },
+            linkedin: { type: ["string", "null"] },
+            github: { type: ["string", "null"] },
+          },
+          required: ["id", "slug", "name", "title", "bio", "avatarUrl", "url", "x", "linkedin", "github"],
+        },
+      },
+    },
+    required: ["organization", "authors"],
+  },
   listPosts: {
     type: "object",
     properties: {
@@ -4360,6 +4518,66 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               enum: ["changelog", "linkedin_post", "twitter_post", "blog_post", "investor_update", "image"],
             },
             sourceMetadata: {},
+            metadata: {
+              type: ["object", "null"],
+              properties: {
+                coverImage: {
+                  type: ["object", "null"],
+                  properties: {
+                    url: {
+                      type: "string",
+                      description:
+                        "Absolute https URL, or a path to an image uploaded in Notra (starting with /api/uploads/).",
+                    },
+                    alt: { type: "string", description: "Alt text. Empty string when none is set." },
+                  },
+                  required: ["url", "alt"],
+                  description: "Cover image shown on post cards and social previews.",
+                },
+                tags: { type: "array", items: { type: "string" } },
+                excerpt: {
+                  type: ["string", "null"],
+                  description:
+                    "Summary shown on post cards and in meta descriptions. Null means it is derived from the first paragraph.",
+                },
+                authors: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string" },
+                      slug: {
+                        type: "string",
+                        description: "Stable author handle; hosted sites list the author's posts at /author/{slug}.",
+                      },
+                      name: { type: "string" },
+                      title: { type: ["string", "null"] },
+                      avatarUrl: { type: ["string", "null"] },
+                    },
+                    required: ["id", "slug", "name", "title", "avatarUrl"],
+                  },
+                  description:
+                    "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+                },
+                featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
+                noindex: {
+                  type: "boolean",
+                  description: "Asks search engines not to index the post and leaves it out of the sitemap.",
+                },
+                hidden: {
+                  type: "boolean",
+                  description:
+                    "Reachable by direct link, but excluded from hosted site listings, feeds, search engine indexing, sitemaps and generated AI indexes. Not private.",
+                },
+                displayDate: {
+                  type: ["string", "null"],
+                  description: "Date shown on the post as YYYY-MM-DD. Null means the publish date is used.",
+                },
+              },
+              required: ["coverImage", "tags", "excerpt", "authors", "featured", "noindex", "hidden", "displayDate"],
+              description:
+                "Cover image, tags, excerpt, authors and other site metadata. Set for blog posts and changelogs, null for every other content type.",
+            },
             status: { type: "string", enum: ["draft", "published"] },
             createdAt: { type: "string" },
             updatedAt: { type: "string" },
@@ -4374,6 +4592,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             "rawHtml",
             "recommendations",
             "contentType",
+            "metadata",
             "status",
             "createdAt",
             "updatedAt",
@@ -5496,6 +5715,65 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             enum: ["changelog", "linkedin_post", "twitter_post", "blog_post", "investor_update", "image"],
           },
           sourceMetadata: {},
+          metadata: {
+            type: ["object", "null"],
+            properties: {
+              coverImage: {
+                type: ["object", "null"],
+                properties: {
+                  url: {
+                    type: "string",
+                    description:
+                      "Absolute https URL, or a path to an image uploaded in Notra (starting with /api/uploads/).",
+                  },
+                  alt: { type: "string", description: "Alt text. Empty string when none is set." },
+                },
+                required: ["url", "alt"],
+                description: "Cover image shown on post cards and social previews.",
+              },
+              tags: { type: "array", items: { type: "string" } },
+              excerpt: {
+                type: ["string", "null"],
+                description:
+                  "Summary shown on post cards and in meta descriptions. Null means it is derived from the first paragraph.",
+              },
+              authors: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    slug: {
+                      type: "string",
+                      description: "Stable author handle; hosted sites list the author's posts at /author/{slug}.",
+                    },
+                    name: { type: "string" },
+                    title: { type: ["string", "null"] },
+                    avatarUrl: { type: ["string", "null"] },
+                  },
+                  required: ["id", "slug", "name", "title", "avatarUrl"],
+                },
+                description: "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+              },
+              featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
+              noindex: {
+                type: "boolean",
+                description: "Asks search engines not to index the post and leaves it out of the sitemap.",
+              },
+              hidden: {
+                type: "boolean",
+                description:
+                  "Reachable by direct link, but excluded from hosted site listings, feeds, search engine indexing, sitemaps and generated AI indexes. Not private.",
+              },
+              displayDate: {
+                type: ["string", "null"],
+                description: "Date shown on the post as YYYY-MM-DD. Null means the publish date is used.",
+              },
+            },
+            required: ["coverImage", "tags", "excerpt", "authors", "featured", "noindex", "hidden", "displayDate"],
+            description:
+              "Cover image, tags, excerpt, authors and other site metadata. Set for blog posts and changelogs, null for every other content type.",
+          },
           status: { type: "string", enum: ["draft", "published"] },
           createdAt: { type: "string" },
           updatedAt: { type: "string" },
@@ -5510,6 +5788,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "rawHtml",
           "recommendations",
           "contentType",
+          "metadata",
           "status",
           "createdAt",
           "updatedAt",

@@ -80,7 +80,7 @@ test("toolsets default to everything and filter registered tools", () => {
   const geo = registeredToolNames({ toolsets: parseToolsets("geo") });
   expect(new Set(all).size).toBe(all.length);
   expect(new Set([...content, ...geo])).toEqual(new Set(all));
-  expect(content).toContain("create_chat");
+  expect(content).toContain("list_posts");
   expect(content).not.toContain("list_projects");
   expect(geo).toContain("list_projects");
   expect(geo.filter((name) => content.includes(name)).sort()).toEqual(["list_workspaces", "submit_feedback", "whoami"]);

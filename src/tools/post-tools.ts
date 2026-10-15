@@ -45,8 +45,8 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
     "create_post",
     {
       description:
-        "Create a post directly from your own title and markdown, without AI generation. Omit markdown to create an empty draft to fill in later with update_post. Slugs are only accepted for blog posts and changelogs.",
-      annotations: { title: "Create Post", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
+        "Create a post directly from your own title and markdown, without AI generation. Omit markdown to create an empty draft to fill in later with update_post. Slugs are only accepted for blog posts and changelogs. Setting status to published can expose the post on a hosted site and request a visibility rescan.",
+      annotations: { title: "Create Post", readOnlyHint: false, openWorldHint: true, destructiveHint: true },
       inputSchema: shareJsonSchema(createPostSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createPost")),
     },
@@ -56,11 +56,12 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
   server.registerTool(
     "update_post",
     {
-      description: "Update a post's title, markdown content, or publication status",
+      description:
+        "Update a post’s title, slug, markdown, or publication status. Changes to title, slug, or markdown also sync an existing linked GitHub pull request. Publishing can expose content on a hosted site and request a visibility rescan. A sync failure can occur after the post is saved; check the post and linked PR before retrying.",
       annotations: {
         title: "Update Post",
         readOnlyHint: false,
-        openWorldHint: false,
+        openWorldHint: true,
         destructiveHint: true,
         idempotentHint: true,
       },
@@ -73,11 +74,11 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
   server.registerTool(
     "delete_post",
     {
-      description: "Delete a post by its ID",
+      description: "Delete a post by its ID, including content that may be published on a hosted site.",
       annotations: {
         title: "Delete Post",
         readOnlyHint: false,
-        openWorldHint: false,
+        openWorldHint: true,
         destructiveHint: true,
         idempotentHint: true,
       },

@@ -1,7 +1,7 @@
 {
   "name": "@usenotra/mcp",
-  "version": "1.2.0",
-  "description": "MCP server for the Notra API",
+  "version": "1.3.0",
+  "description": "Manage Notra content and track brand visibility in AI answers.",
   "mcpName": "io.github.usenotra/notra",
   "type": "module",
   "bin": {

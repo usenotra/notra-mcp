@@ -173,10 +173,10 @@ In PostHog, filter on `mcp_tool_called` and break down by `tool_name`, `client_n
 
 All 106 tools are exposed by default, which costs roughly 20k tokens of agent context. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
-| Toolset   | Tools                                                                                                           |
-| --------- | --------------------------------------------------------------------------------------------------------------- |
-| `content` | Posts, brand identities, integrations, schedules, event triggers, chats, agent sessions, skills, feedback inbox |
-| `geo`     | Projects and every GEO tool                                                                                     |
+| Toolset   | Tools                                                                                    |
+| --------- | ---------------------------------------------------------------------------------------- |
+| `content` | Posts, brand identities, integrations, schedules, event triggers, skills, feedback inbox |
+| `geo`     | Projects and every GEO tool                                                              |
 
 Workspace tools and `submit_feedback` are always available.
 
@@ -232,7 +232,7 @@ Post publishing schedules are separate from the content-generation schedules bel
 | Tool                        | Description                                             |
 | --------------------------- | ------------------------------------------------------- |
 | `list_integrations`         | List all connected integrations (GitHub, Slack, Linear) |
-| `create_github_integration` | Connect a GitHub repository                             |
+| `create_github_integration` | Connect a public GitHub repository                      |
 | `delete_integration`        | Delete a GitHub or Linear integration                   |
 
 ### Schedules
@@ -256,26 +256,13 @@ Post publishing schedules are separate from the content-generation schedules bel
 
 ### Webhooks
 
-| Tool                      | Description                                                          |
-| ------------------------- | -------------------------------------------------------------------- |
-| `list_webhook_endpoints`  | List HTTPS endpoints subscribed to Notra events                      |
-| `create_webhook_endpoint` | Subscribe an endpoint to events; returns its one-time signing secret |
-| `delete_webhook_endpoint` | Remove a webhook subscription and cancel unsent deliveries           |
-| `list_webhook_deliveries` | List webhook deliveries, optionally filtered by status               |
-| `get_webhook_delivery`    | Get a delivery's payload and attempt history                         |
-| `retry_webhook_delivery`  | Retry a failed webhook delivery                                      |
-
-### Chats
-
-| Tool                           | Description                                                                |
-| ------------------------------ | -------------------------------------------------------------------------- |
-| `list_chats`                   | List chat sessions                                                         |
-| `get_chat`                     | Get a single chat with messages                                            |
-| `get_chat_by_external_channel` | Get a chat by Discord or Slack channel ID                                  |
-| `create_chat`                  | Start a new chat and return the streamed reply                             |
-| `post_chat_message`            | Post a message to an existing chat and return the streamed reply           |
-| `respond_to_chat_approvals`    | Approve or deny the actions a chat reply paused on, after the user decides |
-| `list_agent_chats`             | List durable agent sessions and their status                               |
+| Tool                      | Description                                                |
+| ------------------------- | ---------------------------------------------------------- |
+| `list_webhook_endpoints`  | List HTTPS endpoints subscribed to Notra events            |
+| `delete_webhook_endpoint` | Remove a webhook subscription and cancel unsent deliveries |
+| `list_webhook_deliveries` | List webhook deliveries, optionally filtered by status     |
+| `get_webhook_delivery`    | Get a delivery's payload and attempt history               |
+| `retry_webhook_delivery`  | Retry a failed webhook delivery                            |
 
 ### Skills
 
@@ -380,8 +367,6 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `get_geo_traffic_journey`   | Every event in one journey                                   |
 | `list_geo_traffic_pages`    | Most visited pages by AI traffic                             |
 | `get_geo_ingest_setup`      | Tracking install snippets and ingest endpoint                |
-| `issue_geo_ingest_token`    | Issue the tracking token                                     |
-| `rotate_geo_ingest_token`   | Rotate the token, invalidating all previously issued tokens  |
 
 ### Feedback
 
@@ -391,6 +376,14 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `list_feedback`   | List feedback the organization received, by status, kind or project                 |
 | `get_feedback`    | Get one feedback entry with agent metadata                                          |
 | `update_feedback` | Set a feedback entry's triage status                                                |
+
+## Review and data boundaries
+
+All supported operations are listed upfront by `tools/list`. General-purpose agent execution and approval tools are not exposed because they can run dynamically discovered third-party operations. Chat history and agent sessions are available through the dashboard and API. Use the Notra dashboard for agent conversations, private-repository authentication, webhook signing secrets, and traffic tracking credentials.
+
+Tool inputs are for task-specific business content. Do not send health records, biometric data, government identifiers, payment card information, credentials, or unrelated conversation history. Authenticate through OAuth or local configuration, never through tool arguments. Feedback accepts only the user-approved message, optional title, and feedback kind.
+
+See `docs/openai-resubmission.md` for the listing copy, review evidence, and release checks.
 
 ## Development
 

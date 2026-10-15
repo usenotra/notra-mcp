@@ -2,9 +2,7 @@ import "zod/compile";
 import { McpServer } from "@modelcontextprotocol/server";
 import { SERVER_ICONS, SERVER_INSTRUCTIONS, SERVER_TITLE, SERVER_WEBSITE_URL } from "./constants/server.js";
 import { NotraClient } from "./notra-client.js";
-import { registerAgentTools } from "./tools/agent-tools.js";
 import { registerBrandIdentityTools } from "./tools/brand-identity-tools.js";
-import { registerChatTools } from "./tools/chat-tools.js";
 import { registerEventTriggerTools } from "./tools/event-trigger-tools.js";
 import { registerFeedbackInboxTools, registerFeedbackTools } from "./tools/feedback-tools.js";
 import { registerGeoAgentReadinessTools } from "./tools/geo-agent-readiness-tools.js";
@@ -31,7 +29,7 @@ import type { Toolset } from "./types/toolset.js";
 import { parseToolsets } from "./utils/toolsets.js";
 import { instrumentMcpUsage } from "./utils/mcp-usage.js";
 
-export const SERVER_VERSION = "1.2.0";
+export const SERVER_VERSION = "1.3.0";
 
 type Registrar = (server: McpServer, client: NotraClient) => void;
 
@@ -43,8 +41,6 @@ const CONTENT_REGISTRARS: readonly Registrar[] = [
   registerScheduleTools,
   registerEventTriggerTools,
   registerWebhookTools,
-  registerChatTools,
-  registerAgentTools,
   registerSkillTools,
   registerFeedbackInboxTools,
 ];

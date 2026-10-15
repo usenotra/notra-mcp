@@ -28,13 +28,23 @@ const CLIENT_INTERNALS = new Set(["constructor", "request", "requestText", "with
 
 /** Spec routes deliberately not exposed as MCP tools. */
 const EXCLUDED_SPEC_ROUTES = {
+  "GET /v1/chats": "chat history belongs in the dashboard or API, not the content MCP surface",
+  "GET /v1/chats/{chatId}": "chat history belongs in the dashboard or API",
+  "GET /v1/chats/by-external": "external-channel chat lookup remains available through the API",
+  "GET /v2/agent-chats": "agent sessions remain available through the API",
+  "POST /v1/chats": "general-purpose agent execution is not exposed through MCP",
+  "POST /v1/chats/{chatId}": "agent continuation and approvals are not exposed through MCP",
+  "POST /v1/webhooks": "signing-secret creation belongs in the dashboard",
+  "POST /v1/geo/ingest/token": "credential issuance belongs in the dashboard",
+  "POST /v1/geo/ingest/rotate-token": "credential rotation belongs in the dashboard",
+  "GET /v1/posts/authors": "author assignment is not exposed through MCP; manage authors in the dashboard",
   "GET /v1/status": "unauthenticated reachability probe, no value inside an authenticated MCP session",
   "POST /v1/feedback":
     "API-key variant; the spec directs agents to the organization feedback URL used by submit_feedback",
   "POST /v2/eve/v1/session":
-    "eve session protocol needs the NDJSON event stream to read replies; create_chat covers conversational use",
+    "general-purpose agent execution can invoke dynamically discovered third-party tools; dashboard only",
   "POST /v2/eve/v1/session/{sessionId}":
-    "eve session protocol needs the NDJSON event stream to read replies; post_chat_message covers conversational use",
+    "general-purpose agent continuation can invoke dynamically discovered third-party tools; dashboard only",
   "GET /v1/projects/{projectId}/geo/visibility/prompt-results":
     "unbounded full answers; list_geo_prompt_result_summaries and get_geo_prompt_result_detail cover it",
   "GET /v2/eve/v1/session/{sessionId}/stream":
@@ -223,7 +233,7 @@ async function main() {
     if (tools.size > 0) {
       covered.push(route.key);
       if (route.key in EXCLUDED_SPEC_ROUTES) excludedButCovered.push(route.key);
-    } else if (clientMethods.length > 0) {
+    } else if (clientMethods.length > 0 && !(route.key in EXCLUDED_SPEC_ROUTES)) {
       clientOnly.push(`${route.key}  client: ${clientMethods.join(", ")}`);
     } else if (!(route.key in EXCLUDED_SPEC_ROUTES)) {
       missingTool.push(`${route.key}  [${route.tag}] ${route.operationId || route.summary}`);
@@ -251,7 +261,11 @@ async function main() {
 
   const failed =
     missingTool.length + clientOnly.length + unknownRoutes.length + stalePending.length + excludedButCovered.length > 0;
-  console.log(failed ? "\nFAIL: MCP tools and API routes are out of sync." : "\nOK: every spec route has an MCP tool.");
+  console.log(
+    failed
+      ? "\nFAIL: MCP tools and API routes are out of sync."
+      : "\nOK: every spec route has an MCP tool or a documented exclusion.",
+  );
   process.exit(failed ? 1 : 0);
 }
 

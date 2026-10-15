@@ -25,7 +25,8 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
   server.registerTool(
     "create_github_integration",
     {
-      description: "Connect a GitHub repository as an integration for content generation",
+      description:
+        "Connect a public GitHub repository for content generation. For private repositories, configure access in the Notra dashboard; never request or send a personal access token in chat.",
       annotations: {
         title: "Create GitHub Integration",
         readOnlyHint: false,
@@ -35,10 +36,8 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
       inputSchema: shareJsonSchema(createGithubIntegrationSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createGitHubIntegration")),
     },
-    ({ owner, repo, branch, token }) =>
-      handleError(() =>
-        client.createGithubIntegration({ owner, repo, branch: branch ?? undefined, token: token ?? undefined }),
-      ),
+    ({ owner, repo, branch }) =>
+      handleError(() => client.createGithubIntegration({ owner, repo, branch: branch ?? undefined })),
   );
 
   server.registerTool(
