@@ -1,7 +1,7 @@
 {
   "name": "@usenotra/mcp",
   "version": "1.3.0",
-  "description": "Manage Notra content and track brand visibility in AI answers.",
+  "description": "Help your company show up in AI search. Track mentions, compare competitors, and find content gaps.",
   "mcpName": "io.github.usenotra/notra",
   "type": "module",
   "bin": {

@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.usenotra/notra",
   "title": "Notra",
-  "description": "Manage Notra content and track brand visibility in AI answers.",
+  "description": "Help your company show up in AI search. Track mentions, compare competitors, and find content gaps.",
   "repository": {
     "url": "https://github.com/usenotra/notra-mcp",
     "source": "github"

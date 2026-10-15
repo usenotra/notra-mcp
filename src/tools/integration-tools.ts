@@ -14,7 +14,8 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
   server.registerTool(
     "list_integrations",
     {
-      description: "List all connected integrations (GitHub, Slack, Linear) for your organization",
+      description:
+        "List enabled GitHub and Linear integrations for your organization. Includes organization details. The slack array is always empty; Slack connections are managed in the Notra dashboard and are not exposed by this API.",
       annotations: { title: "List Integrations", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: shareJsonSchema(listIntegrationsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listIntegrations")),
