@@ -233,7 +233,7 @@ async function main() {
     if (tools.size > 0) {
       covered.push(route.key);
       if (route.key in EXCLUDED_SPEC_ROUTES) excludedButCovered.push(route.key);
-    } else if (clientMethods.length > 0 && !(route.key in EXCLUDED_SPEC_ROUTES)) {
+    } else if (clientMethods.length > 0) {
       clientOnly.push(`${route.key}  client: ${clientMethods.join(", ")}`);
     } else if (!(route.key in EXCLUDED_SPEC_ROUTES)) {
       missingTool.push(`${route.key}  [${route.tag}] ${route.operationId || route.summary}`);

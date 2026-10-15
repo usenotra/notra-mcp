@@ -21,16 +21,6 @@ export interface WebhookEndpointListResponse {
   endpoints: WebhookEndpoint[];
 }
 
-export interface CreateWebhookEndpointRequest {
-  url: string;
-  events: WebhookEvent[];
-}
-
-export interface CreateWebhookEndpointResponse {
-  endpoint: WebhookEndpoint;
-  secret: string;
-}
-
 export interface WebhookIdResponse {
   id: string;
 }

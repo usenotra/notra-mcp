@@ -61,7 +61,6 @@ test("timeouts are translated during both fetch and response-body reads", async 
       };
     });
     await assert.rejects(client.listPosts(), /timed out after 30s/);
-    await assert.rejects(client.createChat({ message: "hello" }), /timed out after 180s/);
     await assert.rejects(client.runGeoSequence("project", "sequence"), /timed out after 300s/);
   }
   const networkError = new Error("connection reset");
@@ -69,42 +68,6 @@ test("timeouts are translated during both fetch and response-body reads", async 
     throw networkError;
   });
   await assert.rejects(client.listPosts(), (error) => error === networkError);
-});
-
-test("chat replies prefer stream metadata and fall back to response headers", async () => {
-  vi.spyOn(globalThis, "fetch").mockImplementation(
-    async () =>
-      new Response('data: {"type":"text-delta","delta":"Hi"}\ndata: {"messageMetadata":{"chatId":"stream-id"}}', {
-        headers: { "x-chat-id": "header-id" },
-      }),
-  );
-  assert.deepEqual(await client.createChat({ message: "hello" }), {
-    text: "Hi",
-    chatId: "stream-id",
-    pendingApprovals: [],
-  });
-  vi.spyOn(globalThis, "fetch").mockImplementation(
-    async () => new Response("plain reply", { headers: { "x-chat-id": "header-id" } }),
-  );
-  assert.deepEqual(await client.postChatMessage("chat", { message: "hello" }), {
-    text: "plain reply",
-    chatId: "header-id",
-    pendingApprovals: [],
-  });
-});
-
-test("chat errors use JSON messages, raw text, or HTTP status", async () => {
-  for (const [body, expected] of [
-    [JSON.stringify({ message: "blocked" }), "blocked"],
-    [JSON.stringify({ error: "denied" }), "denied"],
-    ["upstream unavailable", "upstream unavailable"],
-    ["", "HTTP 503: Unavailable"],
-  ]) {
-    vi.spyOn(globalThis, "fetch").mockImplementation(
-      async () => new Response(body, { status: 503, statusText: "Unavailable" }),
-    );
-    await assert.rejects(client.createChat({ message: "hello" }), { message: expected });
-  }
 });
 
 test("missing single-resource payloads produce useful not-found errors", async () => {
@@ -122,14 +85,14 @@ test("query serialization preserves false and zero and rejects unsupported value
   }
 });
 
-test("account API keys send the selected workspace on JSON and chat requests", async () => {
+test("account API keys send the selected workspace on every request", async () => {
   const fetch = vi.spyOn(globalThis, "fetch").mockImplementation(async () => Response.json({ posts: [] }));
   const accountClient = new NotraClient(
     { kind: "apiKey", token: "account-key", organizationId: "org_b" },
     "https://api.example.test",
   );
   await accountClient.listPosts();
-  await accountClient.createChat({ message: "Hello" }).catch(() => {});
+  await accountClient.listSkills();
   expect(fetch.mock.calls.map(([, options]) => options.headers["X-Notra-Organization-Id"])).toEqual(["org_b", "org_b"]);
 });
 
@@ -152,7 +115,7 @@ test("workspace selection errors for account API keys explain how to pick a work
     Response.json({ error: selectionRequired }, { status: 403 }),
   );
   await assert.rejects(client.listPosts(), /list_workspaces.*NOTRA_ORGANIZATION_ID.*X-Notra-Organization-Id/);
-  await assert.rejects(client.createChat({ message: "Hello" }), /list_workspaces/);
+  await assert.rejects(client.listSkills(), /list_workspaces/);
 
   vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
     Response.json({ error: "Workspace access revoked" }, { status: 403 }),

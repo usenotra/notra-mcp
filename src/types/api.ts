@@ -278,7 +278,6 @@ export interface CreateGithubIntegrationRequest {
   owner: string;
   repo: string;
   branch?: string | null;
-  token?: string | null;
 }
 
 export interface CreateGithubIntegrationResponse {
@@ -386,88 +385,6 @@ export interface UpdateScheduleRequest {
 
 export interface ListSchedulesParams {
   repositoryIds?: string[];
-}
-
-export type ChatModel =
-  | "auto"
-  | "anthropic/claude-opus-4.8"
-  | "anthropic/claude-sonnet-4.6"
-  | "anthropic/claude-haiku-4.5"
-  | "openai/gpt-5.4"
-  | "openai/gpt-5.5";
-
-export type ThinkingLevel = "off" | "low" | "medium" | "high";
-export type ExternalChannelSource = "discord" | "slack" | "dashboard";
-
-export interface ExternalChannelId {
-  source: ExternalChannelSource;
-  id?: string;
-}
-
-export interface ChatSessionSummary {
-  chatId: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  pinnedAt: string | null;
-  externalChannelId?: ExternalChannelId | null;
-}
-
-export type ChatContext =
-  | {
-      type: "github-repo";
-      integrationId: string;
-      owner: string;
-      repo: string;
-    }
-  | {
-      type: "linear-team";
-      integrationId: string;
-      teamName?: string;
-    };
-
-export interface SendChatMessageRequest {
-  message: string;
-  model?: ChatModel;
-  enableThinking?: boolean;
-  thinkingLevel?: ThinkingLevel;
-  timezone?: string;
-  context?: ChatContext[];
-  externalChannelId?: ExternalChannelId | null;
-}
-
-export interface ChatToolApprovalResponse {
-  id: string;
-  approved: boolean;
-  reason?: string;
-}
-
-export interface RespondToChatApprovalsRequest {
-  approvals: ChatToolApprovalResponse[];
-  model?: ChatModel;
-  timezone?: string;
-}
-
-export interface ChatPendingApproval {
-  approvalId: string;
-  toolCallId: string;
-  toolName: string | null;
-  input: unknown;
-}
-
-export interface ChatStreamResponse {
-  chatId: string | null;
-  text: string;
-  pendingApprovals: ChatPendingApproval[];
-}
-
-export interface GetChatsResponse {
-  chats: ChatSessionSummary[];
-}
-
-export interface GetChatResponse {
-  chat: ChatSessionSummary;
-  messages: unknown[];
 }
 
 export interface SkillSummary {

@@ -150,16 +150,13 @@ test("post updates validate slugs and skill names cannot contain paths", async (
 
 test("feedback collects only task-specific product feedback", async () => {
   const { submitFeedbackSchema } = await import("../src/schemas/feedback.ts");
-  assert.deepEqual(Object.keys(submitFeedbackSchema.shape).sort(), ["kind", "message", "title"]);
-  assert.equal(
-    submitFeedbackSchema.safeParse({
+  assert.deepEqual(Object.keys(submitFeedbackSchema.shape).sort(), ["kind", "message", "sentiment", "title"]);
+  assert.deepEqual(
+    submitFeedbackSchema.parse({
       message: "Please support exporting drafts",
+      sentiment: "positive",
       contextUrl: "https://example.test/private",
-    }).success,
-    false,
-  );
-  assert.equal(
-    submitFeedbackSchema.safeParse({ message: "Please support exporting drafts", kind: "feature" }).success,
-    true,
+    }),
+    { message: "Please support exporting drafts", sentiment: "positive" },
   );
 });

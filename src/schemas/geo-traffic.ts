@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { GEO_TRAFFIC_CATEGORY_VALUES, GEO_TRAFFIC_VISITOR_TYPE_VALUES } from "../constants/geo.js";
-import { geoResourceIdSchema, geoWindowShape, projectIdSchema } from "./geo-fields.js";
+import { geoWindowShape, projectIdSchema } from "./geo-fields.js";
 
 export const getGeoTrafficOverviewSchema = z.object({
   projectId: projectIdSchema,
@@ -38,15 +38,3 @@ export const listGeoTrafficPagesSchema = z.object({
 });
 
 export const getGeoIngestSetupSchema = z.object({});
-
-export const issueGeoIngestTokenSchema = z.object({
-  projectId: geoResourceIdSchema
-    .optional()
-    .describe("Bind the token to one project. Omit to track the whole organization."),
-});
-
-export const rotateGeoIngestTokenSchema = z.object({
-  projectId: geoResourceIdSchema
-    .optional()
-    .describe("Bind the new token to one project. Omit to track the whole organization."),
-});

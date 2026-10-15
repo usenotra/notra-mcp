@@ -23,7 +23,6 @@ export const OAUTH_PERMISSION_RESOURCES = [
   "integrations",
   "schedules",
   "event-triggers",
-  "chats",
   "skills",
   "feedback",
   "projects",

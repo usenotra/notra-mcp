@@ -126,7 +126,7 @@ test("OAuth verifies signatures and claims; API keys remain delegated to the API
   const organizationToken = await sign({ org_id: "workos-org", "urn:notra:access": "read" });
   const organizationAuth = await authenticateBearerToken(organizationToken, config);
   assert.equal(organizationAuth.organizationId, "workos-org");
-  assert.equal(organizationAuth.scopes.length, 17);
+  assert.equal(organizationAuth.scopes.length, 16);
   assert.ok(organizationAuth.scopes.includes("traffic.read"));
   assert.ok(!organizationAuth.scopes.includes("posts.write"));
 
@@ -169,7 +169,7 @@ test("access levels expand scopes without broader claims overriding consent", ()
       "urn:notra:permission:posts": "write",
       permissions: ["*"],
     });
-    assert.equal(scopes.length, level === "full" ? 34 : 17);
+    assert.equal(scopes.length, level === "full" ? 32 : 16);
     assert.equal(scopes.includes("posts.read"), level !== "write");
     assert.equal(scopes.includes("scans.write"), level !== "read");
     assert.equal(scopes.includes("traffic.read"), level !== "write");

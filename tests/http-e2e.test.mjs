@@ -33,9 +33,15 @@ let upstream;
 beforeAll(async () => {
   upstream = createHttpServer(async (req, res) => {
     const started = Date.now();
-    let bytes = 0;
-    for await (const chunk of req) bytes += chunk.length;
-    state.upstream.requests.push({ url: req.url, bytes, organizationId: req.headers["x-notra-organization-id"] });
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const body = Buffer.concat(chunks);
+    state.upstream.requests.push({
+      url: req.url,
+      bytes: body.length,
+      body: body.length < 10_000 ? body.toString() : undefined,
+      organizationId: req.headers["x-notra-organization-id"],
+    });
     res.on("close", () => {
       if (!res.writableEnded) state.upstream.disconnects.push({ url: req.url, afterMs: Date.now() - started });
     });
@@ -227,7 +233,7 @@ test("the workspace-scoped URL forwards its workspace, wins over the header, and
   expect((await modern("tools/list", {}, { path: "/a%20b" })).status).toBe(404);
 });
 
-test("removed executors and credential fields cannot reach the upstream API", async () => {
+test("removed executors cannot reach the upstream API and credential fields are dropped", async () => {
   const before = state.upstream.requests.length;
   for (const name of [
     "list_chats",
@@ -248,6 +254,7 @@ test("removed executors and credential fields cannot reach the upstream API", as
     name: "create_github_integration",
     arguments: { owner: "example", repo: "public", token: "must-not-be-forwarded" },
   });
-  expect(body.result?.isError ?? Boolean(body.error)).toBe(true);
-  expect(state.upstream.requests.length).toBe(before);
+  expect(body.error).toBeUndefined();
+  expect(state.upstream.requests.length).toBe(before + 1);
+  expect(JSON.parse(state.upstream.requests.at(-1).body)).toEqual({ owner: "example", repo: "public" });
 });

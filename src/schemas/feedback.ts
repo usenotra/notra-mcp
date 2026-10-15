@@ -2,12 +2,13 @@ import * as z from "zod";
 import { feedbackToolInputSchema } from "@usenotra/geo/feedback";
 import { FEEDBACK_KIND_VALUES, FEEDBACK_STATUS_VALUES } from "../constants/feedback.js";
 
-export const submitFeedbackSchema = z.strictObject({
+export const submitFeedbackSchema = z.object({
   message: feedbackToolInputSchema.message.describe(
     "Task-specific product feedback approved by the user. Exclude conversation history, personal records, payment data, and credentials.",
   ),
   title: feedbackToolInputSchema.title,
   kind: feedbackToolInputSchema.kind,
+  sentiment: feedbackToolInputSchema.sentiment,
 });
 
 export const listFeedbackSchema = z.object({

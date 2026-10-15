@@ -1,22 +1,10 @@
 import * as z from "zod";
-import { WEBHOOK_DELIVERY_STATUS_FILTER_VALUES, WEBHOOK_EVENT_VALUES } from "../constants/webhook.js";
+import { WEBHOOK_DELIVERY_STATUS_FILTER_VALUES } from "../constants/webhook.js";
 
 const endpointIdSchema = z.string().min(1).describe("The webhook endpoint ID (see list_webhook_endpoints)");
 const deliveryIdSchema = z.string().min(1).describe("The webhook delivery ID (see list_webhook_deliveries)");
 
 export const listWebhookEndpointsSchema = z.object({});
-
-export const createWebhookEndpointSchema = z.object({
-  url: z
-    .url({ protocol: /^https$/ })
-    .max(2048)
-    .describe("HTTPS URL that receives event POSTs"),
-  events: z
-    .array(z.enum(WEBHOOK_EVENT_VALUES))
-    .min(1)
-    .max(WEBHOOK_EVENT_VALUES.length)
-    .describe("Notra events to send to the endpoint"),
-});
 
 export const deleteWebhookEndpointSchema = z.object({ endpointId: endpointIdSchema });
 

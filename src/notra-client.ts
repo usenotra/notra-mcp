@@ -5,15 +5,11 @@ import type {
   BrandIdentityGenerationStatusResponse,
   BrandIdentityListResponse,
   BrandIdentityResponse,
-  ChatStreamResponse,
   CreatePostRequest,
   CreateGithubIntegrationRequest,
   CreateGithubIntegrationResponse,
   CreateSkillRequest,
   DeleteSkillResponse,
-  ExternalChannelSource,
-  GetChatResponse,
-  GetChatsResponse,
   GenerateBrandIdentityRequest,
   GenerateBrandIdentityResponse,
   GeneratePostRequest,
@@ -29,9 +25,6 @@ import type {
   ScheduleDeleteResponse,
   ScheduleListResponse,
   ScheduleResponse,
-  SendChatMessageRequest,
-  RespondToChatApprovalsRequest,
-  ChatSessionSummary,
   ListSkillsResponse,
   SkillResponse,
   UpdateScheduleRequest,
@@ -39,7 +32,6 @@ import type {
   UpdatePostRequest,
   UpdateSkillRequest,
 } from "./types/api.js";
-import type { AgentChatsListResponse, ListAgentChatsParams } from "./types/agent.js";
 import type { AuthContext } from "./types/auth.js";
 import type { CancelPostScheduleResponse, PostScheduleResponse, SchedulePostRequest } from "./types/post-schedule.js";
 import type {
@@ -50,8 +42,6 @@ import type {
   ListEventTriggersParams,
 } from "./types/event-trigger.js";
 import type {
-  CreateWebhookEndpointRequest,
-  CreateWebhookEndpointResponse,
   ListWebhookDeliveriesParams,
   WebhookDeliveryListResponse,
   WebhookDeliveryResponse,
@@ -112,7 +102,6 @@ import type {
 import type { GeoSettingsResponse, UpdateGeoSettingsRequest } from "./types/geo-settings.js";
 import type {
   GeoIngestSetupResponse,
-  GeoIngestTokenResponse,
   GeoTrafficJourneyResponse,
   GeoTrafficJourneysResponse,
   GeoTrafficLogParams,
@@ -142,8 +131,6 @@ import type {
 import type { RequestOptions, RequestTimeoutOptions } from "./types/request.js";
 import type { WorkspaceContextResponse } from "./types/workspace.js";
 import { apiErrorSchema } from "./schemas/api.js";
-import { chatHistoryApprovalPartSchema } from "./schemas/chat-stream.js";
-import { parseChatStream } from "./utils/chat-stream.js";
 import { withoutHiddenReadinessChecks } from "./utils/geo-agent-readiness.js";
 import { appendQueryParams } from "./utils/query-params.js";
 import { describeOrganizationError } from "./utils/organization.js";
@@ -243,86 +230,6 @@ export class NotraClient {
     }
 
     return data as T;
-  }
-
-  private async requestText<B = undefined>(
-    method: string,
-    path: string,
-    options?: RequestOptions<B>,
-  ): Promise<ChatStreamResponse> {
-    const url = new URL(`${this.baseUrl}${path}`);
-
-    if (options?.params) {
-      appendQueryParams(url, options.params);
-    }
-
-    const headers = requestHeaders(this.auth, "text/event-stream, application/json");
-
-    const timeoutMs = options?.timeoutMs ?? 180_000;
-    const fetchOptions: RequestInit = { method, headers, signal: createRequestSignal(timeoutMs, options?.signal) };
-    if (options?.body && (method === "POST" || method === "PATCH" || method === "PUT")) {
-      fetchOptions.body = JSON.stringify(options.body);
-    }
-
-    let response: Response;
-    try {
-      response = await fetch(url.toString(), fetchOptions);
-    } catch (error) {
-      throw asTimeoutError(error, timeoutMs) ?? asCancellationError(error) ?? error;
-    }
-
-    let text: string;
-    try {
-      text = await response.text();
-    } catch (error) {
-      throw asTimeoutError(error, timeoutMs) ?? asCancellationError(error) ?? error;
-    }
-
-    if (!response.ok) {
-      let data: unknown;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        // Non-JSON errors use the response text below.
-      }
-      const errorBody = apiErrorSchema.safeParse(data).data;
-      const message =
-        errorBody?.message ?? errorBody?.error ?? (text || `HTTP ${response.status}: ${response.statusText}`);
-      throw new Error(describeOrganizationError(message, this.auth));
-    }
-
-    const parsed = parseChatStream(text);
-    return this.withApprovalDetails({ ...parsed, chatId: parsed.chatId ?? response.headers.get("x-chat-id") });
-  }
-
-  private async withApprovalDetails(response: ChatStreamResponse): Promise<ChatStreamResponse> {
-    if (!response.chatId || response.pendingApprovals.every((approval) => approval.toolName !== null)) {
-      return response;
-    }
-    let messages: unknown[];
-    try {
-      ({ messages } = await this.getChat(response.chatId));
-    } catch {
-      return response;
-    }
-    const known = new Map<string, { toolName: string; input: unknown }>();
-    for (const message of messages) {
-      const parts = (message as { parts?: unknown }).parts;
-      if (!Array.isArray(parts)) continue;
-      for (const part of parts) {
-        const parsed = chatHistoryApprovalPartSchema.safeParse(part);
-        if (!parsed.success) continue;
-        const { type, toolName, input, approval } = parsed.data;
-        const name = toolName ?? (type.startsWith("tool-") ? type.slice("tool-".length) : null);
-        if (name) known.set(approval.id, { toolName: name, input: input ?? null });
-      }
-    }
-    return {
-      ...response,
-      pendingApprovals: response.pendingApprovals.map((approval) =>
-        approval.toolName === null ? { ...approval, ...known.get(approval.approvalId) } : approval,
-      ),
-    };
   }
 
   async listPosts(params?: ListPostsParams): Promise<PostListResponse> {
@@ -458,37 +365,6 @@ export class NotraClient {
     return this.request<ScheduleDeleteResponse>("DELETE", `/v1/schedules/${encodeURIComponent(scheduleId)}`);
   }
 
-  async listChats(): Promise<GetChatsResponse> {
-    return this.request<GetChatsResponse>("GET", "/v1/chats");
-  }
-
-  async createChat(body: SendChatMessageRequest): Promise<ChatStreamResponse> {
-    return this.requestText<SendChatMessageRequest>("POST", "/v1/chats", { body });
-  }
-
-  async getChatByExternalChannel(
-    source: Exclude<ExternalChannelSource, "dashboard">,
-    id: string,
-  ): Promise<ChatSessionSummary> {
-    return this.request<ChatSessionSummary>("GET", "/v1/chats/by-external", {
-      params: { source, id },
-    });
-  }
-
-  async getChat(chatId: string): Promise<GetChatResponse> {
-    return this.request<GetChatResponse>("GET", `/v1/chats/${encodeURIComponent(chatId)}`);
-  }
-
-  async postChatMessage(chatId: string, body: SendChatMessageRequest): Promise<ChatStreamResponse> {
-    return this.requestText<SendChatMessageRequest>("POST", `/v1/chats/${encodeURIComponent(chatId)}`, { body });
-  }
-
-  async respondToChatApprovals(chatId: string, body: RespondToChatApprovalsRequest): Promise<ChatStreamResponse> {
-    return this.requestText<RespondToChatApprovalsRequest>("POST", `/v1/chats/${encodeURIComponent(chatId)}`, {
-      body,
-    });
-  }
-
   async listSkills(): Promise<ListSkillsResponse> {
     return this.request<ListSkillsResponse>("GET", "/v1/skills");
   }
@@ -537,12 +413,6 @@ export class NotraClient {
     return this.request<WebhookEndpointListResponse>("GET", "/v1/webhooks");
   }
 
-  async createWebhookEndpoint(body: CreateWebhookEndpointRequest): Promise<CreateWebhookEndpointResponse> {
-    return this.request<CreateWebhookEndpointResponse, CreateWebhookEndpointRequest>("POST", "/v1/webhooks", {
-      body,
-    });
-  }
-
   async deleteWebhookEndpoint(endpointId: string): Promise<WebhookIdResponse> {
     return this.request<WebhookIdResponse>("DELETE", `/v1/webhooks/${encodeURIComponent(endpointId)}`);
   }
@@ -573,10 +443,6 @@ export class NotraClient {
       `/v1/feedback/${encodeURIComponent(feedbackId)}`,
       { body },
     );
-  }
-
-  async listAgentChats(params?: ListAgentChatsParams): Promise<AgentChatsListResponse> {
-    return this.request<AgentChatsListResponse>("GET", "/v2/agent-chats", { params });
   }
 
   private geoPath(projectId: string, suffix: string): string {
@@ -951,17 +817,5 @@ export class NotraClient {
 
   async getGeoIngestSetup(): Promise<GeoIngestSetupResponse> {
     return this.request<GeoIngestSetupResponse>("GET", "/v1/geo/ingest/setup");
-  }
-
-  async issueGeoIngestToken(projectId?: string): Promise<GeoIngestTokenResponse> {
-    return this.request<GeoIngestTokenResponse>("POST", "/v1/geo/ingest/token", {
-      params: { projectId },
-    });
-  }
-
-  async rotateGeoIngestToken(projectId?: string): Promise<GeoIngestTokenResponse> {
-    return this.request<GeoIngestTokenResponse>("POST", "/v1/geo/ingest/rotate-token", {
-      params: { projectId },
-    });
   }
 }

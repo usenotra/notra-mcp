@@ -22,8 +22,6 @@ async function listen(handler) {
 test.each([
   { operation: "JSON", phase: "headers", timeout: 30_000 },
   { operation: "JSON", phase: "body", timeout: 30_000 },
-  { operation: "chat", phase: "headers", timeout: 180_000 },
-  { operation: "chat", phase: "body", timeout: 180_000 },
   { operation: "sequence", phase: "headers", timeout: 300_000 },
   { operation: "snapshot optional", phase: "headers", timeout: 5_000 },
 ])("$operation cancels a request stalled at $phase", async ({ operation, phase, timeout }) => {
@@ -38,9 +36,9 @@ test.each([
   const server = createServer((_req, res) => {
     res.on("close", disconnected);
     if (phase === "body") {
-      res.writeHead(200, { "content-type": operation === "chat" ? "text/event-stream" : "application/json" });
+      res.writeHead(200, { "content-type": "application/json" });
       res.flushHeaders();
-      res.write(operation === "chat" ? 'data: {"type":"text-delta","delta":"partial"}\n' : '{"posts":');
+      res.write('{"posts":');
     }
     received();
   });
@@ -73,11 +71,9 @@ test.each([
   const request =
     operation === "JSON"
       ? client.listPosts()
-      : operation === "chat"
-        ? client.createChat({ message: "Hello" })
-        : operation === "snapshot optional"
-          ? client.getGeoChanges("project", { timeoutMs: timeout })
-          : client.runGeoSequence("project", "sequence");
+      : operation === "snapshot optional"
+        ? client.getGeoChanges("project", { timeoutMs: timeout })
+        : client.runGeoSequence("project", "sequence");
   const rejected = expect(request).rejects.toThrow(`Notra API request timed out after ${timeout / 1000}s`);
   await requestReceived;
   if (phase === "body") await responseReceived;
@@ -90,7 +86,7 @@ test.each([
   expect(controller.signal.aborted).toBe(true);
 });
 
-test.each(["JSON", "chat"])("MCP request cancellation disconnects the upstream %s request", async (operation) => {
+test("MCP request cancellation disconnects the upstream request", async () => {
   const disconnects = [];
   let received;
   const requestReceived = new Promise((resolve) => {
@@ -103,9 +99,7 @@ test.each(["JSON", "chat"])("MCP request cancellation disconnects the upstream %
   });
   const client = new NotraClient("test-token", baseUrl);
   const controller = new AbortController();
-  const request = runWithRequestSignal(controller.signal, () =>
-    operation === "JSON" ? client.listPosts() : client.createChat({ message: "Hello" }),
-  );
+  const request = runWithRequestSignal(controller.signal, () => client.listPosts());
   const rejected = expect(request).rejects.toThrow("Notra API request was cancelled");
   await requestReceived;
   controller.abort();

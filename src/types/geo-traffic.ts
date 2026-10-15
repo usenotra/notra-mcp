@@ -105,7 +105,3 @@ export interface GeoIngestSetupResponse {
   snippets: { next: string; nuxt: string; netlify: string };
   organization: Organization;
 }
-
-export interface GeoIngestTokenResponse extends GeoIngestSetupResponse {
-  token: string;
-}
