@@ -39,8 +39,8 @@ export function registerEventTriggerTools(server: McpServer, client: NotraClient
     "create_event_trigger",
     {
       description:
-        "Create an event trigger that generates content whenever a GitHub release or push happens in the targeted repositories. Generated content uses AI credits each time the trigger fires.",
-      annotations: { title: "Create Event Trigger", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
+        "Create an event trigger that generates content whenever a GitHub release or push happens in the targeted repositories. Generated content uses AI credits each time the trigger fires. When autoPublish is true, generated content is automatically published to outputConfig.publishDestination.",
+      annotations: { title: "Create Event Trigger", readOnlyHint: false, openWorldHint: true, destructiveHint: true },
       inputSchema: shareJsonSchema(createEventTriggerSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createEventTrigger")),
     },
@@ -51,7 +51,7 @@ export function registerEventTriggerTools(server: McpServer, client: NotraClient
     "update_event_trigger",
     {
       description:
-        "Replace an event trigger's configuration. The API takes the full definition, so read it with get_event_trigger first and send every field back.",
+        "Replace an event trigger's configuration. The API takes the full definition, so read it with get_event_trigger first and send every field back. When autoPublish is true, future generated content is automatically published to outputConfig.publishDestination.",
       annotations: {
         title: "Update Event Trigger",
         readOnlyHint: false,

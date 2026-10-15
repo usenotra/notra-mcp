@@ -26,8 +26,9 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
   server.registerTool(
     "create_schedule",
     {
-      description: "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger",
-      annotations: { title: "Create Schedule", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
+      description:
+        "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger. Generation uses AI credits. When autoPublish is true, generated content is automatically published to outputConfig.publishDestination.",
+      annotations: { title: "Create Schedule", readOnlyHint: false, openWorldHint: true, destructiveHint: true },
       inputSchema: shareJsonSchema(schedulePayloadSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createSchedule")),
     },
@@ -37,7 +38,8 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
   server.registerTool(
     "update_schedule",
     {
-      description: "Update an existing content generation schedule",
+      description:
+        "Update an existing content generation schedule. When autoPublish is true, future generated content is automatically published to outputConfig.publishDestination.",
       annotations: {
         title: "Update Schedule",
         readOnlyHint: false,
