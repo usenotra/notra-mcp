@@ -383,8 +383,6 @@ All supported operations are listed upfront by `tools/list`. General-purpose age
 
 Tool inputs are for task-specific business content. Do not send health records, biometric data, government identifiers, payment card information, credentials, or unrelated conversation history. Authenticate through OAuth or local configuration, never through tool arguments. Feedback accepts only the user-approved message, optional title, and feedback kind.
 
-See `docs/openai-resubmission.md` for the listing copy, review evidence, and release checks.
-
 ## Development
 
 Use Node 22.12+ (Node 22) or Node 24 and the pnpm version pinned in `package.json`:

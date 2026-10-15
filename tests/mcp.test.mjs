@@ -82,30 +82,6 @@ test("fetch failures expose connection details without stacks or raw error objec
   }
 });
 
-test("review manifest covers the exact public tool catalog and annotations", async () => {
-  const { readFile } = await import("node:fs/promises");
-  const manifest = JSON.parse(await readFile(new URL("../docs/openai-tool-review.json", import.meta.url), "utf8"));
-  const registrations = vi.spyOn(McpServer.prototype, "registerTool");
-  const server = createServer("test-key");
-  try {
-    const actual = registrations.mock.calls
-      .map(([name, tool]) => ({ name, description: tool.description, annotations: tool.annotations }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-    assert.deepEqual(
-      actual,
-      manifest.map(({ justification, ...tool }) => tool),
-    );
-    for (const tool of manifest) {
-      for (const hint of ["readOnlyHint", "destructiveHint", "openWorldHint"]) {
-        assert.ok(tool.justification[hint]?.trim().length > 0, `${tool.name}: missing ${hint} explanation`);
-      }
-    }
-  } finally {
-    registrations.mockRestore();
-    await server.close();
-  }
-});
-
 test("restricted operations stay absent even when requested through onlyTool", async () => {
   for (const name of [
     "list_chats",
