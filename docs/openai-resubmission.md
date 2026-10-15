@@ -98,3 +98,5 @@ Checked Notra main at `25127ae63`. The Slack bot does not use the public Notra M
 - `apps/api/src/routes/chats.ts` and `apps/api/src/lib/chat/direct-stream.ts` preserve the separate HTTP chat API and internal orchestration.
 
 The Slack agent and its tool package have no `@usenotra/mcp` dependency or `mcp.usenotra.com` call. Removing the seven chat/agent tools from MCP changes neither the bot nor the HTTP chat endpoints. The bot uses internal services rather than routing its work back through the public MCP or HTTP chat wrapper.
+
+Validation: all 27 existing Slack channel, controls, and installation tests passed on the checked Notra revision. The MCP suite passed all 113 tests after removing the seven chat and agent registrations.
