@@ -102,6 +102,14 @@ export interface GeoTrafficPagesResponse {
 export interface GeoIngestSetupResponse {
   ingestUrl: string;
   snippet: string;
-  snippets: { next: string; nuxt: string; netlify: string };
+  snippets: {
+    next: string;
+    nuxt: string;
+    netlify: string;
+    tanstack: string;
+    astro: string;
+    sveltekit: string;
+    reactRouter: string;
+  };
   organization: Organization;
 }
