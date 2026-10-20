@@ -205,6 +205,42 @@ export interface BrandIdentityDeleteResponse {
   disabledEvents: Array<{ id: string; name: string }>;
 }
 
+export type BrandColorRole = "primary" | "secondary" | "accent" | "background" | "foreground" | "neutral" | "custom";
+
+export interface BrandColor {
+  id: string;
+  role: BrandColorRole;
+  name: string | null;
+  lightValue: string;
+  darkValue: string | null;
+  usage: string | null;
+}
+
+export interface BrandColorListResponse {
+  organization: Organization;
+  colors: BrandColor[];
+}
+
+export interface BrandColorResponse {
+  organization: Organization;
+  color: BrandColor;
+}
+
+export interface BrandColorDeleteResponse {
+  id: string;
+  organization: Organization;
+}
+
+export interface CreateBrandColorRequest {
+  role?: BrandColorRole;
+  name?: string | null;
+  lightValue: string;
+  darkValue?: string | null;
+  usage?: string | null;
+}
+
+export type UpdateBrandColorRequest = Partial<CreateBrandColorRequest>;
+
 export interface UpdateBrandIdentityRequest {
   name?: string;
   websiteUrl?: string;

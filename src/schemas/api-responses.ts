@@ -4,6 +4,7 @@ export type ApiOperationId =
   | "approveGeoContentBrief"
   | "cancelPostSchedule"
   | "createAgentSession"
+  | "createBrandColor"
   | "createBrandIdentity"
   | "createEventTrigger"
   | "createGeoPrompt"
@@ -16,6 +17,7 @@ export type ApiOperationId =
   | "createSchedule"
   | "createSkill"
   | "createWebhookEndpoint"
+  | "deleteBrandColor"
   | "deleteBrandIdentity"
   | "deleteEventTrigger"
   | "deleteGeoCompetitor"
@@ -63,6 +65,7 @@ export type ApiOperationId =
   | "importGeoPrompts"
   | "issueGeoIngestToken"
   | "listAgentChats"
+  | "listBrandColors"
   | "listBrandIdentities"
   | "listChats"
   | "listEventTriggers"
@@ -98,6 +101,7 @@ export type ApiOperationId =
   | "submitFeedback"
   | "submitOrganizationFeedback"
   | "suggestGeoCompetitors"
+  | "updateBrandColor"
   | "updateBrandIdentity"
   | "updateEventTrigger"
   | "updateFeedback"
@@ -152,6 +156,37 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     type: "object",
     properties: { ok: { type: "boolean", enum: [true] }, sessionId: { type: "string" } },
     required: ["ok", "sessionId"],
+  },
+  createBrandColor: {
+    type: "object",
+    properties: {
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+      color: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          role: {
+            type: "string",
+            enum: ["primary", "secondary", "accent", "background", "foreground", "neutral", "custom"],
+          },
+          name: { type: ["string", "null"] },
+          lightValue: { type: "string" },
+          darkValue: { type: ["string", "null"] },
+          usage: { type: ["string", "null"] },
+        },
+        required: ["id", "role", "name", "lightValue", "darkValue", "usage"],
+      },
+    },
+    required: ["organization", "color"],
   },
   createBrandIdentity: {
     type: "object",
@@ -539,6 +574,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             description: "ID of the generated post. Set once the job reaches completed.",
           },
           error: { type: ["string", "null"], description: "Failure reason when status is failed." },
+          errorCode: {
+            type: ["string", "null"],
+            description:
+              "Stable machine-readable failure code when status is failed, such as NO_ACTIVITY_TYPES_SELECTED or NO_AVAILABLE_SOURCES. Absent or null for other failures and for older jobs.",
+          },
           source: { type: "string", enum: ["api", "dashboard"] },
           createdAt: { type: "string" },
           updatedAt: { type: "string" },
@@ -780,6 +820,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 "post.unpublished",
                 "geo.scan.completed",
                 "geo.scan.failed",
+                "geo.alert.triggered",
               ],
             },
           },
@@ -791,6 +832,23 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       secret: { type: "string" },
     },
     required: ["endpoint", "secret"],
+  },
+  deleteBrandColor: {
+    type: "object",
+    properties: {
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+      id: { type: "string" },
+    },
+    required: ["organization", "id"],
   },
   deleteBrandIdentity: {
     type: "object",
@@ -2893,6 +2951,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             description: "ID of the generated post. Set once the job reaches completed.",
           },
           error: { type: ["string", "null"], description: "Failure reason when status is failed." },
+          errorCode: {
+            type: ["string", "null"],
+            description:
+              "Stable machine-readable failure code when status is failed, such as NO_ACTIVITY_TYPES_SELECTED or NO_AVAILABLE_SOURCES. Absent or null for other failures and for older jobs.",
+          },
           source: { type: "string", enum: ["api", "dashboard"] },
           createdAt: { type: "string" },
           updatedAt: { type: "string" },
@@ -3129,6 +3192,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               "post.unpublished",
               "geo.scan.completed",
               "geo.scan.failed",
+              "geo.alert.triggered",
             ],
           },
           status: { type: "string", enum: ["pending", "sending", "retrying", "succeeded", "failed", "cancelled"] },
@@ -3360,6 +3424,40 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["sessions"],
+  },
+  listBrandColors: {
+    type: "object",
+    properties: {
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+      colors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            role: {
+              type: "string",
+              enum: ["primary", "secondary", "accent", "background", "foreground", "neutral", "custom"],
+            },
+            name: { type: ["string", "null"] },
+            lightValue: { type: "string" },
+            darkValue: { type: ["string", "null"] },
+            usage: { type: ["string", "null"] },
+          },
+          required: ["id", "role", "name", "lightValue", "darkValue", "usage"],
+        },
+      },
+    },
+    required: ["organization", "colors"],
   },
   listBrandIdentities: {
     type: "object",
@@ -4832,6 +4930,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 "post.unpublished",
                 "geo.scan.completed",
                 "geo.scan.failed",
+                "geo.alert.triggered",
               ],
             },
             status: { type: "string", enum: ["pending", "sending", "retrying", "succeeded", "failed", "cancelled"] },
@@ -4888,6 +4987,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                   "post.unpublished",
                   "geo.scan.completed",
                   "geo.scan.failed",
+                  "geo.alert.triggered",
                 ],
               },
             },
@@ -5092,12 +5192,29 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
   runGeoSequence: {
     type: "object",
     properties: {
-      checks: { type: "integer", description: "Recorded answers across every engine that responded." },
+      checks: {
+        type: "integer",
+        description:
+          "Answers recorded during this request by the API-based engines that responded. Consumer-app answers from the queued scan are not counted.",
+      },
       mentions: { type: "integer", description: "How many of those answers mentioned the tracked brand." },
       engines: {
         type: "array",
         items: { type: "string" },
-        description: "Engines the conversation was played against.",
+        description:
+          "API-based engines that answered the conversation during this request. Empty when only consumer apps run or none of the API engines answered.",
+      },
+      queuedScanId: {
+        type: ["string", "null"],
+        default: null,
+        description:
+          "Scan that plays the conversation in the tracked consumer apps (ChatGPT, Perplexity, Gemini, AI Mode, Copilot) in the background, or `null` when none was queued. Poll `GET /v1/projects/{projectId}/geo/scans/{scanId}` until `status` leaves `running`; its answers then land in the project's GEO checks.",
+      },
+      queuedEngines: {
+        type: "array",
+        items: { type: "string" },
+        default: [],
+        description: "Consumer-app engines covered by `queuedScanId`. Empty when nothing was queued.",
       },
       organization: {
         type: "object",
@@ -5374,6 +5491,37 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["domain", "field", "competitors", "organization"],
+  },
+  updateBrandColor: {
+    type: "object",
+    properties: {
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+      color: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          role: {
+            type: "string",
+            enum: ["primary", "secondary", "accent", "background", "foreground", "neutral", "custom"],
+          },
+          name: { type: ["string", "null"] },
+          lightValue: { type: "string" },
+          darkValue: { type: ["string", "null"] },
+          usage: { type: ["string", "null"] },
+        },
+        required: ["id", "role", "name", "lightValue", "darkValue", "usage"],
+      },
+    },
+    required: ["organization", "color"],
   },
   updateBrandIdentity: {
     type: "object",

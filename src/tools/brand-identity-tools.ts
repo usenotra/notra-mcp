@@ -5,6 +5,10 @@ import {
   deleteBrandIdentitySchema,
   generateBrandIdentitySchema,
   getBrandIdentityGenerationStatusSchema,
+  listBrandColorsSchema,
+  createBrandColorSchema,
+  updateBrandColorSchema,
+  deleteBrandColorSchema,
 } from "../schemas/brand-identity.js";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
@@ -101,5 +105,63 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
       outputSchema: shareJsonSchema(apiOutputSchema("getBrandIdentityGeneration")),
     },
     ({ jobId }) => handleError(() => client.getBrandIdentityGenerationStatus(jobId)),
+  );
+
+  server.registerTool(
+    "list_brand_colors",
+    {
+      description:
+        "List the brand guideline colors of a brand identity, including light/dark hex values, role, and usage",
+      annotations: { title: "List Brand Colors", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      inputSchema: shareJsonSchema(listBrandColorsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listBrandColors")),
+    },
+    ({ brandIdentityId }) => handleError(() => client.listBrandColors(brandIdentityId)),
+  );
+
+  server.registerTool(
+    "create_brand_color",
+    {
+      description: "Add a color to a brand identity's guidelines",
+      annotations: { title: "Create Brand Color", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
+      inputSchema: shareJsonSchema(createBrandColorSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("createBrandColor")),
+    },
+    ({ brandIdentityId, ...body }) => handleError(() => client.createBrandColor(brandIdentityId, body)),
+  );
+
+  server.registerTool(
+    "update_brand_color",
+    {
+      description: "Update a brand color's hex values, name, role, or usage. Only the provided fields change.",
+      annotations: {
+        title: "Update Brand Color",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(updateBrandColorSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("updateBrandColor")),
+    },
+    ({ brandIdentityId, colorId, ...body }) =>
+      handleError(() => client.updateBrandColor(brandIdentityId, colorId, body)),
+  );
+
+  server.registerTool(
+    "delete_brand_color",
+    {
+      description: "Delete a color from a brand identity's guidelines",
+      annotations: {
+        title: "Delete Brand Color",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(deleteBrandColorSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("deleteBrandColor")),
+    },
+    ({ brandIdentityId, colorId }) => handleError(() => client.deleteBrandColor(brandIdentityId, colorId)),
   );
 }

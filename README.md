@@ -224,6 +224,10 @@ Post publishing schedules are separate from the content-generation schedules bel
 | `get_brand_identity`                   | Get a single brand identity by ID                        |
 | `update_brand_identity`                | Update brand identity settings                           |
 | `delete_brand_identity`                | Delete a brand identity                                  |
+| `list_brand_colors`                    | List a brand identity's guideline colors                 |
+| `create_brand_color`                   | Add a brand color                                        |
+| `update_brand_color`                   | Update a brand color                                     |
+| `delete_brand_color`                   | Delete a brand color                                     |
 | `generate_brand_identity`              | Queue async brand identity generation from a website URL |
 | `get_brand_identity_generation_status` | Check the status of a brand identity generation job      |
 

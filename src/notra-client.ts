@@ -1,10 +1,14 @@
 import { GEO_LONG_RUNNING_TIMEOUT_MS } from "./constants/geo.js";
 import { ORGANIZATION_ID_HEADER } from "./constants/organization.js";
 import type {
+  BrandColorDeleteResponse,
+  BrandColorListResponse,
+  BrandColorResponse,
   BrandIdentityDeleteResponse,
   BrandIdentityGenerationStatusResponse,
   BrandIdentityListResponse,
   BrandIdentityResponse,
+  CreateBrandColorRequest,
   CreatePostRequest,
   CreateGithubIntegrationRequest,
   CreateGithubIntegrationResponse,
@@ -28,6 +32,7 @@ import type {
   ListSkillsResponse,
   SkillResponse,
   UpdateScheduleRequest,
+  UpdateBrandColorRequest,
   UpdateBrandIdentityRequest,
   UpdatePostRequest,
   UpdateSkillRequest,
@@ -309,6 +314,40 @@ export class NotraClient {
     return this.request<BrandIdentityDeleteResponse>(
       "DELETE",
       `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}`,
+    );
+  }
+
+  async listBrandColors(brandIdentityId: string): Promise<BrandColorListResponse> {
+    return this.request<BrandColorListResponse>(
+      "GET",
+      `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}/colors`,
+    );
+  }
+
+  async createBrandColor(brandIdentityId: string, body: CreateBrandColorRequest): Promise<BrandColorResponse> {
+    return this.request<BrandColorResponse, CreateBrandColorRequest>(
+      "POST",
+      `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}/colors`,
+      { body },
+    );
+  }
+
+  async updateBrandColor(
+    brandIdentityId: string,
+    colorId: string,
+    body: UpdateBrandColorRequest,
+  ): Promise<BrandColorResponse> {
+    return this.request<BrandColorResponse, UpdateBrandColorRequest>(
+      "PATCH",
+      `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}/colors/${encodeURIComponent(colorId)}`,
+      { body },
+    );
+  }
+
+  async deleteBrandColor(brandIdentityId: string, colorId: string): Promise<BrandColorDeleteResponse> {
+    return this.request<BrandColorDeleteResponse>(
+      "DELETE",
+      `/v1/brand-identities/${encodeURIComponent(brandIdentityId)}/colors/${encodeURIComponent(colorId)}`,
     );
   }
 
