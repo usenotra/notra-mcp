@@ -105,6 +105,7 @@ export type ApiOperationId =
   | "updateBrandIdentity"
   | "updateEventTrigger"
   | "updateFeedback"
+  | "updateGeoContentBrief"
   | "updateGeoPrompt"
   | "updateGeoSequence"
   | "updateGeoSettings"
@@ -1779,8 +1780,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           tanstack: { type: "string" },
           astro: { type: "string" },
           sveltekit: { type: "string" },
+          reactRouter: { type: "string" },
         },
-        required: ["next", "nuxt", "netlify", "tanstack", "astro", "sveltekit"],
+        required: ["next", "nuxt", "netlify", "tanstack", "astro", "sveltekit", "reactRouter"],
       },
       drainUrls: {
         type: "object",
@@ -3377,8 +3379,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           tanstack: { type: "string" },
           astro: { type: "string" },
           sveltekit: { type: "string" },
+          reactRouter: { type: "string" },
         },
-        required: ["next", "nuxt", "netlify", "tanstack", "astro", "sveltekit"],
+        required: ["next", "nuxt", "netlify", "tanstack", "astro", "sveltekit", "reactRouter"],
       },
       drainUrls: {
         type: "object",
@@ -5162,8 +5165,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           tanstack: { type: "string" },
           astro: { type: "string" },
           sveltekit: { type: "string" },
+          reactRouter: { type: "string" },
         },
-        required: ["next", "nuxt", "netlify", "tanstack", "astro", "sveltekit"],
+        required: ["next", "nuxt", "netlify", "tanstack", "astro", "sveltekit", "reactRouter"],
       },
       drainUrls: {
         type: "object",
@@ -5699,6 +5703,150 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["feedback"],
+  },
+  updateGeoContentBrief: {
+    type: "object",
+    properties: {
+      brief: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          topic: { type: "string" },
+          brief: {
+            type: "object",
+            properties: {
+              targetPrompt: { type: "string" },
+              intent: { type: "string" },
+              contentSubtype: {
+                type: "string",
+                enum: ["guide", "comparison", "listicle", "how-to", "faq", "alternatives"],
+              },
+              workingTitle: { type: "string" },
+              audience: { type: "string" },
+              jobToBeDone: { type: "string" },
+              sections: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    heading: { type: "string" },
+                    goal: { type: "string" },
+                    claims: { type: "array", items: { type: "string" } },
+                  },
+                  required: ["heading", "goal", "claims"],
+                },
+              },
+              questionsToAnswer: { type: "array", items: { type: "string" } },
+              internalLinks: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: { url: { type: "string" }, anchor: { type: "string" }, why: { type: "string" } },
+                  required: ["url", "anchor", "why"],
+                },
+              },
+              acceptanceChecklist: { type: "array", items: { type: "string" } },
+              recommendedAngle: { type: "string" },
+              competitorsToCounter: { type: "array", items: { type: "string" } },
+              sourcesToReference: { type: "array", items: { type: "string" } },
+              missingCoverage: { type: "array", items: { type: "string" } },
+              baseline: {
+                type: ["object", "null"],
+                properties: {
+                  sourcePromptId: { type: "string" },
+                  mentionedEngines: { type: "number" },
+                  totalEngines: { type: "number" },
+                  engines: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        engine: { type: "string" },
+                        mentioned: { type: "boolean" },
+                        position: { type: ["number", "null"] },
+                      },
+                      required: ["engine", "mentioned", "position"],
+                    },
+                  },
+                  competitorMentions: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: { name: { type: "string" }, engines: { type: "number" } },
+                      required: ["name", "engines"],
+                    },
+                  },
+                  citedDomains: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: { domain: { type: "string" }, engines: { type: "number" } },
+                      required: ["domain", "engines"],
+                    },
+                  },
+                  capturedAt: { type: ["string", "null"] },
+                },
+                required: [
+                  "sourcePromptId",
+                  "mentionedEngines",
+                  "totalEngines",
+                  "engines",
+                  "competitorMentions",
+                  "citedDomains",
+                  "capturedAt",
+                ],
+              },
+            },
+            required: [
+              "targetPrompt",
+              "intent",
+              "contentSubtype",
+              "workingTitle",
+              "audience",
+              "jobToBeDone",
+              "sections",
+              "questionsToAnswer",
+              "internalLinks",
+              "acceptanceChecklist",
+            ],
+          },
+          status: { type: "string", enum: ["draft", "approved", "writing", "completed", "failed"] },
+          autoApproved: { type: "boolean" },
+          runId: { type: ["string", "null"] },
+          postId: { type: ["string", "null"] },
+          humanized: { type: "boolean" },
+          error: { type: ["string", "null"] },
+          createdAt: { type: "string" },
+          updatedAt: { type: "string" },
+          completedAt: { type: ["string", "null"] },
+        },
+        required: [
+          "id",
+          "topic",
+          "brief",
+          "status",
+          "autoApproved",
+          "runId",
+          "postId",
+          "humanized",
+          "error",
+          "createdAt",
+          "updatedAt",
+          "completedAt",
+        ],
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["brief", "organization"],
   },
   updateGeoPrompt: {
     type: "object",

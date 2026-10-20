@@ -66,6 +66,7 @@ import type {
   GeoContentGapsResponse,
   PlanGeoContentBriefRequest,
   PlanGeoContentBriefResponse,
+  UpdateGeoContentBriefRequest,
 } from "./types/geo-brief.js";
 import type { GeoAgentReadinessResponse, StartGeoAgentReadinessScanResponse } from "./types/geo-agent-readiness.js";
 import type { GeoWindowParams } from "./types/geo-common.js";
@@ -787,6 +788,18 @@ export class NotraClient {
     return this.request<GeoContentBriefResponse>(
       "GET",
       this.geoPath(projectId, `/briefs/${encodeURIComponent(briefId)}`),
+    );
+  }
+
+  async updateGeoContentBrief(
+    projectId: string,
+    briefId: string,
+    body: UpdateGeoContentBriefRequest,
+  ): Promise<GeoContentBriefResponse> {
+    return this.request<GeoContentBriefResponse, UpdateGeoContentBriefRequest>(
+      "PATCH",
+      this.geoPath(projectId, `/briefs/${encodeURIComponent(briefId)}`),
+      { body },
     );
   }
 

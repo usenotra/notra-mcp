@@ -352,6 +352,7 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `list_geo_content_briefs`   | List content briefs and their statuses                        |
 | `plan_geo_content_brief`    | Research a topic and plan a brief (billed, can take minutes)  |
 | `get_geo_content_brief`     | Get a brief with the full document and writer status          |
+| `update_geo_content_brief`  | Edit a draft brief's outline and planning fields              |
 | `approve_geo_content_brief` | Approve a brief and start the article writer                  |
 
 ### Agent readiness

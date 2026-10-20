@@ -81,6 +81,19 @@ export interface PlanGeoContentBriefResponse {
   organization: Organization;
 }
 
+export interface UpdateGeoContentBriefRequest {
+  expectedUpdatedAt?: string;
+  workingTitle?: string;
+  targetPrompt?: string;
+  intent?: string;
+  audience?: string;
+  jobToBeDone?: string;
+  sections?: GeoBriefDocument["sections"];
+  questionsToAnswer?: string[];
+  internalLinks?: GeoBriefDocument["internalLinks"];
+  acceptanceChecklist?: string[];
+}
+
 export interface GeoContentBriefResponse {
   brief: {
     id: string;
