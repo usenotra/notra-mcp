@@ -105,7 +105,7 @@ import type {
   RunGeoSequenceResponse,
   UpdateGeoSequenceRequest,
 } from "./types/geo-sequence.js";
-import type { GeoSettingsResponse, UpdateGeoSettingsRequest } from "./types/geo-settings.js";
+import type { GeoEngineListResponse, GeoSettingsResponse, UpdateGeoSettingsRequest } from "./types/geo-settings.js";
 import type {
   GeoIngestSetupResponse,
   GeoTrafficJourneyResponse,
@@ -522,6 +522,10 @@ export class NotraClient {
 
   async getGeoSettings(projectId: string): Promise<GeoSettingsResponse> {
     return this.request<GeoSettingsResponse>("GET", this.geoPath(projectId, "/settings"));
+  }
+
+  async listGeoEngines(projectId: string): Promise<GeoEngineListResponse> {
+    return this.request<GeoEngineListResponse>("GET", this.geoPath(projectId, "/engines"));
   }
 
   async updateGeoSettings(projectId: string, body: UpdateGeoSettingsRequest): Promise<GeoSettingsResponse> {

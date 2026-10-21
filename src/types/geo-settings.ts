@@ -26,6 +26,20 @@ export interface GeoSettingsResponse {
   organization: Organization;
 }
 
+export interface GeoEngine {
+  id: string;
+  label: string;
+  provider: string;
+  zdr: "all" | "some" | "none";
+  default: boolean;
+  supportsGroundedChecks: boolean;
+}
+
+export interface GeoEngineListResponse {
+  engines: GeoEngine[];
+  organization: Organization;
+}
+
 export interface UpdateGeoSettingsRequest {
   companyName: string;
   aliases: string[];

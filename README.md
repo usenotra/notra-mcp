@@ -295,6 +295,7 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | Tool                  | Description                                                      |
 | --------------------- | ---------------------------------------------------------------- |
 | `get_geo_settings`    | Get tracked company, aliases, languages, engines and scan config |
+| `list_geo_engines`    | List the engine IDs a project can track                          |
 | `update_geo_settings` | Replace the settings document and restart the scan cycle         |
 
 ### GEO prompts and sequences

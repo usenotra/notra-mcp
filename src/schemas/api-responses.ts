@@ -74,6 +74,7 @@ export type ApiOperationId =
   | "listGeoCompetitors"
   | "listGeoContentBriefs"
   | "listGeoContentGaps"
+  | "listGeoEngines"
   | "listGeoPromptResultSummaries"
   | "listGeoPrompts"
   | "listGeoScans"
@@ -4042,6 +4043,42 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["promptGaps", "searchGaps", "aiSearchGaps", "hasScanData", "snapshotReady", "organization"],
+  },
+  listGeoEngines: {
+    type: "object",
+    properties: {
+      engines: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Engine id to pass in the `engines` setting." },
+            label: { type: "string" },
+            provider: { type: "string" },
+            zdr: {
+              type: "string",
+              enum: ["all", "some", "none"],
+              description:
+                "Zero data retention coverage. Engines with `none` need `enforceZdr: false` or an entry in `nonZdrApprovedEngines`.",
+            },
+            default: { type: "boolean", description: "Part of the default engine set for new projects." },
+            supportsGroundedChecks: { type: "boolean" },
+          },
+          required: ["id", "label", "provider", "zdr", "default", "supportsGroundedChecks"],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["engines", "organization"],
   },
   listGeoPromptResultSummaries: {
     type: "object",

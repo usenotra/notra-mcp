@@ -1,4 +1,4 @@
-import { getGeoSettingsSchema, updateGeoSettingsSchema } from "../schemas/geo-settings.js";
+import { getGeoSettingsSchema, listGeoEnginesSchema, updateGeoSettingsSchema } from "../schemas/geo-settings.js";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
@@ -21,10 +21,22 @@ export function registerGeoSettingsTools(server: McpServer, client: NotraClient)
   );
 
   server.registerTool(
+    "list_geo_engines",
+    {
+      description:
+        "List the answer engine IDs a project can track. Includes model APIs and consumer surfaces such as google/ai-overview (Google AI Overview), google/gemini (the Gemini app) and openai/chatgpt (the ChatGPT app). Use these IDs for engines in update_geo_settings.",
+      annotations: { title: "List GEO Engines", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      inputSchema: shareJsonSchema(listGeoEnginesSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoEngines")),
+    },
+    ({ projectId }) => handleError(() => client.listGeoEngines(projectId)),
+  );
+
+  server.registerTool(
     "update_geo_settings",
     {
       description:
-        "Replace all GEO settings and restart the recurring scan schedule. Send every field from get_geo_settings; this endpoint does not merge partial updates. Use model catalog IDs for engines and languages listed in the current settings response.",
+        "Replace all GEO settings and restart the recurring scan schedule. Send every field from get_geo_settings; this endpoint does not merge partial updates. Use engine IDs from list_geo_engines and languages listed in the current settings response.",
       annotations: {
         title: "Update GEO Settings",
         readOnlyHint: false,
