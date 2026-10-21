@@ -57,7 +57,7 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
     "update_post",
     {
       description:
-        "Update a post's title, slug, markdown, or publication status. Changes to title, slug, or markdown also sync a post linked to GitHub: an open pull request gets a new commit, a repository set to publish directly gets a direct commit, and a closed or merged pull request is left as is (no new pull request). Publishing can expose content on a hosted site and request a visibility rescan. A sync failure can occur after the post is saved; check the post and linked PR before retrying.",
+        "Update a post's title, slug, markdown, or publication status. Changes to title, slug, or markdown also sync a post linked to GitHub: an open pull request gets a new commit, and a repository set to publish directly gets a direct commit when its live branch allows one. Otherwise, including closed or merged pull requests, GitHub is left as is and no new pull request is opened. Publishing can expose content on a hosted site and request a visibility rescan. A sync failure can occur after the post is saved; check the post and linked PR before retrying.",
       annotations: {
         title: "Update Post",
         readOnlyHint: false,
