@@ -3,6 +3,8 @@ import {
   createGeoPromptSchema,
   updateGeoPromptSchema,
   deleteGeoPromptSchema,
+  listGeoPromptSuggestionsSchema,
+  geoPromptSuggestionSchema,
 } from "../schemas/geo-prompt.js";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
@@ -82,5 +84,55 @@ export function registerGeoPromptTools(server: McpServer, client: NotraClient) {
       outputSchema: shareJsonSchema(apiOutputSchema("importGeoPrompts")),
     },
     ({ projectId, rows, csv }) => handleError(() => client.importGeoPrompts(projectId, toImportSource(rows, csv))),
+  );
+
+  server.registerTool(
+    "list_geo_prompt_suggestions",
+    {
+      description:
+        "List prompts Notra suggests tracking, derived from the project's Google Search Console queries with their clicks, impressions and position. Empty until Search Console is connected in the dashboard. Accept or dismiss each with accept_geo_prompt_suggestion or dismiss_geo_prompt_suggestion.",
+      annotations: {
+        title: "List GEO Prompt Suggestions",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
+      inputSchema: shareJsonSchema(listGeoPromptSuggestionsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoPromptSuggestions")),
+    },
+    ({ projectId }) => handleError(() => client.listGeoPromptSuggestions(projectId)),
+  );
+
+  server.registerTool(
+    "accept_geo_prompt_suggestion",
+    {
+      description:
+        "Start tracking a suggested prompt and return it. If the project already tracks the same prompt, that prompt is returned instead of a duplicate.",
+      annotations: {
+        title: "Accept GEO Prompt Suggestion",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: false,
+      },
+      inputSchema: shareJsonSchema(geoPromptSuggestionSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("acceptGeoPromptSuggestion")),
+    },
+    ({ projectId, suggestionId }) => handleError(() => client.acceptGeoPromptSuggestion(projectId, suggestionId)),
+  );
+
+  server.registerTool(
+    "dismiss_geo_prompt_suggestion",
+    {
+      description: "Dismiss a suggested prompt without tracking it. Dismissed suggestions cannot be brought back.",
+      annotations: {
+        title: "Dismiss GEO Prompt Suggestion",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: true,
+      },
+      inputSchema: shareJsonSchema(geoPromptSuggestionSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("dismissGeoPromptSuggestion")),
+    },
+    ({ projectId, suggestionId }) => handleError(() => client.dismissGeoPromptSuggestion(projectId, suggestionId)),
   );
 }

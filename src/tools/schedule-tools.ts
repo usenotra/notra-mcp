@@ -3,6 +3,8 @@ import {
   schedulePayloadSchema,
   updateScheduleSchema,
   deleteScheduleSchema,
+  runScheduleSchema,
+  listScheduleRunsSchema,
 } from "../schemas/schedule.js";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
@@ -68,5 +70,29 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
       outputSchema: shareJsonSchema(apiOutputSchema("deleteSchedule")),
     },
     ({ scheduleId }) => handleError(() => client.deleteSchedule(scheduleId)),
+  );
+
+  server.registerTool(
+    "run_schedule",
+    {
+      description:
+        "Run an enabled content generation schedule once right now, outside its cron timing. Generation uses AI credits, and when the schedule has autoPublish on the result is published like a scheduled run. Returns a runId; follow it with list_schedule_runs until its status leaves running.",
+      annotations: { title: "Run Schedule", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
+      inputSchema: shareJsonSchema(runScheduleSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("runSchedule")),
+    },
+    ({ scheduleId }) => handleError(() => client.runSchedule(scheduleId)),
+  );
+
+  server.registerTool(
+    "list_schedule_runs",
+    {
+      description:
+        "List a schedule's most recent runs, newest first, with status, error message and the draft post each run created (use get_post with postId)",
+      annotations: { title: "List Schedule Runs", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      inputSchema: shareJsonSchema(listScheduleRunsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listScheduleRuns")),
+    },
+    ({ scheduleId, limit }) => handleError(() => client.listScheduleRuns(scheduleId, { limit })),
   );
 }

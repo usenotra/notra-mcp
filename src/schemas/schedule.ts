@@ -71,3 +71,12 @@ export const updateScheduleSchema = z.object({
 export const deleteScheduleSchema = z.object({
   scheduleId: z.string().min(1).describe("The schedule ID to delete"),
 });
+
+export const runScheduleSchema = z.object({
+  scheduleId: z.string().min(1).describe("The schedule ID to run"),
+});
+
+export const listScheduleRunsSchema = z.object({
+  scheduleId: z.string().min(1).describe("The schedule ID whose runs to list"),
+  limit: z.number().int().min(1).max(50).optional().describe("Most recent runs to return (1-50, default 10)"),
+});

@@ -26,6 +26,30 @@ test("requests encode IDs and filters, send bearer auth, and serialize mutation 
   assert.equal(requests[2].url.searchParams.get("visitorTypes"), "crawler,ai_referral");
 });
 
+test("dashboard action routes encode IDs and send the expected methods and bodies", async () => {
+  const requests = [];
+  vi.spyOn(globalThis, "fetch").mockImplementation(async (url, options) => {
+    requests.push({ method: options.method, path: new URL(url).pathname + new URL(url).search, body: options.body });
+    return Response.json({});
+  });
+  await client.listGeoPromptSuggestions("p/1");
+  await client.acceptGeoPromptSuggestion("p/1", "s 1");
+  await client.dismissGeoPromptSuggestion("p/1", "s 1");
+  await client.updateGeoContentGap("p/1", "prompt/1", true);
+  await client.rescanGeoPrompt("p/1", "prompt/1");
+  await client.runSchedule("sched/1");
+  await client.listScheduleRuns("sched/1", { limit: 5 });
+  expect(requests).toEqual([
+    { method: "GET", path: "/v1/projects/p%2F1/geo/prompts/suggestions", body: undefined },
+    { method: "POST", path: "/v1/projects/p%2F1/geo/prompts/suggestions/s%201/accept", body: undefined },
+    { method: "POST", path: "/v1/projects/p%2F1/geo/prompts/suggestions/s%201/dismiss", body: undefined },
+    { method: "PATCH", path: "/v1/projects/p%2F1/geo/gaps/prompt%2F1", body: JSON.stringify({ ignored: true }) },
+    { method: "POST", path: "/v1/projects/p%2F1/geo/scans/prompts/prompt%2F1", body: undefined },
+    { method: "POST", path: "/v1/schedules/sched%2F1/run", body: undefined },
+    { method: "GET", path: "/v1/schedules/sched%2F1/runs?limit=5", body: undefined },
+  ]);
+});
+
 test("API errors preserve useful messages and handle invalid JSON", async () => {
   for (const [body, status, expected] of [
     [{ message: "quota exhausted", error: "fallback" }, 403, "quota exhausted"],

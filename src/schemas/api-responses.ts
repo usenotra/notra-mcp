@@ -1,6 +1,7 @@
 import type { JSONSchema } from "zod/v4/core";
 
 export type ApiOperationId =
+  | "acceptGeoPromptSuggestion"
   | "approveGeoContentBrief"
   | "cancelPostSchedule"
   | "createAgentSession"
@@ -8,6 +9,7 @@ export type ApiOperationId =
   | "createBrandIdentity"
   | "createEventTrigger"
   | "createGeoPrompt"
+  | "createGeoPromptScan"
   | "createGeoScan"
   | "createGeoSequence"
   | "createGitHubIntegration"
@@ -29,6 +31,7 @@ export type ApiOperationId =
   | "deleteSchedule"
   | "deleteSkill"
   | "deleteWebhookEndpoint"
+  | "dismissGeoPromptSuggestion"
   | "getBrandIdentity"
   | "getBrandIdentityGeneration"
   | "getChat"
@@ -77,6 +80,7 @@ export type ApiOperationId =
   | "listGeoEngines"
   | "listGeoPromptResultSummaries"
   | "listGeoPrompts"
+  | "listGeoPromptSuggestions"
   | "listGeoScans"
   | "listGeoSentimentEvidence"
   | "listGeoSequences"
@@ -87,6 +91,7 @@ export type ApiOperationId =
   | "listPostAuthors"
   | "listPosts"
   | "listProjects"
+  | "listScheduleRuns"
   | "listSchedules"
   | "listSkills"
   | "listWebhookDeliveries"
@@ -96,6 +101,7 @@ export type ApiOperationId =
   | "retryWebhookDelivery"
   | "rotateGeoIngestToken"
   | "runGeoSequence"
+  | "runSchedule"
   | "schedulePost"
   | "sendAgentSessionMessage"
   | "startGeoAgentReadinessScan"
@@ -107,6 +113,7 @@ export type ApiOperationId =
   | "updateEventTrigger"
   | "updateFeedback"
   | "updateGeoContentBrief"
+  | "updateGeoContentGap"
   | "updateGeoPrompt"
   | "updateGeoSequence"
   | "updateGeoSettings"
@@ -116,6 +123,34 @@ export type ApiOperationId =
   | "upsertGeoCompetitor";
 
 export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema> = {
+  acceptGeoPromptSuggestion: {
+    type: "object",
+    properties: {
+      prompt: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          prompt: { type: "string" },
+          enabled: { type: "boolean" },
+          source: { type: "string", enum: ["custom", "auto"] },
+          tags: { type: "array", items: { type: "string" } },
+          createdAt: { type: ["string", "null"] },
+        },
+        required: ["id", "prompt", "enabled", "source", "tags", "createdAt"],
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["prompt", "organization"],
+  },
   approveGeoContentBrief: {
     type: "object",
     properties: {
@@ -345,6 +380,24 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["prompt", "organization"],
+  },
+  createGeoPromptScan: {
+    type: "object",
+    properties: {
+      scanId: { type: "string" },
+      statusUrl: { type: "string" },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["scanId", "statusUrl", "organization"],
   },
   createGeoScan: {
     type: "object",
@@ -1053,6 +1106,24 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
   },
   deleteSkill: { type: "object", properties: { success: { type: "boolean", enum: [true] } }, required: ["success"] },
   deleteWebhookEndpoint: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
+  dismissGeoPromptSuggestion: {
+    type: "object",
+    properties: {
+      id: { type: "string" },
+      dismissed: { type: "boolean" },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["id", "dismissed", "organization"],
+  },
   getBrandIdentity: {
     type: "object",
     properties: {
@@ -4160,6 +4231,50 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["configured", "prompts", "organization"],
   },
+  listGeoPromptSuggestions: {
+    type: "object",
+    properties: {
+      suggestions: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            prompt: { type: "string" },
+            title: { type: ["string", "null"] },
+            source: { type: "string", enum: ["search_console"] },
+            keywords: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  query: { type: "string" },
+                  clicks: { type: "number" },
+                  impressions: { type: "number" },
+                  position: { type: "number" },
+                },
+                required: ["query", "clicks", "impressions", "position"],
+              },
+              description: "Search Console queries the suggestion was derived from.",
+            },
+            createdAt: { type: "string" },
+          },
+          required: ["id", "prompt", "title", "source", "keywords", "createdAt"],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["suggestions", "organization"],
+  },
   listGeoScans: {
     type: "object",
     properties: {
@@ -4781,6 +4896,44 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["projects", "organization"],
   },
+  listScheduleRuns: {
+    type: "object",
+    properties: {
+      runs: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            status: {
+              type: "string",
+              enum: ["running", "success", "failed", "skipped"],
+              description:
+                "`running` until the run reports back. A run that never reports back is shown as `failed` after six hours.",
+            },
+            title: { type: ["string", "null"], description: "Title of what the run produced, null while running." },
+            postId: { type: ["string", "null"], description: "The draft post the run created, if any." },
+            errorMessage: { type: ["string", "null"] },
+            manual: { type: "boolean", description: "Started on demand rather than by the schedule." },
+            startedAt: { type: "string" },
+            finishedAt: { type: ["string", "null"] },
+          },
+          required: ["id", "status", "title", "postId", "errorMessage", "manual", "startedAt", "finishedAt"],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["runs", "organization"],
+  },
   listSchedules: {
     type: "object",
     properties: {
@@ -5269,6 +5422,23 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["checks", "mentions", "engines", "organization"],
+  },
+  runSchedule: {
+    type: "object",
+    properties: {
+      runId: { type: "string", description: "ID of the run, as listed by `GET /v1/schedules/{scheduleId}/runs`." },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["runId", "organization"],
   },
   schedulePost: {
     type: "object",
@@ -5884,6 +6054,24 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["brief", "organization"],
+  },
+  updateGeoContentGap: {
+    type: "object",
+    properties: {
+      promptId: { type: "string" },
+      ignored: { type: "boolean" },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["promptId", "ignored", "organization"],
   },
   updateGeoPrompt: {
     type: "object",

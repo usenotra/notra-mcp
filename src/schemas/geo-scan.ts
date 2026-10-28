@@ -15,3 +15,8 @@ export const getGeoScanSchema = z.object({
   projectId: projectIdSchema,
   scanId: geoResourceIdSchema.describe("The scan ID to retrieve"),
 });
+
+export const rescanGeoPromptSchema = z.object({
+  projectId: projectIdSchema,
+  promptId: geoResourceIdSchema.describe("ID of an enabled tracked prompt, from list_geo_prompts"),
+});
