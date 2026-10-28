@@ -423,6 +423,31 @@ export interface ListSchedulesParams {
   repositoryIds?: string[];
 }
 
+export interface RunScheduleResponse {
+  runId: string;
+  organization: Organization;
+}
+
+export interface ScheduleRun {
+  id: string;
+  status: "running" | "success" | "failed" | "skipped";
+  title: string | null;
+  postId: string | null;
+  errorMessage: string | null;
+  manual: boolean;
+  startedAt: string;
+  finishedAt: string | null;
+}
+
+export interface ScheduleRunListResponse {
+  runs: ScheduleRun[];
+  organization: Organization;
+}
+
+export interface ListScheduleRunsParams {
+  limit?: number;
+}
+
 export interface SkillSummary {
   id: string;
   name: string;

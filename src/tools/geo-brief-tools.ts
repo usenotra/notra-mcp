@@ -5,6 +5,7 @@ import {
   getGeoContentBriefSchema,
   approveGeoContentBriefSchema,
   updateGeoContentBriefSchema,
+  updateGeoContentGapSchema,
 } from "../schemas/geo-brief.js";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
@@ -25,6 +26,24 @@ export function registerGeoBriefTools(server: McpServer, client: NotraClient) {
       outputSchema: shareJsonSchema(apiOutputSchema("listGeoContentGaps")),
     },
     ({ projectId }) => handleError(() => client.listGeoContentGaps(projectId)),
+  );
+
+  server.registerTool(
+    "update_geo_content_gap",
+    {
+      description:
+        "Ignore a prompt gap from list_geo_content_gaps so it stops appearing there and in brief planning, or restore it with ignored false. Ignored gaps are not listed anywhere, so keep the promptId if you may want to restore it. Only promptGaps rows can be ignored.",
+      annotations: {
+        title: "Update GEO Content Gap",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(updateGeoContentGapSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("updateGeoContentGap")),
+    },
+    ({ projectId, promptId, ignored }) => handleError(() => client.updateGeoContentGap(projectId, promptId, ignored)),
   );
 
   server.registerTool(

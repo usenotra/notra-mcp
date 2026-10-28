@@ -20,3 +20,12 @@ export const deleteGeoPromptSchema = z.object({
   projectId: projectIdSchema,
   promptId: geoResourceIdSchema.describe("The prompt ID to delete"),
 });
+
+export const listGeoPromptSuggestionsSchema = z.object({
+  projectId: projectIdSchema,
+});
+
+export const geoPromptSuggestionSchema = z.object({
+  projectId: projectIdSchema,
+  suggestionId: geoResourceIdSchema.describe("The suggestion ID from list_geo_prompt_suggestions"),
+});

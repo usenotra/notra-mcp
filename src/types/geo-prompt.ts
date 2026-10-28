@@ -35,3 +35,23 @@ export interface ImportGeoPromptsResponse {
   issues: GeoImportIssue[];
   organization: Organization;
 }
+
+export interface GeoPromptSuggestion {
+  id: string;
+  prompt: string;
+  title: string | null;
+  source: "search_console";
+  keywords: { query: string; clicks: number; impressions: number; position: number }[];
+  createdAt: string;
+}
+
+export interface GeoPromptSuggestionListResponse {
+  suggestions: GeoPromptSuggestion[];
+  organization: Organization;
+}
+
+export interface DismissGeoPromptSuggestionResponse {
+  id: string;
+  dismissed: boolean;
+  organization: Organization;
+}

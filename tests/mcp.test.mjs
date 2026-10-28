@@ -30,7 +30,13 @@ test("automation tools disclose and annotate automatic publication", async () =>
   try {
     server = createServer("test-key");
     const tools = new Map(registrations.mock.calls.map(([name, tool]) => [name, tool]));
-    for (const name of ["create_schedule", "update_schedule", "create_event_trigger", "update_event_trigger"]) {
+    for (const name of [
+      "create_schedule",
+      "update_schedule",
+      "run_schedule",
+      "create_event_trigger",
+      "update_event_trigger",
+    ]) {
       const tool = tools.get(name);
       assert.equal(tool.annotations.readOnlyHint, false, name);
       assert.equal(tool.annotations.openWorldHint, true, name);

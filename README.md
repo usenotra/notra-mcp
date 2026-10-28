@@ -241,12 +241,14 @@ Post publishing schedules are separate from the content-generation schedules bel
 
 ### Schedules
 
-| Tool              | Description                               |
-| ----------------- | ----------------------------------------- |
-| `list_schedules`  | List scheduled content generation jobs    |
-| `create_schedule` | Create a scheduled content generation job |
-| `update_schedule` | Update a scheduled content generation job |
-| `delete_schedule` | Delete a scheduled content generation job |
+| Tool                 | Description                                   |
+| -------------------- | --------------------------------------------- |
+| `list_schedules`     | List scheduled content generation jobs        |
+| `create_schedule`    | Create a scheduled content generation job     |
+| `update_schedule`    | Update a scheduled content generation job     |
+| `delete_schedule`    | Delete a scheduled content generation job     |
+| `run_schedule`       | Run a schedule once now (uses AI credits)     |
+| `list_schedule_runs` | List a schedule's recent runs and their posts |
 
 ### Event Triggers
 
@@ -300,18 +302,21 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 
 ### GEO prompts and sequences
 
-| Tool                  | Description                                                           |
-| --------------------- | --------------------------------------------------------------------- |
-| `list_geo_prompts`    | List tracked prompts (custom and auto-derived)                        |
-| `create_geo_prompt`   | Track a new prompt                                                    |
-| `update_geo_prompt`   | Enable or disable a tracked prompt                                    |
-| `delete_geo_prompt`   | Stop tracking a prompt                                                |
-| `import_geo_prompts`  | Bulk import prompts from rows or CSV                                  |
-| `list_geo_sequences`  | List multi-turn prompt sequences                                      |
-| `create_geo_sequence` | Create a prompt sequence                                              |
-| `update_geo_sequence` | Update a sequence's name, steps or enabled state                      |
-| `delete_geo_sequence` | Delete a sequence                                                     |
-| `run_geo_sequence`    | Run a sequence now, synchronously (uses AI credits, can take minutes) |
+| Tool                            | Description                                                           |
+| ------------------------------- | --------------------------------------------------------------------- |
+| `list_geo_prompts`              | List tracked prompts (custom and auto-derived)                        |
+| `create_geo_prompt`             | Track a new prompt                                                    |
+| `update_geo_prompt`             | Enable or disable a tracked prompt                                    |
+| `delete_geo_prompt`             | Stop tracking a prompt                                                |
+| `import_geo_prompts`            | Bulk import prompts from rows or CSV                                  |
+| `list_geo_prompt_suggestions`   | List prompts suggested from Search Console queries                    |
+| `accept_geo_prompt_suggestion`  | Track a suggested prompt                                              |
+| `dismiss_geo_prompt_suggestion` | Dismiss a suggested prompt                                            |
+| `list_geo_sequences`            | List multi-turn prompt sequences                                      |
+| `create_geo_sequence`           | Create a prompt sequence                                              |
+| `update_geo_sequence`           | Update a sequence's name, steps or enabled state                      |
+| `delete_geo_sequence`           | Delete a sequence                                                     |
+| `run_geo_sequence`              | Run a sequence now, synchronously (uses AI credits, can take minutes) |
 
 ### GEO competitors
 
@@ -328,6 +333,7 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | Tool                               | Description                                                 |
 | ---------------------------------- | ----------------------------------------------------------- |
 | `create_geo_scan`                  | Trigger an async visibility scan (uses AI credits)          |
+| `rescan_geo_prompt`                | Scan a single prompt again (uses AI credits)                |
 | `list_geo_scans`                   | List scans with pagination                                  |
 | `get_geo_scan`                     | Get a scan and its status                                   |
 | `get_geo_snapshot`                 | Compact cross-signal diagnosis and recommended next actions |
@@ -350,6 +356,7 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | Tool                        | Description                                                   |
 | --------------------------- | ------------------------------------------------------------- |
 | `list_geo_content_gaps`     | Prompts where competitors are mentioned and this brand is not |
+| `update_geo_content_gap`    | Ignore a prompt gap or restore it                             |
 | `list_geo_content_briefs`   | List content briefs and their statuses                        |
 | `plan_geo_content_brief`    | Research a topic and plan a brief (billed, can take minutes)  |
 | `get_geo_content_brief`     | Get a brief with the full document and writer status          |

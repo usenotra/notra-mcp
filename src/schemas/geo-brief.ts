@@ -6,6 +6,12 @@ export const listGeoContentGapsSchema = z.object({
   projectId: projectIdSchema,
 });
 
+export const updateGeoContentGapSchema = z.object({
+  projectId: projectIdSchema,
+  promptId: geoResourceIdSchema.describe("The id of a promptGaps row from list_geo_content_gaps"),
+  ignored: z.boolean().describe("true hides the gap from content gaps and brief planning; false brings it back"),
+});
+
 export const listGeoContentBriefsSchema = z.object({
   projectId: projectIdSchema,
 });

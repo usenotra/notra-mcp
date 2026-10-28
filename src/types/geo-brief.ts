@@ -116,3 +116,9 @@ export interface ApproveGeoContentBriefResponse {
   runId: string;
   organization: Organization;
 }
+
+export interface UpdateGeoContentGapResponse {
+  promptId: string;
+  ignored: boolean;
+  organization: Organization;
+}

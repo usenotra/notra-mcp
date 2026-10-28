@@ -21,14 +21,17 @@ import type {
   IntegrationsListResponse,
   IntegrationDeleteResponse,
   ListPostsParams,
+  ListScheduleRunsParams,
   ListSchedulesParams,
   PostDeleteResponse,
   PostGenerationStatusResponse,
   PostListResponse,
   PostResponse,
+  RunScheduleResponse,
   ScheduleDeleteResponse,
   ScheduleListResponse,
   ScheduleResponse,
+  ScheduleRunListResponse,
   ListSkillsResponse,
   SkillResponse,
   UpdateScheduleRequest,
@@ -67,6 +70,7 @@ import type {
   PlanGeoContentBriefRequest,
   PlanGeoContentBriefResponse,
   UpdateGeoContentBriefRequest,
+  UpdateGeoContentGapResponse,
 } from "./types/geo-brief.js";
 import type { GeoAgentReadinessResponse, StartGeoAgentReadinessScanResponse } from "./types/geo-agent-readiness.js";
 import type { GeoWindowParams } from "./types/geo-common.js";
@@ -85,9 +89,11 @@ import type {
   UpsertGeoCompetitorRequest,
 } from "./types/geo-competitor.js";
 import type {
+  DismissGeoPromptSuggestionResponse,
   GeoPromptDeleteResponse,
   GeoPromptListResponse,
   GeoPromptResponse,
+  GeoPromptSuggestionListResponse,
   ImportGeoPromptsRequest,
   ImportGeoPromptsResponse,
 } from "./types/geo-prompt.js";
@@ -405,6 +411,16 @@ export class NotraClient {
     return this.request<ScheduleDeleteResponse>("DELETE", `/v1/schedules/${encodeURIComponent(scheduleId)}`);
   }
 
+  async runSchedule(scheduleId: string): Promise<RunScheduleResponse> {
+    return this.request<RunScheduleResponse>("POST", `/v1/schedules/${encodeURIComponent(scheduleId)}/run`);
+  }
+
+  async listScheduleRuns(scheduleId: string, params?: ListScheduleRunsParams): Promise<ScheduleRunListResponse> {
+    return this.request<ScheduleRunListResponse>("GET", `/v1/schedules/${encodeURIComponent(scheduleId)}/runs`, {
+      params,
+    });
+  }
+
   async listSkills(): Promise<ListSkillsResponse> {
     return this.request<ListSkillsResponse>("GET", "/v1/skills");
   }
@@ -567,6 +583,27 @@ export class NotraClient {
     );
   }
 
+  async listGeoPromptSuggestions(projectId: string): Promise<GeoPromptSuggestionListResponse> {
+    return this.request<GeoPromptSuggestionListResponse>("GET", this.geoPath(projectId, "/prompts/suggestions"));
+  }
+
+  async acceptGeoPromptSuggestion(projectId: string, suggestionId: string): Promise<GeoPromptResponse> {
+    return this.request<GeoPromptResponse>(
+      "POST",
+      this.geoPath(projectId, `/prompts/suggestions/${encodeURIComponent(suggestionId)}/accept`),
+    );
+  }
+
+  async dismissGeoPromptSuggestion(
+    projectId: string,
+    suggestionId: string,
+  ): Promise<DismissGeoPromptSuggestionResponse> {
+    return this.request<DismissGeoPromptSuggestionResponse>(
+      "POST",
+      this.geoPath(projectId, `/prompts/suggestions/${encodeURIComponent(suggestionId)}/dismiss`),
+    );
+  }
+
   async listGeoSequences(projectId: string): Promise<GeoSequenceListResponse> {
     return this.request<GeoSequenceListResponse>("GET", this.geoPath(projectId, "/sequences"));
   }
@@ -643,6 +680,13 @@ export class NotraClient {
 
   async createGeoScan(projectId: string): Promise<CreateGeoScanResponse> {
     return this.request<CreateGeoScanResponse>("POST", this.geoPath(projectId, "/scans"));
+  }
+
+  async rescanGeoPrompt(projectId: string, promptId: string): Promise<CreateGeoScanResponse> {
+    return this.request<CreateGeoScanResponse>(
+      "POST",
+      this.geoPath(projectId, `/scans/prompts/${encodeURIComponent(promptId)}`),
+    );
   }
 
   async listGeoScans(projectId: string, params?: ListGeoScansParams): Promise<GeoScanListResponse> {
@@ -774,6 +818,18 @@ export class NotraClient {
 
   async listGeoContentGaps(projectId: string, options?: RequestTimeoutOptions): Promise<GeoContentGapsResponse> {
     return this.request<GeoContentGapsResponse>("GET", this.geoPath(projectId, "/gaps"), options);
+  }
+
+  async updateGeoContentGap(
+    projectId: string,
+    promptId: string,
+    ignored: boolean,
+  ): Promise<UpdateGeoContentGapResponse> {
+    return this.request<UpdateGeoContentGapResponse, { ignored: boolean }>(
+      "PATCH",
+      this.geoPath(projectId, `/gaps/${encodeURIComponent(promptId)}`),
+      { body: { ignored } },
+    );
   }
 
   async listGeoContentBriefs(projectId: string): Promise<GeoContentBriefListResponse> {
