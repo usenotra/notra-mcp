@@ -57,15 +57,7 @@ const MANUAL_COVERAGE = {
 };
 
 /** Client routes the production API has not shipped yet. Remove entries once they appear in the spec. */
-const PENDING_API_ROUTES = {
-  "PATCH /v1/projects/{projectId}/geo/gaps/{promptId}": "usenotra/notra#2070",
-  "POST /v1/projects/{projectId}/geo/scans/prompts/{promptId}": "usenotra/notra#2070",
-  "GET /v1/projects/{projectId}/geo/prompts/suggestions": "usenotra/notra#2070",
-  "POST /v1/projects/{projectId}/geo/prompts/suggestions/{suggestionId}/accept": "usenotra/notra#2070",
-  "POST /v1/projects/{projectId}/geo/prompts/suggestions/{suggestionId}/dismiss": "usenotra/notra#2070",
-  "POST /v1/schedules/{scheduleId}/run": "usenotra/notra#2071",
-  "GET /v1/schedules/{scheduleId}/runs": "usenotra/notra#2071",
-};
+const PENDING_API_ROUTES = {};
 
 function normalizeSpecPath(specPath) {
   return specPath.replace(/\{[^}]+\}/g, PLACEHOLDER);
