@@ -56,6 +56,7 @@ export type ApiOperationId =
   | "getGeoVisibilityOverview"
   | "getGeoVisibilityPromptResults"
   | "getGeoVisibilityTimeseries"
+  | "getGitHubActivity"
   | "getPost"
   | "getPostGeneration"
   | "getPostSchedule"
@@ -319,6 +320,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             properties: {
               publishDestination: { type: "string", enum: ["webflow", "framer", "custom"] },
               brandVoiceId: { type: "string", minLength: 1 },
+              notify: {
+                type: "object",
+                properties: { slack: { type: "boolean" }, email: { type: "boolean" } },
+                required: ["slack", "email"],
+              },
             },
           },
           enabled: { type: "boolean" },
@@ -780,6 +786,13 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 maxLength: 2000,
                 description:
                   "Free-text brief for this schedule, passed to the writer on every run on top of the brand's custom instructions. Use it to steer the angle of the content, for example tutorial-style blog posts.",
+              },
+              notify: {
+                type: "object",
+                properties: { slack: { type: "boolean" }, email: { type: "boolean" } },
+                required: ["slack", "email"],
+                description:
+                  "Where to announce new content after a successful run: Slack posts to the organization's notification channel, email goes to the workspace owners.",
               },
             },
           },
@@ -1312,6 +1325,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             properties: {
               publishDestination: { type: "string", enum: ["webflow", "framer", "custom"] },
               brandVoiceId: { type: "string", minLength: 1 },
+              notify: {
+                type: "object",
+                properties: { slack: { type: "boolean" }, email: { type: "boolean" } },
+                required: ["slack", "email"],
+              },
             },
           },
           enabled: { type: "boolean" },
@@ -2877,6 +2895,56 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["configured", "points", "organization"],
   },
+  getGitHubActivity: {
+    type: "object",
+    properties: {
+      integration: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          displayName: { type: "string" },
+          owner: { type: ["string", "null"] },
+          repo: { type: ["string", "null"] },
+          defaultBranch: { type: ["string", "null"] },
+        },
+        required: ["id", "displayName", "owner", "repo", "defaultBranch"],
+      },
+      type: { type: "string", enum: ["pull_requests", "commits", "releases"] },
+      since: { type: "string" },
+      until: { type: "string" },
+      items: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            ref: { type: "string", description: "Pull request number, commit SHA or release tag, depending on type." },
+            title: { type: "string" },
+            body: { type: ["string", "null"] },
+            author: { type: ["string", "null"] },
+            url: { type: "string" },
+            occurredAt: { type: "string", description: "Merge, commit or publish time (ISO 8601)." },
+          },
+          required: ["ref", "title", "body", "author", "url", "occurredAt"],
+        },
+      },
+      pagination: {
+        type: "object",
+        properties: { page: { type: "integer" }, nextPage: { type: ["integer", "null"] } },
+        required: ["page", "nextPage"],
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["integration", "type", "since", "until", "items", "pagination", "organization"],
+  },
   getPost: {
     type: "object",
     properties: {
@@ -3651,6 +3719,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               properties: {
                 publishDestination: { type: "string", enum: ["webflow", "framer", "custom"] },
                 brandVoiceId: { type: "string", minLength: 1 },
+                notify: {
+                  type: "object",
+                  properties: { slack: { type: "boolean" }, email: { type: "boolean" } },
+                  required: ["slack", "email"],
+                },
               },
             },
             enabled: { type: "boolean" },
@@ -5032,6 +5105,13 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                   description:
                     "Free-text brief for this schedule, passed to the writer on every run on top of the brand's custom instructions. Use it to steer the angle of the content, for example tutorial-style blog posts.",
                 },
+                notify: {
+                  type: "object",
+                  properties: { slack: { type: "boolean" }, email: { type: "boolean" } },
+                  required: ["slack", "email"],
+                  description:
+                    "Where to announce new content after a successful run: Slack posts to the organization's notification channel, email goes to the workspace owners.",
+                },
               },
             },
             enabled: { type: "boolean" },
@@ -5818,6 +5898,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             properties: {
               publishDestination: { type: "string", enum: ["webflow", "framer", "custom"] },
               brandVoiceId: { type: "string", minLength: 1 },
+              notify: {
+                type: "object",
+                properties: { slack: { type: "boolean" }, email: { type: "boolean" } },
+                required: ["slack", "email"],
+              },
             },
           },
           enabled: { type: "boolean" },
@@ -6439,6 +6524,13 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 maxLength: 2000,
                 description:
                   "Free-text brief for this schedule, passed to the writer on every run on top of the brand's custom instructions. Use it to steer the angle of the content, for example tutorial-style blog posts.",
+              },
+              notify: {
+                type: "object",
+                properties: { slack: { type: "boolean" }, email: { type: "boolean" } },
+                required: ["slack", "email"],
+                description:
+                  "Where to announce new content after a successful run: Slack posts to the organization's notification channel, email goes to the workspace owners.",
               },
             },
           },

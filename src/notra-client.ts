@@ -20,6 +20,8 @@ import type {
   GeneratePostResponse,
   IntegrationsListResponse,
   IntegrationDeleteResponse,
+  GithubActivityResponse,
+  ListGithubActivityParams,
   ListPostsParams,
   ListScheduleRunsParams,
   ListSchedulesParams,
@@ -382,6 +384,14 @@ export class NotraClient {
       "POST",
       "/v1/integrations/github",
       { body },
+    );
+  }
+
+  async listGithubActivity(integrationId: string, params?: ListGithubActivityParams): Promise<GithubActivityResponse> {
+    return this.request<GithubActivityResponse>(
+      "GET",
+      `/v1/integrations/github/${encodeURIComponent(integrationId)}/activity`,
+      { params },
     );
   }
 
