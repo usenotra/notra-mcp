@@ -233,11 +233,12 @@ Post publishing schedules are separate from the content-generation schedules bel
 
 ### Integrations
 
-| Tool                        | Description                                 |
-| --------------------------- | ------------------------------------------- |
-| `list_integrations`         | List enabled GitHub and Linear integrations |
-| `create_github_integration` | Connect a public GitHub repository          |
-| `delete_integration`        | Delete a GitHub or Linear integration       |
+| Tool                        | Description                                                    |
+| --------------------------- | -------------------------------------------------------------- |
+| `list_integrations`         | List enabled GitHub and Linear integrations                    |
+| `create_github_integration` | Connect a public GitHub repository                             |
+| `list_github_activity`      | List merged PRs, commits or releases of a connected repository |
+| `delete_integration`        | Delete a GitHub or Linear integration                          |
 
 ### Schedules
 

@@ -2,6 +2,7 @@ import {
   listIntegrationsSchema,
   createGithubIntegrationSchema,
   deleteIntegrationSchema,
+  listGithubActivitySchema,
 } from "../schemas/integration.js";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
@@ -21,6 +22,23 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
       outputSchema: shareJsonSchema(apiOutputSchema("listIntegrations")),
     },
     () => handleError(() => client.listIntegrations()),
+  );
+
+  server.registerTool(
+    "list_github_activity",
+    {
+      description:
+        "List what shipped in a connected GitHub repository: pull requests merged into the default branch (default), commits on it, or published releases, within a time window (default: last 7 days). Each item has the title, body, author and link. Use it to decide what to write about, then write the post yourself with create_post, or let Notra draft it with generate_post. Reads GitHub live; follow pagination.nextPage until it is null, since a page can hold fewer items than the page size.",
+      annotations: {
+        title: "List GitHub Activity",
+        readOnlyHint: true,
+        openWorldHint: true,
+        destructiveHint: false,
+      },
+      inputSchema: shareJsonSchema(listGithubActivitySchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGitHubActivity")),
+    },
+    ({ integrationId, ...params }) => handleError(() => client.listGithubActivity(integrationId, params)),
   );
 
   server.registerTool(
