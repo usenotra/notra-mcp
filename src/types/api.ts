@@ -321,6 +321,34 @@ export interface CreateGithubIntegrationResponse {
   organization: Organization;
 }
 
+export type GithubActivityType = "pull_requests" | "commits" | "releases";
+
+export interface ListGithubActivityParams {
+  type?: GithubActivityType;
+  since?: string;
+  until?: string;
+  page?: number;
+}
+
+export interface GithubActivityItem {
+  ref: string;
+  title: string;
+  body: string | null;
+  author: string | null;
+  url: string;
+  occurredAt: string;
+}
+
+export interface GithubActivityResponse {
+  integration: GithubIntegration;
+  type: GithubActivityType;
+  since: string;
+  until: string;
+  items: GithubActivityItem[];
+  pagination: { page: number; nextPage: number | null };
+  organization: Organization;
+}
+
 export interface UpdatePostRequest {
   title?: string;
   slug?: string | null;
