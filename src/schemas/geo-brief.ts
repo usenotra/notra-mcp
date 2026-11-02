@@ -63,8 +63,8 @@ export const updateGeoContentBriefSchema = z
     workingTitle: briefLineSchema.max(120).optional().describe("Working title, also used as the post title"),
     targetPrompt: briefLineSchema.optional().describe("The question a buyer would ask an AI assistant"),
     intent: briefLineSchema.optional().describe("Search intent behind the target prompt"),
-    audience: briefLineSchema.optional(),
-    jobToBeDone: briefLineSchema.optional(),
+    audience: briefLineSchema.optional().describe("Who the article is for, one line"),
+    jobToBeDone: briefLineSchema.optional().describe("What the reader is trying to get done, one line"),
     sections: z
       .array(
         z.object({

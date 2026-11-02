@@ -1,7 +1,7 @@
 import { GEO_SNAPSHOT_OPTIONAL_TIMEOUT_MS } from "../constants/geo.js";
 import type { NotraClient } from "../notra-client.js";
 import type { GeoWindowParams } from "../types/geo-common.js";
-import type { GeoSnapshotResponse } from "../types/geo-diagnostics.js";
+import type { GeoNextAction, GeoSnapshotResponse } from "../types/geo-diagnostics.js";
 
 const SNAPSHOT_ITEM_LIMIT = 5;
 
@@ -131,61 +131,76 @@ export async function loadGeoSnapshot(
       : positioned.reduce((sum, engine) => sum + (engine.avgPosition ?? 0) * engine.mentions, 0) / positionWeight;
   const mentionRate = checks === 0 ? 0 : mentions / checks;
   const visibilityRate = checks === 0 ? 0 : visibility / checks;
-  const recommendedNextActions: GeoSnapshotResponse["recommendedNextActions"] = [];
+  const recommendedNextActions: GeoNextAction[] = [];
+  const next = (
+    priority: GeoNextAction["priority"],
+    action: string,
+    reason: string,
+    tool: string | null,
+    args: Record<string, unknown> | null,
+    usesCredits = false,
+  ) => recommendedNextActions.push({ priority, action, reason, tool, arguments: args, usesCredits });
+  const projectArgs = { projectId };
+  const windowArgs = { projectId, ...window };
 
   if (!overview.configured) {
-    recommendedNextActions.push({
-      priority: "high",
-      action: "configure_visibility",
-      reason: "The visibility analytics backend is not configured.",
-    });
+    next("high", "configure_visibility", "The visibility analytics backend is not configured.", null, null);
   } else if (checks === 0) {
-    recommendedNextActions.push({
-      priority: "high",
-      action: "run_geo_scan",
-      reason: "No answer-engine checks exist in the selected window.",
-    });
+    next(
+      "high",
+      "run_geo_scan",
+      "No answer-engine checks exist in the selected window.",
+      "create_geo_scan",
+      projectArgs,
+      true,
+    );
   } else if (mentionRate < 0.5) {
-    recommendedNextActions.push({
-      priority: "medium",
-      action: "review_content_gaps",
-      reason: `The aggregate mention rate is ${Math.round(mentionRate * 100)}%.`,
-    });
+    next(
+      "medium",
+      "review_content_gaps",
+      `The aggregate mention rate is ${Math.round(mentionRate * 100)}%.`,
+      "list_geo_content_gaps",
+      projectArgs,
+    );
   }
   if (changes && (changes.lost > 0 || changes.citationsRemoved > 0)) {
-    recommendedNextActions.push({
-      priority: "high",
-      action: "investigate_visibility_losses",
-      reason: `${changes.lost} mentions and ${changes.citationsRemoved} citations were lost since the previous scan.`,
-    });
+    next(
+      "high",
+      "investigate_visibility_losses",
+      `${changes.lost} mentions and ${changes.citationsRemoved} citations were lost since the previous scan.`,
+      "get_geo_changes",
+      projectArgs,
+    );
   }
   if (contentGaps && contentGaps.promptGapCount + contentGaps.searchGapCount > 0) {
-    recommendedNextActions.push({
-      priority: "high",
-      action: "prioritize_content_gaps",
-      reason: `${contentGaps.promptGapCount} prompt gaps and ${contentGaps.searchGapCount} search gaps are open.`,
-    });
+    next(
+      "high",
+      "prioritize_content_gaps",
+      `${contentGaps.promptGapCount} prompt gaps and ${contentGaps.searchGapCount} search gaps are open.`,
+      "list_geo_content_gaps",
+      projectArgs,
+    );
   }
   if (sentiment && sentiment.negativeShare !== null && sentiment.negativeShare >= 0.25) {
-    recommendedNextActions.push({
-      priority: "medium",
-      action: "review_negative_sentiment",
-      reason: `${Math.round(sentiment.negativeShare * 100)}% of classified mentions are negative.`,
-    });
+    next(
+      "medium",
+      "review_negative_sentiment",
+      `${Math.round(sentiment.negativeShare * 100)}% of classified mentions are negative.`,
+      "list_geo_sentiment_evidence",
+      windowArgs,
+    );
   }
   if (agentReadiness && agentReadiness.score !== null && agentReadiness.score < 80) {
-    recommendedNextActions.push({
-      priority: "medium",
-      action: "fix_agent_readiness",
-      reason: `The latest agent readiness score is ${agentReadiness.score}.`,
-    });
+    next(
+      "medium",
+      "fix_agent_readiness",
+      `The latest agent readiness score is ${agentReadiness.score}.`,
+      "get_geo_agent_readiness",
+      projectArgs,
+    );
   }
   if (traffic && !traffic.configured) {
-    recommendedNextActions.push({
-      priority: "low",
-      action: "configure_ai_traffic",
-      reason: "AI traffic measurement is not configured.",
-    });
+    next("low", "configure_ai_traffic", "AI traffic measurement is not configured.", "get_geo_ingest_setup", {});
   }
 
   return {

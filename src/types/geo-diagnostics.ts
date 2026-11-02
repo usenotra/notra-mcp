@@ -174,11 +174,18 @@ export interface GeoSnapshotResponse {
     totals: GeoTrafficOverviewResponse["totals"];
     topSources: GeoTrafficOverviewResponse["sources"];
   } | null;
-  recommendedNextActions: Array<{
-    priority: "high" | "medium" | "low";
-    action: string;
-    reason: string;
-  }>;
+  recommendedNextActions: GeoNextAction[];
   warnings: Array<{ section: string; message: string }>;
   organization: Organization;
+}
+
+export interface GeoNextAction {
+  priority: "high" | "medium" | "low";
+  action: string;
+  reason: string;
+  /** The MCP tool that performs this action, or null when it needs the dashboard. */
+  tool: string | null;
+  arguments: Record<string, unknown> | null;
+  /** True when calling the tool books AI credits; confirm with the user first. */
+  usesCredits: boolean;
 }

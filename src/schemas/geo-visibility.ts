@@ -21,10 +21,12 @@ export const listGeoPromptResultSummariesSchema = z.object({
   projectId: projectIdSchema,
   ...geoWindowShape,
   cursor: z.string().regex(/^\d+$/).optional().describe("Cursor returned by the previous page"),
-  limit: z.number().int().min(1).max(100).default(20),
-  engine: geoShortTextSchema.optional(),
-  mentioned: z.boolean().optional(),
-  query: z.string().trim().min(1).max(300).optional(),
+  limit: z.number().int().min(1).max(100).default(20).describe("Results per page (1-100)"),
+  engine: geoShortTextSchema
+    .optional()
+    .describe("Only results from this answer engine ID, as listed by list_geo_engines"),
+  mentioned: z.boolean().optional().describe("true for answers that mention the brand, false for answers that do not"),
+  query: z.string().trim().min(1).max(300).optional().describe("Text to search for in the prompt"),
 });
 
 export const getGeoPromptResultDetailSchema = z.object({

@@ -11,8 +11,8 @@ export const getGeoChangesSchema = z.object({ projectId: projectIdSchema });
 
 export const getGeoPromptHistorySchema = z.object({
   projectId: projectIdSchema,
-  promptId: geoResourceIdSchema,
-  scanId: geoResourceIdSchema.optional(),
+  promptId: geoResourceIdSchema.describe("Tracked prompt ID from list_geo_prompts or a prompt result summary"),
+  scanId: geoResourceIdSchema.optional().describe("Only checks from this scan (see list_geo_scans)"),
 });
 
 export const getGeoSentimentSchema = z.object({
@@ -25,13 +25,13 @@ export const getGeoSentimentAnalysisSchema = getGeoSentimentSchema;
 export const listGeoSentimentEvidenceSchema = z.object({
   projectId: projectIdSchema,
   ...geoWindowShape,
-  cursor: z.string().min(1).max(4096).optional(),
+  cursor: z.string().min(1).max(4096).optional().describe("Cursor returned by the previous page"),
 });
 
 export const listGeoShelfSourcesSchema = z.object({
   projectId: projectIdSchema,
-  offset: z.number().int().min(0).max(100_000).default(0),
-  limit: z.number().int().min(1).max(100).default(20),
+  offset: z.number().int().min(0).max(100_000).default(0).describe("Rows to skip; pass the previous nextOffset"),
+  limit: z.number().int().min(1).max(100).default(20).describe("Sources per page (1-100)"),
 });
 
 const readinessReportStatusSchema = apiResponsePropertySchema("getGeoAgentReadiness", "report", "status");
@@ -95,6 +95,9 @@ export const geoSnapshotOutputSchema = z.object({
       priority: z.enum(["high", "medium", "low"]),
       action: z.string(),
       reason: z.string(),
+      tool: z.string().nullable().describe("Tool to call for this action, or null when it needs the Notra dashboard"),
+      arguments: z.record(z.string(), z.unknown()).nullable().describe("Arguments to pass to tool"),
+      usesCredits: z.boolean().describe("Calling tool books AI credits; confirm with the user first"),
     }),
   ),
   warnings: z.array(z.object({ section: z.string(), message: z.string() })),

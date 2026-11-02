@@ -3,6 +3,8 @@ import {
   upsertGeoCompetitorSchema,
   suggestGeoCompetitorsSchema,
   deleteGeoCompetitorSchema,
+  upsertGeoCompetitorOutputSchema,
+  deleteGeoCompetitorOutputSchema,
 } from "../schemas/geo-competitor.js";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
@@ -10,6 +12,7 @@ import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import type { NotraClient } from "../notra-client.js";
 import { geoCompetitorImportSchema } from "../schemas/geo-import.js";
 
+import { summarizeCompetitorDelete, summarizeCompetitorUpsert } from "../utils/geo-competitor-change.js";
 import { toImportSource } from "../utils/import-source.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
@@ -39,9 +42,10 @@ export function registerGeoCompetitorTools(server: McpServer, client: NotraClien
         idempotentHint: true,
       },
       inputSchema: shareJsonSchema(upsertGeoCompetitorSchema),
-      outputSchema: shareJsonSchema(apiOutputSchema("upsertGeoCompetitor")),
+      outputSchema: shareJsonSchema(upsertGeoCompetitorOutputSchema),
     },
-    ({ projectId, ...body }) => handleError(() => client.upsertGeoCompetitor(projectId, body)),
+    ({ projectId, ...body }) =>
+      handleError(async () => summarizeCompetitorUpsert(body.name, await client.upsertGeoCompetitor(projectId, body))),
   );
 
   server.registerTool(
@@ -73,9 +77,10 @@ export function registerGeoCompetitorTools(server: McpServer, client: NotraClien
         idempotentHint: true,
       },
       inputSchema: shareJsonSchema(deleteGeoCompetitorSchema),
-      outputSchema: shareJsonSchema(apiOutputSchema("deleteGeoCompetitor")),
+      outputSchema: shareJsonSchema(deleteGeoCompetitorOutputSchema),
     },
-    ({ projectId, name }) => handleError(() => client.deleteGeoCompetitor(projectId, name)),
+    ({ projectId, name }) =>
+      handleError(async () => summarizeCompetitorDelete(name, await client.deleteGeoCompetitor(projectId, name))),
   );
 
   server.registerTool(
