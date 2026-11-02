@@ -132,7 +132,12 @@ test("snapshot bounds slow optional signals and preserves a warning", async () =
   assert.deepEqual(snapshot.warnings, [{ section: "agentReadiness", message: "Notra API request timed out after 5s" }]);
   assert.deepEqual(timeouts, [5_000, 5_000, 5_000, 5_000, 5_000, 5_000, 5_000]);
   assert.deepEqual(
-    snapshot.recommendedNextActions.map((action) => action.action),
-    ["review_content_gaps", "investigate_visibility_losses", "review_negative_sentiment", "configure_ai_traffic"],
+    snapshot.recommendedNextActions.map(({ action, tool, arguments: args }) => [action, tool, args]),
+    [
+      ["review_content_gaps", "list_geo_content_gaps", { projectId: "project-1" }],
+      ["investigate_visibility_losses", "get_geo_changes", { projectId: "project-1" }],
+      ["review_negative_sentiment", "list_geo_sentiment_evidence", { projectId: "project-1", days: 30 }],
+      ["configure_ai_traffic", "get_geo_ingest_setup", {}],
+    ],
   );
 });

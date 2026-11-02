@@ -52,10 +52,16 @@ test("dashboard action routes encode IDs and send the expected methods and bodie
 
 test("API errors preserve useful messages and handle invalid JSON", async () => {
   for (const [body, status, expected] of [
-    [{ message: "quota exhausted", error: "fallback" }, 403, "quota exhausted"],
-    [{ error: "not allowed" }, 403, "not allowed"],
-    [{ message: 42, error: "fallback" }, 400, "fallback"],
+    [{ message: "quota exhausted", error: "fallback" }, 403, "quota exhausted (HTTP 403)"],
+    [{ error: "not allowed" }, 403, "not allowed (HTTP 403)"],
+    [{ message: 42, error: "fallback" }, 400, "fallback (HTTP 400)"],
+    [
+      { error: "GEO plan required", code: "geo_plan_required", recovery: "Upgrade in the dashboard." },
+      402,
+      "GEO plan required (HTTP 402, geo_plan_required) Upgrade in the dashboard.",
+    ],
     [{}, 502, "HTTP 502: Bad Gateway"],
+    [{ code: "upstream_unavailable" }, 502, "HTTP 502: Bad Gateway (upstream_unavailable)"],
     ["upstream down", 502, "HTTP 502: Bad Gateway"],
     ["not json", 200, "Invalid JSON response from API"],
   ]) {
@@ -68,6 +74,22 @@ test("API errors preserve useful messages and handle invalid JSON", async () => 
     );
     await assert.rejects(client.listPosts(), { message: expected });
   }
+});
+
+test("rate-limit errors tell the agent how long to wait", async () => {
+  vi.spyOn(globalThis, "fetch").mockImplementation(
+    async () =>
+      new Response(JSON.stringify({ error: "Rate limit exceeded", limit: 5, remaining: 0, reset: 0 }), {
+        status: 429,
+        headers: { "Retry-After": "42" },
+      }),
+  );
+  await assert.rejects(client.createGeoScan("p"), { message: "Rate limit exceeded (HTTP 429) Retry after 42s." });
+
+  vi.spyOn(globalThis, "fetch").mockImplementation(
+    async () => new Response("busy", { status: 429, statusText: "Too Many Requests", headers: { "Retry-After": "7" } }),
+  );
+  await assert.rejects(client.createGeoScan("p"), { message: "HTTP 429: Too Many Requests Retry after 7s." });
 });
 
 test("timeouts are translated during both fetch and response-body reads", async () => {
@@ -144,7 +166,7 @@ test("workspace selection errors for account API keys explain how to pick a work
   vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
     Response.json({ error: "Workspace access revoked" }, { status: 403 }),
   );
-  await assert.rejects(client.listPosts(), { message: "Workspace access revoked" });
+  await assert.rejects(client.listPosts(), { message: "Workspace access revoked (HTTP 403)" });
   const selected = new NotraClient(
     { kind: "apiKey", token: "account-key", organizationId: "org_gone" },
     "https://api.example.test",

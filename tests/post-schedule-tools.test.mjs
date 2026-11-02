@@ -138,7 +138,7 @@ test("upstream publishing conflicts stay MCP tool errors and GEO-only servers do
     .mockImplementation(() => Promise.resolve(Response.json({ error: "Post is already publishing" }, { status: 409 })));
   const result = await call("schedule_post", { postId: "post-1", scheduledAt: schedule.scheduledAt });
   expect(result.result.isError).toBe(true);
-  expect(result.result.content[0].text).toBe("Post is already publishing");
+  expect(result.result.content[0].text).toBe("Post is already publishing (HTTP 409)");
   const filtered = await call("get_post_schedule", { postId: "post-1" }, { toolsets: parseToolsets("geo") });
   expect(filtered.error.code).toBe(-32602);
   expect(fetch).toHaveBeenCalledOnce();

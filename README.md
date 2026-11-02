@@ -299,25 +299,25 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | --------------------- | ---------------------------------------------------------------- |
 | `get_geo_settings`    | Get tracked company, aliases, languages, engines and scan config |
 | `list_geo_engines`    | List the engine IDs a project can track                          |
-| `update_geo_settings` | Replace the settings document and restart the scan cycle         |
+| `update_geo_settings` | Change only the given settings and restart the scan cycle        |
 
 ### GEO prompts and sequences
 
-| Tool                            | Description                                                           |
-| ------------------------------- | --------------------------------------------------------------------- |
-| `list_geo_prompts`              | List tracked prompts (custom and auto-derived)                        |
-| `create_geo_prompt`             | Track a new prompt                                                    |
-| `update_geo_prompt`             | Enable or disable a tracked prompt                                    |
-| `delete_geo_prompt`             | Stop tracking a prompt                                                |
-| `import_geo_prompts`            | Bulk import prompts from rows or CSV                                  |
-| `list_geo_prompt_suggestions`   | List prompts suggested from Search Console queries                    |
-| `accept_geo_prompt_suggestion`  | Track a suggested prompt                                              |
-| `dismiss_geo_prompt_suggestion` | Dismiss a suggested prompt                                            |
-| `list_geo_sequences`            | List multi-turn prompt sequences                                      |
-| `create_geo_sequence`           | Create a prompt sequence                                              |
-| `update_geo_sequence`           | Update a sequence's name, steps or enabled state                      |
-| `delete_geo_sequence`           | Delete a sequence                                                     |
-| `run_geo_sequence`              | Run a sequence now, synchronously (uses AI credits, can take minutes) |
+| Tool                            | Description                                                      |
+| ------------------------------- | ---------------------------------------------------------------- |
+| `list_geo_prompts`              | List tracked prompts (custom and auto-derived)                   |
+| `create_geo_prompt`             | Track a new prompt                                               |
+| `update_geo_prompt`             | Enable or disable a tracked prompt                               |
+| `delete_geo_prompt`             | Stop tracking a prompt                                           |
+| `import_geo_prompts`            | Bulk import prompts from rows or CSV                             |
+| `list_geo_prompt_suggestions`   | List prompts suggested from Search Console queries               |
+| `accept_geo_prompt_suggestion`  | Track a suggested prompt                                         |
+| `dismiss_geo_prompt_suggestion` | Dismiss a suggested prompt                                       |
+| `list_geo_sequences`            | List multi-turn prompt sequences                                 |
+| `create_geo_sequence`           | Create a prompt sequence                                         |
+| `update_geo_sequence`           | Update a sequence's name, steps or enabled state                 |
+| `delete_geo_sequence`           | Delete a sequence                                                |
+| `run_geo_sequence`              | Run a sequence now; consumer apps queue a scan (uses AI credits) |
 
 ### GEO competitors
 

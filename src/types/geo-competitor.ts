@@ -19,6 +19,18 @@ export interface GeoCompetitorListResponse {
   organization: Organization;
 }
 
+export interface GeoCompetitorUpsertSummary {
+  competitor: GeoCompetitor | null;
+  totalCompetitors: number;
+  organization: Organization;
+}
+
+export interface GeoCompetitorDeleteSummary {
+  deleted: string;
+  totalCompetitors: number;
+  organization: Organization;
+}
+
 export interface UpsertGeoCompetitorRequest {
   name: string;
   previousName?: string;

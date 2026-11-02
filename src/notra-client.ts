@@ -144,7 +144,7 @@ import type {
 } from "./types/project.js";
 import type { RequestOptions, RequestTimeoutOptions } from "./types/request.js";
 import type { WorkspaceContextResponse } from "./types/workspace.js";
-import { apiErrorSchema } from "./schemas/api.js";
+import { describeApiError } from "./utils/api-error.js";
 import { withoutHiddenReadinessChecks } from "./utils/geo-agent-readiness.js";
 import { appendQueryParams } from "./utils/query-params.js";
 import { describeOrganizationError } from "./utils/organization.js";
@@ -232,15 +232,13 @@ export class NotraClient {
         throw cancelled;
       }
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(describeApiError(response, undefined, (message) => message));
       }
       throw new Error("Invalid JSON response from API");
     }
 
     if (!response.ok) {
-      const errorBody = apiErrorSchema.safeParse(data).data;
-      const message = errorBody?.message ?? errorBody?.error ?? `HTTP ${response.status}: ${response.statusText}`;
-      throw new Error(describeOrganizationError(message, this.auth));
+      throw new Error(describeApiError(response, data, (message) => describeOrganizationError(message, this.auth)));
     }
 
     return data as T;

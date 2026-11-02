@@ -6,11 +6,16 @@ export interface GeoSettings {
   projectId: string;
   companyName: string;
   aliases: string[];
+  conversionPaths: string[];
+  domains: string[];
   competitors: string[];
   languages: string[];
   engines: string[];
   enforceZdr: boolean;
   nonZdrApprovedEngines: string[];
+  trackWithoutSearch: boolean;
+  pausedAutoPromptIds: string[];
+  removedAutoPromptIds: string[];
   enabled: boolean;
   scanIntervalHours: number;
   scanStartedAt: string | null;
@@ -43,10 +48,17 @@ export interface GeoEngineListResponse {
 export interface UpdateGeoSettingsRequest {
   companyName: string;
   aliases: string[];
+  domains?: string[];
+  conversionPaths?: string[];
   languages: string[];
   engines: string[];
   enforceZdr: boolean;
   nonZdrApprovedEngines: string[];
+  trackWithoutSearch?: boolean;
+  pausedAutoPromptIds?: string[];
+  removedAutoPromptIds?: string[];
   enabled: boolean;
   scanIntervalHours: number;
 }
+
+export type GeoSettingsPatch = Partial<UpdateGeoSettingsRequest>;

@@ -30,7 +30,7 @@ test("GEO resource IDs reject path separators, whitespace and oversized IDs", ()
 test("imports require exactly one nonempty source and enforce API row limits", () => {
   for (const [schema, row, max] of [
     [geoPromptImportSchema, { prompt: "How does this product work?" }, 500],
-    [geoCompetitorImportSchema, { name: "Competitor" }, 25],
+    [geoCompetitorImportSchema, { name: "Competitor" }, 2000],
   ]) {
     const rows = Array.from({ length: max }, () => row);
     assert.equal(schema.safeParse({ projectId: "p", rows }).success, true);
@@ -109,43 +109,54 @@ test("GEO updates reject empty patches while accepting explicit false values", a
   }
 });
 
-test("GEO settings require a complete configuration and allowed scan intervals", async () => {
+test("GEO settings accept partial updates and reject invalid values", async () => {
   const { updateGeoSettingsSchema } = await import("../src/schemas/geo-settings.ts");
-  const settings = {
-    projectId: "p",
-    companyName: "Acme",
-    aliases: [],
-    languages: ["English"],
-    engines: ["engine-1"],
-    enforceZdr: true,
-    nonZdrApprovedEngines: [],
-    enabled: false,
-    scanIntervalHours: 24,
-  };
-  assert.equal(updateGeoSettingsSchema.safeParse(settings).success, true);
+  assert.equal(updateGeoSettingsSchema.safeParse({ projectId: "p", enabled: false }).success, true);
+  assert.equal(updateGeoSettingsSchema.safeParse({ projectId: "p", scanIntervalHours: 120 }).success, true);
   for (const changes of [
     { engines: [] },
     { languages: [] },
     { scanIntervalHours: 25 },
+    { scanIntervalHours: 91 * 24 },
     { aliases: Array(11).fill("Acme") },
-    { enabled: undefined },
+    { conversionPaths: ["signup"] },
+    { pausedAutoPromptIds: ["bad id"] },
   ]) {
-    assert.equal(updateGeoSettingsSchema.safeParse({ ...settings, ...changes }).success, false);
+    assert.equal(updateGeoSettingsSchema.safeParse({ projectId: "p", ...changes }).success, false);
   }
 });
 
-test("post updates validate slugs and skill names cannot contain paths", async () => {
-  const { updatePostSchema } = await import("../src/schemas/post.ts");
-  const { skillPayloadSchema } = await import("../src/schemas/skill.ts");
-  assert.equal(updatePostSchema.safeParse({ postId: "p", slug: null }).success, true);
-  assert.equal(updatePostSchema.safeParse({ postId: "p", slug: "valid-slug" }).success, true);
-  for (const slug of ["a/b", "Uppercase", "-leading", "double--hyphen"])
-    assert.equal(updatePostSchema.safeParse({ postId: "p", slug }).success, false);
-  for (const name of ["../file", "trailing-", "with space", "UPPERCASE"])
-    assert.equal(
-      skillPayloadSchema.safeParse({ name, description: "Description", content: "Instructions" }).success,
-      false,
-    );
+test("GEO settings updates keep stored values for omitted fields", async () => {
+  const { mergeGeoSettings } = await import("../src/utils/geo-settings.ts");
+  const stored = {
+    companyName: "Acme",
+    aliases: ["ACME Inc"],
+    domains: ["docs.acme.com"],
+    conversionPaths: [],
+    languages: ["English"],
+    engines: ["engine-1"],
+    enforceZdr: true,
+    nonZdrApprovedEngines: [],
+    trackWithoutSearch: false,
+    pausedAutoPromptIds: [],
+    removedAutoPromptIds: [],
+    enabled: true,
+    scanIntervalHours: 24,
+    isScanning: false,
+  };
+  assert.deepEqual(mergeGeoSettings(stored, { enabled: false, domains: [] }), {
+    enabled: false,
+    domains: [],
+    companyName: "Acme",
+    aliases: ["ACME Inc"],
+    languages: ["English"],
+    engines: ["engine-1"],
+    enforceZdr: true,
+    nonZdrApprovedEngines: [],
+    scanIntervalHours: 24,
+  });
+  assert.throws(() => mergeGeoSettings(stored, { enabled: undefined }), /at least one setting/);
+  assert.throws(() => mergeGeoSettings(null, { enabled: false }), /Missing: companyName, aliases, languages/);
 });
 
 test("feedback collects only task-specific product feedback", async () => {

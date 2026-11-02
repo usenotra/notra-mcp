@@ -4,6 +4,7 @@ import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 
+import { mergeGeoSettings } from "../utils/geo-settings.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
@@ -36,7 +37,7 @@ export function registerGeoSettingsTools(server: McpServer, client: NotraClient)
     "update_geo_settings",
     {
       description:
-        "Replace all GEO settings and restart the recurring scan schedule. Send every field from get_geo_settings; this endpoint does not merge partial updates. Use engine IDs from list_geo_engines and languages listed in the current settings response.",
+        "Change a project's GEO settings and restart the recurring scan schedule. Send only the fields to change; omitted fields keep their stored value. List fields replace the whole list, so include existing entries you want to keep. Use engine IDs from list_geo_engines and languages listed in get_geo_settings.",
       annotations: {
         title: "Update GEO Settings",
         readOnlyHint: false,
@@ -47,6 +48,10 @@ export function registerGeoSettingsTools(server: McpServer, client: NotraClient)
       inputSchema: shareJsonSchema(updateGeoSettingsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("updateGeoSettings")),
     },
-    ({ projectId, ...body }) => handleError(() => client.updateGeoSettings(projectId, body)),
+    ({ projectId, ...patch }) =>
+      handleError(async () => {
+        const { settings } = await client.getGeoSettings(projectId);
+        return client.updateGeoSettings(projectId, mergeGeoSettings(settings, patch));
+      }),
   );
 }
