@@ -1,0 +1,19 @@
+src/utils/api-error.ts
+  s_f8c057eb8298a8::t_5ad0e16accc357 1-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "07fe21db1e63c4893074ac1d94c194bda54bd3ba",
+  "prompts": {},
+  "sessions": {
+    "s_f8c057eb8298a8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "73f52b46-e223-47d4-ae9c-4445ed179c5f",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Jan Burzinski <156842394+janburzinski@users.noreply.github.com>"
+    }
+  }
+}
