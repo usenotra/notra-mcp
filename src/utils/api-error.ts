@@ -19,6 +19,8 @@ export function describeApiError(response: Response, data: unknown, describeMess
   const parts = [message];
   if (message !== fallback) {
     parts[0] = `${message} (HTTP ${response.status}${body?.code ? `, ${body.code}` : ""})`;
+  } else if (body?.code) {
+    parts[0] = `${message} (${body.code})`;
   }
   if (body?.recovery) {
     parts.push(body.recovery);

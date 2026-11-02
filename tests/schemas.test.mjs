@@ -120,6 +120,7 @@ test("GEO settings accept partial updates and reject invalid values", async () =
     { scanIntervalHours: 91 * 24 },
     { aliases: Array(11).fill("Acme") },
     { conversionPaths: ["signup"] },
+    { pausedAutoPromptIds: ["bad id"] },
   ]) {
     assert.equal(updateGeoSettingsSchema.safeParse({ projectId: "p", ...changes }).success, false);
   }

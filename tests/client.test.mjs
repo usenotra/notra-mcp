@@ -61,6 +61,7 @@ test("API errors preserve useful messages and handle invalid JSON", async () => 
       "GEO plan required (HTTP 402, geo_plan_required) Upgrade in the dashboard.",
     ],
     [{}, 502, "HTTP 502: Bad Gateway"],
+    [{ code: "upstream_unavailable" }, 502, "HTTP 502: Bad Gateway (upstream_unavailable)"],
     ["upstream down", 502, "HTTP 502: Bad Gateway"],
     ["not json", 200, "Invalid JSON response from API"],
   ]) {

@@ -21,7 +21,7 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     "get_geo_snapshot",
     {
       description:
-        "Get a compact GEO diagnosis across visibility, sentiment, scan changes, competitors, content gaps, shelf sources, readiness and AI traffic. Each recommended next action names the tool and arguments to call; confirm with the user before actions with usesCredits.",
+        "Get a compact GEO diagnosis across visibility, sentiment, scan changes, competitors, content gaps, shelf sources, readiness and AI traffic. Each recommended next action names the tool and arguments to call, or tool null when it needs the Notra dashboard; confirm with the user before actions with usesCredits.",
       annotations: { title: "Get GEO Snapshot", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: shareJsonSchema(getGeoSnapshotSchema),
       outputSchema: shareJsonSchema(geoSnapshotOutputSchema),

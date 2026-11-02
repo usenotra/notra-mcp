@@ -74,7 +74,7 @@ export function registerGeoSequenceTools(server: McpServer, client: NotraClient)
     "run_geo_sequence",
     {
       description:
-        "Run a GEO prompt sequence now. API-based answer engines run in this call, which can take several minutes; the result reports their checks, mentions and engines. Consumer apps (ChatGPT, Perplexity, Gemini, AI Mode, Copilot) are queued as a background scan instead: poll get_geo_scan with queuedScanId. If the call fails with a 409 the run is still finishing on its own; do not run it again, read the results with list_geo_prompt_result_summaries later. This uses AI credits.",
+        "Run a GEO prompt sequence now. API-based answer engines run in this call, which can take several minutes; the result reports their checks, mentions and engines. Consumer apps (ChatGPT, Perplexity, Gemini, AI Mode, Copilot) are queued as a background scan instead: poll get_geo_scan, passing the returned queuedScanId as scanId. If the call fails with a 409 the run is still finishing on its own; do not run it again, read the results with list_geo_prompt_result_summaries later. This uses AI credits.",
       annotations: { title: "Run GEO Sequence", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
       inputSchema: shareJsonSchema(runGeoSequenceSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("runGeoSequence")),

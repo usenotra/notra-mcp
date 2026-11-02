@@ -12,7 +12,7 @@ import {
   GEO_SCAN_MAX_INTERVAL_HOURS,
   GEO_SCAN_MIN_INTERVAL_HOURS,
 } from "../constants/geo.js";
-import { geoShortTextSchema, projectIdSchema } from "./geo-fields.js";
+import { geoResourceIdSchema, geoShortTextSchema, projectIdSchema } from "./geo-fields.js";
 
 export const getGeoSettingsSchema = z.object({
   projectId: projectIdSchema,
@@ -62,12 +62,12 @@ export const updateGeoSettingsSchema = z.object({
     .describe("Engines explicitly approved despite not being zero-data-retention"),
   trackWithoutSearch: z.boolean().optional().describe("Also scan search-capable models without web search"),
   pausedAutoPromptIds: z
-    .array(geoShortTextSchema)
+    .array(geoResourceIdSchema)
     .max(GEO_MAX_AUTO_PROMPT_IDS)
     .optional()
     .describe("IDs of auto-generated prompts (from list_geo_prompts) to skip in scans. Replaces the whole list."),
   removedAutoPromptIds: z
-    .array(geoShortTextSchema)
+    .array(geoResourceIdSchema)
     .max(GEO_MAX_AUTO_PROMPT_IDS)
     .optional()
     .describe("IDs of auto-generated prompts removed from tracking. Replaces the whole list."),

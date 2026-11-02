@@ -33,7 +33,7 @@ export function registerGeoCompetitorTools(server: McpServer, client: NotraClien
     "upsert_geo_competitor",
     {
       description:
-        "Create or update a tracked GEO competitor. Matches on name, case-insensitively; send previousName to rename an existing competitor. Returns the full competitor list.",
+        "Create or update a tracked GEO competitor. Matches on name, case-insensitively; send previousName to rename an existing competitor. Returns the saved competitor and the new total; call list_geo_competitors for the full list.",
       annotations: {
         title: "Upsert GEO Competitor",
         readOnlyHint: false,
