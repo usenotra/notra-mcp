@@ -4,6 +4,23 @@ import { deepFreeze } from "./deep-freeze.js";
 
 const wrappers = new WeakMap<object, StandardSchemaWithJSON>();
 
+// zod emits a ~130-token leap-year regex next to `format: "date"` (and similar
+// for date-time). The format already tells the model the shape and zod still
+// validates, so the regex only costs context. Patterns on other formats stay.
+const SELF_DESCRIBING_FORMATS = new Set(["date", "date-time"]);
+
+function stripFormatPatterns(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(stripFormatPatterns);
+  if (!node || typeof node !== "object") return node;
+  const out: Record<string, unknown> = {};
+  const record = node as Record<string, unknown>;
+  for (const [key, value] of Object.entries(record)) {
+    if (key === "pattern" && SELF_DESCRIBING_FORMATS.has(record.format as string)) continue;
+    out[key] = stripFormatPatterns(value);
+  }
+  return out;
+}
+
 /**
  * The SDK converts a tool's zod schema to JSON Schema on every registration and
  * every `tools/list`, and HTTP builds a server per request. Tool schemas are
@@ -31,7 +48,7 @@ export function shareJsonSchema<S extends StandardSchemaWithJSON>(schema: S): S 
       let json = converted.get(key);
       if (!json) {
         const { $schema: _, ...rest } = standard.jsonSchema[io](resolved);
-        json = deepFreeze(rest);
+        json = deepFreeze(stripFormatPatterns(rest) as Record<string, unknown>);
         converted.set(key, json);
       }
       return json;
