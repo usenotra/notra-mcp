@@ -42,6 +42,33 @@ test("JSON Schema conversion runs once per schema and keeps zod validation", () 
   expect(Object.isFrozen(pristine.properties.id)).toBe(false);
 });
 
+test("JSON Schema drops regexes that duplicate a format but zod still validates them", () => {
+  const schema = z.object({
+    day: z.iso.date().describe("Day"),
+    at: z.iso.datetime({ offset: true }),
+    slug: z.string().regex(/^[a-z]+$/),
+  });
+  const wrapped = shareJsonSchema(schema);
+  const { properties } = wrapped["~standard"].jsonSchema.input({ target: "draft-2020-12" });
+
+  expect(properties.day).toEqual({ type: "string", format: "date", description: "Day" });
+  expect(properties.at).toEqual({ type: "string", format: "date-time" });
+  expect(properties.slug.pattern).toBe("^[a-z]+$");
+  expect(
+    wrapped["~standard"].validate({ day: "2026-02-30", at: "2026-01-01T00:00:00Z", slug: "a" }).issues,
+  ).toHaveLength(1);
+
+  const formatsWithPattern = [];
+  const visit = (node, path) => {
+    if (!node || typeof node !== "object") return;
+    if (typeof node.format === "string" && "pattern" in node) formatsWithPattern.push(path);
+    for (const [key, value] of Object.entries(node)) visit(value, `${path}.${key}`);
+  };
+  const server = createServer("key");
+  for (const name of registeredToolNames()) visit(server.toolInputSchemaJson(name), name);
+  expect(formatsWithPattern).toEqual([]);
+});
+
 test("servers built per request share converted tool schemas", () => {
   const [first, second] = [createServer("key-a"), createServer("key-b")];
   for (const name of ["list_posts", "import_geo_prompts", "get_geo_snapshot", "submit_feedback"]) {

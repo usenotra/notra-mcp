@@ -171,7 +171,7 @@ In PostHog, filter on `mcp_tool_called` and break down by `tool_name`, `client_n
 
 ## Toolsets
 
-All 96 tools are exposed by default, which costs roughly 20k tokens of agent context. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 110 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                    |
 | --------- | ---------------------------------------------------------------------------------------- |
