@@ -6,14 +6,16 @@ const wrappers = new WeakMap<object, StandardSchemaWithJSON>();
 
 // zod emits a ~130-token leap-year regex next to `format: "date"` (and similar
 // for date-time). The format already tells the model the shape and zod still
-// validates, so the regex only costs context.
+// validates, so the regex only costs context. Patterns on other formats stay.
+const SELF_DESCRIBING_FORMATS = new Set(["date", "date-time"]);
+
 function stripFormatPatterns(node: unknown): unknown {
   if (Array.isArray(node)) return node.map(stripFormatPatterns);
   if (!node || typeof node !== "object") return node;
   const out: Record<string, unknown> = {};
   const record = node as Record<string, unknown>;
   for (const [key, value] of Object.entries(record)) {
-    if (key === "pattern" && typeof record.format === "string") continue;
+    if (key === "pattern" && SELF_DESCRIBING_FORMATS.has(record.format as string)) continue;
     out[key] = stripFormatPatterns(value);
   }
   return out;
