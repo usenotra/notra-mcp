@@ -14,7 +14,6 @@ export function instrumentMcpUsage(
     connect(
       trackMcpTransport(transport, {
         token: process.env.NOTRA_GEO_TOKEN ?? "",
-        contextParameters: true,
         identify: () => (auth.kind === "oauth" ? auth.userId : undefined),
         beforeSend: (event) => ({
           ...event,
