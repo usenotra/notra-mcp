@@ -153,30 +153,24 @@ Legacy 2025 sessions expire after 30 minutes of inactivity. Each OAuth user or A
 
 ## Hosted usage statistics
 
-The HTTP server tracks usage exclusively in PostHog, sending one `mcp_tool_called` event per dispatched tool call, including calls that fail tool input/output validation or return `isError: true` with HTTP 200. Initialization, discovery, health checks, and requests rejected before tool dispatch are not counted. Local stdio servers do not emit usage events or contact PostHog.
+The HTTP server reports MCP usage to Notra's MCP server analytics through [`@usenotra/geo/mcp`](https://github.com/usenotra/geo-sdk). Every JSON-RPC request the server answers is recorded with its method, tool name, status (`ok`, `tool_error` or `rpc_error`), latency, response size, session ID, and the client and server names and versions. `tools/list` answers also record the advertised tools. `ping` is skipped. Local stdio servers do not emit usage events.
 
-Set the PostHog project token on the hosted deployment to enable tracking:
+Set the Notra GEO token on the hosted deployment to enable tracking:
 
 ```env
-POSTHOG_PROJECT_TOKEN=your-project-token
+NOTRA_GEO_TOKEN=your-geo-token
 ```
 
-`POSTHOG_HOST` defaults to `https://us.i.posthog.com`; set it to `https://eu.i.posthog.com` for an EU project. Without a project token, tracking is disabled. There is no alternative collector or JSON usage-log fallback.
-
-Events include `tool_name`, `outcome` (`success`, `error`, or `cancelled`), `duration_ms`, `server_version`, `protocol_version`, `client_name`, `client_version`, and `auth_kind`. OAuth events also include the verified WorkOS `organization_id` and `user_id`; API-key calls have no user/workspace attribution and share the PostHog distinct ID `mcp:api-key`, which must not be counted as a unique user. Client identity is self-reported, bucketed into known client names, and unknown names are recorded as `other`; versions are only retained in numeric `major.minor.patch` form. Unknown tool names are recorded as `unknown`.
-
-Arguments, results, prompts, error messages, headers, IP addresses, tokens, API keys, and token hashes are never included in usage events. Delivery is asynchronous and best-effort, with a five-second timeout and at most 64 pending PostHog requests per process. Failed or dropped deliveries produce a credential-free warning without failing tool calls. Events are not sampled, but PostHog delivery is not an audit or billing ledger.
-
-In PostHog, filter on `mcp_tool_called` and break down by `tool_name`, `client_name`, or `outcome`. Count distinct `organization_id`/`user_id` only for OAuth calls, and use `duration_ms` for latency percentiles.
+Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS `user_id`; API-key calls carry no user. Unknown tool names are recorded as `unknown`. Tool arguments and results are never sent. Delivery is batched, asynchronous and best-effort: a failed delivery logs a credential-free warning without failing the tool call.
 
 ## Toolsets
 
-All 106 tools are exposed by default, which costs roughly 20k tokens of agent context. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 110 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
-| Toolset   | Tools                                                                                                           |
-| --------- | --------------------------------------------------------------------------------------------------------------- |
-| `content` | Posts, brand identities, integrations, schedules, event triggers, chats, agent sessions, skills, feedback inbox |
-| `geo`     | Projects and every GEO tool                                                                                     |
+| Toolset   | Tools                                                                                              |
+| --------- | -------------------------------------------------------------------------------------------------- |
+| `content` | Posts, brand identities, integrations, schedules, event triggers, webhooks, skills, feedback inbox |
+| `geo`     | Projects and every GEO tool                                                                        |
 
 Workspace tools and `submit_feedback` are always available.
 
@@ -224,25 +218,32 @@ Post publishing schedules are separate from the content-generation schedules bel
 | `get_brand_identity`                   | Get a single brand identity by ID                        |
 | `update_brand_identity`                | Update brand identity settings                           |
 | `delete_brand_identity`                | Delete a brand identity                                  |
+| `list_brand_colors`                    | List a brand identity's guideline colors                 |
+| `create_brand_color`                   | Add a brand color                                        |
+| `update_brand_color`                   | Update a brand color                                     |
+| `delete_brand_color`                   | Delete a brand color                                     |
 | `generate_brand_identity`              | Queue async brand identity generation from a website URL |
 | `get_brand_identity_generation_status` | Check the status of a brand identity generation job      |
 
 ### Integrations
 
-| Tool                        | Description                                             |
-| --------------------------- | ------------------------------------------------------- |
-| `list_integrations`         | List all connected integrations (GitHub, Slack, Linear) |
-| `create_github_integration` | Connect a GitHub repository                             |
-| `delete_integration`        | Delete a GitHub or Linear integration                   |
+| Tool                        | Description                                                    |
+| --------------------------- | -------------------------------------------------------------- |
+| `list_integrations`         | List enabled GitHub and Linear integrations                    |
+| `create_github_integration` | Connect a public GitHub repository                             |
+| `list_github_activity`      | List merged PRs, commits or releases of a connected repository |
+| `delete_integration`        | Delete a GitHub or Linear integration                          |
 
 ### Schedules
 
-| Tool              | Description                               |
-| ----------------- | ----------------------------------------- |
-| `list_schedules`  | List scheduled content generation jobs    |
-| `create_schedule` | Create a scheduled content generation job |
-| `update_schedule` | Update a scheduled content generation job |
-| `delete_schedule` | Delete a scheduled content generation job |
+| Tool                 | Description                                   |
+| -------------------- | --------------------------------------------- |
+| `list_schedules`     | List scheduled content generation jobs        |
+| `create_schedule`    | Create a scheduled content generation job     |
+| `update_schedule`    | Update a scheduled content generation job     |
+| `delete_schedule`    | Delete a scheduled content generation job     |
+| `run_schedule`       | Run a schedule once now (uses AI credits)     |
+| `list_schedule_runs` | List a schedule's recent runs and their posts |
 
 ### Event Triggers
 
@@ -256,26 +257,13 @@ Post publishing schedules are separate from the content-generation schedules bel
 
 ### Webhooks
 
-| Tool                      | Description                                                          |
-| ------------------------- | -------------------------------------------------------------------- |
-| `list_webhook_endpoints`  | List HTTPS endpoints subscribed to Notra events                      |
-| `create_webhook_endpoint` | Subscribe an endpoint to events; returns its one-time signing secret |
-| `delete_webhook_endpoint` | Remove a webhook subscription and cancel unsent deliveries           |
-| `list_webhook_deliveries` | List webhook deliveries, optionally filtered by status               |
-| `get_webhook_delivery`    | Get a delivery's payload and attempt history                         |
-| `retry_webhook_delivery`  | Retry a failed webhook delivery                                      |
-
-### Chats
-
-| Tool                           | Description                                                                |
-| ------------------------------ | -------------------------------------------------------------------------- |
-| `list_chats`                   | List chat sessions                                                         |
-| `get_chat`                     | Get a single chat with messages                                            |
-| `get_chat_by_external_channel` | Get a chat by Discord or Slack channel ID                                  |
-| `create_chat`                  | Start a new chat and return the streamed reply                             |
-| `post_chat_message`            | Post a message to an existing chat and return the streamed reply           |
-| `respond_to_chat_approvals`    | Approve or deny the actions a chat reply paused on, after the user decides |
-| `list_agent_chats`             | List durable agent sessions and their status                               |
+| Tool                      | Description                                                |
+| ------------------------- | ---------------------------------------------------------- |
+| `list_webhook_endpoints`  | List HTTPS endpoints subscribed to Notra events            |
+| `delete_webhook_endpoint` | Remove a webhook subscription and cancel unsent deliveries |
+| `list_webhook_deliveries` | List webhook deliveries, optionally filtered by status     |
+| `get_webhook_delivery`    | Get a delivery's payload and attempt history               |
+| `retry_webhook_delivery`  | Retry a failed webhook delivery                            |
 
 ### Skills
 
@@ -304,22 +292,26 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | Tool                  | Description                                                      |
 | --------------------- | ---------------------------------------------------------------- |
 | `get_geo_settings`    | Get tracked company, aliases, languages, engines and scan config |
-| `update_geo_settings` | Replace the settings document and restart the scan cycle         |
+| `list_geo_engines`    | List the engine IDs a project can track                          |
+| `update_geo_settings` | Change only the given settings and restart the scan cycle        |
 
 ### GEO prompts and sequences
 
-| Tool                  | Description                                                           |
-| --------------------- | --------------------------------------------------------------------- |
-| `list_geo_prompts`    | List tracked prompts (custom and auto-derived)                        |
-| `create_geo_prompt`   | Track a new prompt                                                    |
-| `update_geo_prompt`   | Enable or disable a tracked prompt                                    |
-| `delete_geo_prompt`   | Stop tracking a prompt                                                |
-| `import_geo_prompts`  | Bulk import prompts from rows or CSV                                  |
-| `list_geo_sequences`  | List multi-turn prompt sequences                                      |
-| `create_geo_sequence` | Create a prompt sequence                                              |
-| `update_geo_sequence` | Update a sequence's name, steps or enabled state                      |
-| `delete_geo_sequence` | Delete a sequence                                                     |
-| `run_geo_sequence`    | Run a sequence now, synchronously (uses AI credits, can take minutes) |
+| Tool                            | Description                                                      |
+| ------------------------------- | ---------------------------------------------------------------- |
+| `list_geo_prompts`              | List tracked prompts (custom and auto-derived)                   |
+| `create_geo_prompt`             | Track a new prompt                                               |
+| `update_geo_prompt`             | Enable or disable a tracked prompt                               |
+| `delete_geo_prompt`             | Stop tracking a prompt                                           |
+| `import_geo_prompts`            | Bulk import prompts from rows or CSV                             |
+| `list_geo_prompt_suggestions`   | List prompts suggested from Search Console queries               |
+| `accept_geo_prompt_suggestion`  | Track a suggested prompt                                         |
+| `dismiss_geo_prompt_suggestion` | Dismiss a suggested prompt                                       |
+| `list_geo_sequences`            | List multi-turn prompt sequences                                 |
+| `create_geo_sequence`           | Create a prompt sequence                                         |
+| `update_geo_sequence`           | Update a sequence's name, steps or enabled state                 |
+| `delete_geo_sequence`           | Delete a sequence                                                |
+| `run_geo_sequence`              | Run a sequence now; consumer apps queue a scan (uses AI credits) |
 
 ### GEO competitors
 
@@ -336,6 +328,7 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | Tool                               | Description                                                 |
 | ---------------------------------- | ----------------------------------------------------------- |
 | `create_geo_scan`                  | Trigger an async visibility scan (uses AI credits)          |
+| `rescan_geo_prompt`                | Scan a single prompt again (uses AI credits)                |
 | `list_geo_scans`                   | List scans with pagination                                  |
 | `get_geo_scan`                     | Get a scan and its status                                   |
 | `get_geo_snapshot`                 | Compact cross-signal diagnosis and recommended next actions |
@@ -358,9 +351,11 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | Tool                        | Description                                                   |
 | --------------------------- | ------------------------------------------------------------- |
 | `list_geo_content_gaps`     | Prompts where competitors are mentioned and this brand is not |
+| `update_geo_content_gap`    | Ignore a prompt gap or restore it                             |
 | `list_geo_content_briefs`   | List content briefs and their statuses                        |
 | `plan_geo_content_brief`    | Research a topic and plan a brief (billed, can take minutes)  |
 | `get_geo_content_brief`     | Get a brief with the full document and writer status          |
+| `update_geo_content_brief`  | Edit a draft brief's outline and planning fields              |
 | `approve_geo_content_brief` | Approve a brief and start the article writer                  |
 
 ### Agent readiness
@@ -380,8 +375,6 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `get_geo_traffic_journey`   | Every event in one journey                                   |
 | `list_geo_traffic_pages`    | Most visited pages by AI traffic                             |
 | `get_geo_ingest_setup`      | Tracking install snippets and ingest endpoint                |
-| `issue_geo_ingest_token`    | Issue the tracking token                                     |
-| `rotate_geo_ingest_token`   | Rotate the token, invalidating all previously issued tokens  |
 
 ### Feedback
 
@@ -391,6 +384,12 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `list_feedback`   | List feedback the organization received, by status, kind or project                 |
 | `get_feedback`    | Get one feedback entry with agent metadata                                          |
 | `update_feedback` | Set a feedback entry's triage status                                                |
+
+## Review and data boundaries
+
+All supported operations are listed upfront by `tools/list`. General-purpose agent execution and approval tools are not exposed because they can run dynamically discovered third-party operations. Chat history and agent sessions are available through the dashboard and API. Use the Notra dashboard for agent conversations, private-repository authentication, webhook signing secrets, and traffic tracking credentials.
+
+Tool inputs are for task-specific business content. Do not send health records, biometric data, government identifiers, payment card information, credentials, or unrelated conversation history. Authenticate through OAuth or local configuration, never through tool arguments. Feedback accepts only the user-approved message, optional title, and feedback kind.
 
 ## Development
 
