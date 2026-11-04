@@ -171,7 +171,7 @@ In PostHog, filter on `mcp_tool_called` and break down by `tool_name`, `client_n
 
 ## Toolsets
 
-All 110 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 112 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                              |
 | --------- | -------------------------------------------------------------------------------------------------- |
@@ -381,6 +381,15 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `get_geo_traffic_journey`   | Every event in one journey                                   |
 | `list_geo_traffic_pages`    | Most visited pages by AI traffic                             |
 | `get_geo_ingest_setup`      | Tracking install snippets and ingest endpoint                |
+
+### MCP server analytics
+
+Usage of your own MCP server, reported by the `@usenotra/geo` SDK. Captured arguments, responses and end-user IDs stay in the dashboard.
+
+| Tool                         | Description                                                                        |
+| ---------------------------- | ---------------------------------------------------------------------------------- |
+| `get_geo_mcp_analytics`      | Calls, errors, latency, clients, models, intents, recent failures and unused tools |
+| `get_geo_mcp_tool_analytics` | One tool's failures and the tools agents call right before and after it            |
 
 ### Feedback
 
