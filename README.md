@@ -153,7 +153,7 @@ Legacy 2025 sessions expire after 30 minutes of inactivity. Each OAuth user or A
 
 ## Hosted usage statistics
 
-The HTTP server reports MCP usage to Notra's MCP server analytics through [`@usenotra/geo/mcp`](https://github.com/usenotra/geo-sdk). Every JSON-RPC request the server answers is recorded with its method, tool name, status (`ok`, `tool_error` or `rpc_error`), latency, response size, session ID, and the client and server names and versions. `tools/list` answers also record the advertised tools. `ping` is skipped. Local stdio servers do not emit usage events.
+The HTTP server reports MCP usage to Notra's MCP server analytics through [`@usenotra/geo/mcp`](https://github.com/usenotra/geo-sdk). Every JSON-RPC request the server answers is recorded with its method, tool name, status (`ok`, `tool_error` or `rpc_error`), latency, response size, session ID, and the client and server names and versions. `tools/list` answers also record the advertised tools. Every tool also advertises optional `_intent` and `_model` parameters so agents can say why they call it and which model they run on; both are recorded and stripped before the tool runs. `ping` is skipped. Local stdio servers do not emit usage events.
 
 Set the Notra GEO token on the hosted deployment to enable tracking:
 
@@ -161,7 +161,7 @@ Set the Notra GEO token on the hosted deployment to enable tracking:
 NOTRA_GEO_TOKEN=your-geo-token
 ```
 
-Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS `user_id`; API-key calls carry no user. Unknown tool names are recorded as `unknown`. Tool arguments and results are never sent. Delivery is batched, asynchronous and best-effort: a failed delivery logs a credential-free warning without failing the tool call.
+Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS `user_id`; API-key calls carry no user. Unknown tool names are recorded as `unknown`. Other tool arguments and results are never sent. Delivery is batched, asynchronous and best-effort: a failed delivery logs a credential-free warning without failing the tool call.
 
 ## Toolsets
 
