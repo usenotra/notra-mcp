@@ -113,11 +113,8 @@ export function createServer(auth: string | AuthContext, options: CreateServerOp
   );
 
   if (options.trackUsage) {
-    instrumentMcpUsage(
-      server,
-      typeof auth === "string" ? { kind: "apiKey", token: auth } : auth,
-      SERVER_VERSION,
-      (name) => TOOL_OWNERS.has(name),
+    instrumentMcpUsage(server, typeof auth === "string" ? { kind: "apiKey", token: auth } : auth, (name) =>
+      TOOL_OWNERS.has(name),
     );
   }
 

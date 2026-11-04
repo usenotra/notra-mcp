@@ -34,7 +34,7 @@ const meta = {
 };
 
 beforeEach(() => {
-  vi.stubEnv("POSTHOG_PROJECT_TOKEN", "");
+  vi.stubEnv("NOTRA_GEO_TOKEN", "");
 });
 
 async function call(name, args, options = { onlyTool: name }) {
