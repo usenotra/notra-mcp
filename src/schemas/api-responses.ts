@@ -759,9 +759,15 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             properties: {
               repositoryIds: {
                 type: "array",
-                items: { type: "string", minLength: 1 },
-                minItems: 1,
-                description: "GitHub integration IDs to generate from, as returned by GET /v1/integrations.",
+                items: { type: "string" },
+                description:
+                  "GitHub integration IDs to generate from, as returned in the github array of GET /v1/integrations.",
+              },
+              linearIntegrationIds: {
+                type: "array",
+                items: { type: "string" },
+                description:
+                  "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations.",
               },
             },
             required: ["repositoryIds"],
@@ -5077,9 +5083,15 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               properties: {
                 repositoryIds: {
                   type: "array",
-                  items: { type: "string", minLength: 1 },
-                  minItems: 1,
-                  description: "GitHub integration IDs to generate from, as returned by GET /v1/integrations.",
+                  items: { type: "string" },
+                  description:
+                    "GitHub integration IDs to generate from, as returned in the github array of GET /v1/integrations.",
+                },
+                linearIntegrationIds: {
+                  type: "array",
+                  items: { type: "string" },
+                  description:
+                    "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations.",
                 },
               },
               required: ["repositoryIds"],
@@ -6497,9 +6509,15 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             properties: {
               repositoryIds: {
                 type: "array",
-                items: { type: "string", minLength: 1 },
-                minItems: 1,
-                description: "GitHub integration IDs to generate from, as returned by GET /v1/integrations.",
+                items: { type: "string" },
+                description:
+                  "GitHub integration IDs to generate from, as returned in the github array of GET /v1/integrations.",
+              },
+              linearIntegrationIds: {
+                type: "array",
+                items: { type: "string" },
+                description:
+                  "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations.",
               },
             },
             required: ["repositoryIds"],

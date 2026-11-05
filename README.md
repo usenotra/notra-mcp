@@ -239,8 +239,8 @@ Post publishing schedules are separate from the content-generation schedules bel
 | Tool                 | Description                                   |
 | -------------------- | --------------------------------------------- |
 | `list_schedules`     | List scheduled content generation jobs        |
-| `create_schedule`    | Create a scheduled content generation job     |
-| `update_schedule`    | Update a scheduled content generation job     |
+| `create_schedule`    | Create a schedule from GitHub and/or Linear   |
+| `update_schedule`    | Change only the fields you pass on a schedule |
 | `delete_schedule`    | Delete a scheduled content generation job     |
 | `run_schedule`       | Run a schedule once now (uses AI credits)     |
 | `list_schedule_runs` | List a schedule's recent runs and their posts |
