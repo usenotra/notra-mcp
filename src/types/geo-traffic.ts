@@ -99,6 +99,101 @@ export interface GeoTrafficPagesResponse {
   organization: Organization;
 }
 
+export type GeoMcpEventStatus = "ok" | "tool_error" | "rpc_error";
+
+export interface GeoMcpIntent {
+  intent: string;
+  tool: string;
+  calls: number;
+  errors: number;
+}
+
+export interface GeoMcpAnalyticsResponse {
+  configured: boolean;
+  server: { name: string; version: string; protocolVersion: string } | null;
+  totals: {
+    requests: number;
+    previousRequests: number;
+    toolCalls: number;
+    previousToolCalls: number;
+    errors: number;
+    previousErrors: number;
+    sessions: number;
+    previousSessions: number;
+    users: number;
+    previousUsers: number;
+    p95Ms: number;
+    previousP95Ms: number;
+  };
+  daily: Array<{
+    day: string;
+    toolsCall: number;
+    resourcesRead: number;
+    promptsGet: number;
+    other: number;
+    errors: number;
+  }>;
+  tools: Array<{
+    name: string;
+    description: string;
+    calls: number;
+    errors: number;
+    users: number;
+    avgResponseBytes: number;
+    p50Ms: number;
+    p95Ms: number;
+    uiResource: string;
+  }>;
+  clients: Array<{ name: string; sessions: number; requests: number; errors: number; lastSeenAt: string }>;
+  errorRequests: Array<{
+    capturedAt: string;
+    clientName: string;
+    clientVersion: string;
+    method: string;
+    target: string;
+    status: GeoMcpEventStatus;
+    errorCode: number;
+    errorMessage: string;
+    durationMs: number;
+    model: string;
+  }>;
+  models: Array<{ name: string; sessions: number; calls: number; errors: number }>;
+  intents: GeoMcpIntent[];
+  elicitations: Array<{
+    method: string;
+    tool: string;
+    requests: number;
+    accepted: number;
+    declined: number;
+    cancelled: number;
+    errors: number;
+  }>;
+  uiRenders: Array<{ resource: string; tools: string[]; renders: number; sessions: number; errors: number }>;
+  catalog: { listedAt: string; unusedTools: Array<{ name: string; description: string }> } | null;
+  organization: Organization;
+}
+
+export interface GeoMcpToolNeighbor {
+  tool: string;
+  calls: number;
+  afterFailure: number;
+}
+
+export interface GeoMcpToolDetailResponse {
+  before: GeoMcpToolNeighbor[];
+  after: GeoMcpToolNeighbor[];
+  failures: Array<{
+    message: string;
+    clientName: string;
+    status: GeoMcpEventStatus;
+    errorCode: number;
+    calls: number;
+    lastSeenAt: string;
+  }>;
+  intents: GeoMcpIntent[];
+  organization: Organization;
+}
+
 export interface GeoIngestSetupResponse {
   ingestUrl: string;
   snippet: string;

@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { GEO_TRAFFIC_CATEGORY_VALUES, GEO_TRAFFIC_VISITOR_TYPE_VALUES } from "../constants/geo.js";
-import { geoWindowShape, projectIdSchema } from "./geo-fields.js";
+import { geoShortTextSchema, geoWindowShape, projectIdSchema } from "./geo-fields.js";
 
 export const getGeoTrafficOverviewSchema = z.object({
   projectId: projectIdSchema,
@@ -38,3 +38,14 @@ export const listGeoTrafficPagesSchema = z.object({
 });
 
 export const getGeoIngestSetupSchema = z.object({});
+
+export const getGeoMcpAnalyticsSchema = z.object({
+  projectId: projectIdSchema,
+  ...geoWindowShape,
+});
+
+export const getGeoMcpToolAnalyticsSchema = z.object({
+  projectId: projectIdSchema,
+  toolName: geoShortTextSchema.describe("Tool name as your MCP server registers it (see get_geo_mcp_analytics)"),
+  ...geoWindowShape,
+});

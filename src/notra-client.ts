@@ -116,6 +116,8 @@ import type {
 import type { GeoEngineListResponse, GeoSettingsResponse, UpdateGeoSettingsRequest } from "./types/geo-settings.js";
 import type {
   GeoIngestSetupResponse,
+  GeoMcpAnalyticsResponse,
+  GeoMcpToolDetailResponse,
   GeoTrafficJourneyResponse,
   GeoTrafficJourneysResponse,
   GeoTrafficLogParams,
@@ -933,6 +935,22 @@ export class NotraClient {
     return this.request<GeoTrafficPagesResponse>("GET", this.geoPath(projectId, "/traffic/pages"), {
       params,
     });
+  }
+
+  async getGeoMcpAnalytics(projectId: string, params?: GeoWindowParams): Promise<GeoMcpAnalyticsResponse> {
+    return this.request<GeoMcpAnalyticsResponse>("GET", this.geoPath(projectId, "/traffic/mcp"), { params });
+  }
+
+  async getGeoMcpToolDetail(
+    projectId: string,
+    toolName: string,
+    params?: GeoWindowParams,
+  ): Promise<GeoMcpToolDetailResponse> {
+    return this.request<GeoMcpToolDetailResponse>(
+      "GET",
+      this.geoPath(projectId, `/traffic/mcp/tools/${encodeURIComponent(toolName)}`),
+      { params },
+    );
   }
 
   async getGeoIngestSetup(): Promise<GeoIngestSetupResponse> {

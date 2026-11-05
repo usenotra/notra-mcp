@@ -41,6 +41,8 @@ export type ApiOperationId =
   | "getGeoAgentReadiness"
   | "getGeoContentBrief"
   | "getGeoIngestSetup"
+  | "getGeoMcpAnalytics"
+  | "getGeoMcpToolDetail"
   | "getGeoPromptHistory"
   | "getGeoPromptResultDetail"
   | "getGeoScan"
@@ -1893,6 +1895,302 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization"],
+  },
+  getGeoMcpAnalytics: {
+    type: "object",
+    properties: {
+      configured: {
+        type: "boolean",
+        description:
+          "False when the traffic backend is not configured for this deployment; the payload is then empty rather than an error.",
+      },
+      server: {
+        type: ["object", "null"],
+        properties: { name: { type: "string" }, version: { type: "string" }, protocolVersion: { type: "string" } },
+        required: ["name", "version", "protocolVersion"],
+        description: "Server info from the newest event. Null before any.",
+      },
+      totals: {
+        type: "object",
+        properties: {
+          requests: { type: "integer" },
+          previousRequests: { type: "integer" },
+          toolCalls: { type: "integer" },
+          previousToolCalls: { type: "integer" },
+          errors: { type: "integer" },
+          previousErrors: { type: "integer" },
+          sessions: { type: "integer" },
+          previousSessions: { type: "integer" },
+          users: { type: "integer" },
+          previousUsers: { type: "integer" },
+          p95Ms: { type: "integer" },
+          previousP95Ms: { type: "integer" },
+        },
+        required: [
+          "requests",
+          "previousRequests",
+          "toolCalls",
+          "previousToolCalls",
+          "errors",
+          "previousErrors",
+          "sessions",
+          "previousSessions",
+          "users",
+          "previousUsers",
+          "p95Ms",
+          "previousP95Ms",
+        ],
+      },
+      daily: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            day: { type: "string" },
+            toolsCall: { type: "integer" },
+            resourcesRead: { type: "integer" },
+            promptsGet: { type: "integer" },
+            other: { type: "integer" },
+            errors: { type: "integer" },
+          },
+          required: ["day", "toolsCall", "resourcesRead", "promptsGet", "other", "errors"],
+        },
+      },
+      tools: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            description: { type: "string" },
+            calls: { type: "integer" },
+            errors: { type: "integer" },
+            users: { type: "integer" },
+            avgResponseBytes: { type: "integer" },
+            p50Ms: { type: "integer" },
+            p95Ms: { type: "integer" },
+            uiResource: { type: "string" },
+          },
+          required: [
+            "name",
+            "description",
+            "calls",
+            "errors",
+            "users",
+            "avgResponseBytes",
+            "p50Ms",
+            "p95Ms",
+            "uiResource",
+          ],
+        },
+      },
+      clients: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            sessions: { type: "integer" },
+            requests: { type: "integer" },
+            errors: { type: "integer" },
+            lastSeenAt: { type: "string" },
+          },
+          required: ["name", "sessions", "requests", "errors", "lastSeenAt"],
+        },
+      },
+      errorRequests: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            capturedAt: { type: "string" },
+            clientName: { type: "string" },
+            clientVersion: { type: "string" },
+            method: { type: "string" },
+            target: { type: "string" },
+            status: { type: "string", enum: ["ok", "tool_error", "rpc_error"] },
+            errorCode: { type: "integer" },
+            errorMessage: { type: "string" },
+            durationMs: { type: "integer" },
+            model: { type: "string" },
+          },
+          required: [
+            "capturedAt",
+            "clientName",
+            "clientVersion",
+            "method",
+            "target",
+            "status",
+            "errorCode",
+            "errorMessage",
+            "durationMs",
+            "model",
+          ],
+        },
+        description: "Most recent failed requests, newest first.",
+      },
+      models: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string" },
+            sessions: { type: "integer" },
+            calls: { type: "integer" },
+            errors: { type: "integer" },
+          },
+          required: ["name", "sessions", "calls", "errors"],
+        },
+      },
+      intents: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            intent: { type: "string" },
+            tool: { type: "string" },
+            calls: { type: "integer" },
+            errors: { type: "integer" },
+          },
+          required: ["intent", "tool", "calls", "errors"],
+        },
+      },
+      elicitations: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            method: { type: "string" },
+            tool: { type: "string" },
+            requests: { type: "integer" },
+            accepted: { type: "integer" },
+            declined: { type: "integer" },
+            cancelled: { type: "integer" },
+            errors: { type: "integer" },
+          },
+          required: ["method", "tool", "requests", "accepted", "declined", "cancelled", "errors"],
+        },
+      },
+      uiRenders: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            resource: { type: "string" },
+            tools: { type: "array", items: { type: "string" } },
+            renders: { type: "integer" },
+            sessions: { type: "integer" },
+            errors: { type: "integer" },
+          },
+          required: ["resource", "tools", "renders", "sessions", "errors"],
+        },
+      },
+      catalog: {
+        type: ["object", "null"],
+        properties: {
+          listedAt: { type: "string" },
+          unusedTools: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { name: { type: "string" }, description: { type: "string" } },
+              required: ["name", "description"],
+            },
+          },
+        },
+        required: ["listedAt", "unusedTools"],
+        description:
+          "Tools from the latest tools/list that were never called in the window. Null before a listing is seen.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: [
+      "configured",
+      "server",
+      "totals",
+      "daily",
+      "tools",
+      "clients",
+      "errorRequests",
+      "models",
+      "intents",
+      "elicitations",
+      "uiRenders",
+      "catalog",
+      "organization",
+    ],
+  },
+  getGeoMcpToolDetail: {
+    type: "object",
+    properties: {
+      before: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { tool: { type: "string" }, calls: { type: "integer" }, afterFailure: { type: "integer" } },
+          required: ["tool", "calls", "afterFailure"],
+        },
+        description: "Tools called right before this one in the same session.",
+      },
+      after: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { tool: { type: "string" }, calls: { type: "integer" }, afterFailure: { type: "integer" } },
+          required: ["tool", "calls", "afterFailure"],
+        },
+        description: "Tools called right after this one in the same session.",
+      },
+      failures: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            message: { type: "string" },
+            clientName: { type: "string" },
+            status: { type: "string", enum: ["ok", "tool_error", "rpc_error"] },
+            errorCode: { type: "integer" },
+            calls: { type: "integer" },
+            lastSeenAt: { type: "string" },
+          },
+          required: ["message", "clientName", "status", "errorCode", "calls", "lastSeenAt"],
+        },
+        description: "Failures grouped by error message.",
+      },
+      intents: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            intent: { type: "string" },
+            tool: { type: "string" },
+            calls: { type: "integer" },
+            errors: { type: "integer" },
+          },
+          required: ["intent", "tool", "calls", "errors"],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["before", "after", "failures", "intents", "organization"],
   },
   getGeoPromptHistory: {
     type: "object",
