@@ -26,21 +26,12 @@ const web = {
   points: [{ day: "2026-11-02", views: 10, visitors: 4 }],
   organization,
 };
-const share = {
-  id: "aaaaaaaaaaaaaaaaaaaaaaaa",
-  name: "Launch week",
-  url: "https://app.usenotra.com/stats/aaaaaaaaaaaaaaaaaaaaaaaa",
-  createdAt: "2026-11-02T00:00:00.000Z",
-};
 
 const TOOLS = [
   "get_geo_web_analytics",
   "get_geo_web_analytics_breakdowns",
   "get_geo_traffic_journey_stats",
   "list_geo_analytics_imports",
-  "list_geo_analytics_shares",
-  "create_geo_analytics_share",
-  "revoke_geo_analytics_share",
 ];
 
 beforeEach(() => {
@@ -116,7 +107,6 @@ test("read tools reach their routes", async () => {
         countries: [],
         devices: [],
         outcomes: [],
-        goals: [],
         outboundLinks: [],
         vitals: [],
         errors: [],
@@ -136,15 +126,13 @@ test("read tools reach their routes", async () => {
         organization,
       });
     }
-    if (pathname.endsWith("/imports")) return Response.json({ imports: [], organization });
-    return Response.json({ shares: [share], organization });
+    return Response.json({ imports: [], organization });
   });
 
   for (const [name, args, path] of [
     ["get_geo_web_analytics_breakdowns", { projectId: "p1", days: 7 }, "/v1/projects/p1/geo/traffic/web/breakdowns"],
     ["get_geo_traffic_journey_stats", { projectId: "p1", days: 7 }, "/v1/projects/p1/geo/traffic/journey-stats"],
     ["list_geo_analytics_imports", { projectId: "p1" }, "/v1/projects/p1/geo/traffic/imports"],
-    ["list_geo_analytics_shares", { projectId: "p1" }, "/v1/projects/p1/geo/traffic/shares"],
   ]) {
     fetch.mockClear();
     const result = await call(name, args);
@@ -154,32 +142,12 @@ test("read tools reach their routes", async () => {
   }
 });
 
-test("share links are created and revoked on the project", async () => {
-  const fetch = vi
-    .spyOn(globalThis, "fetch")
-    .mockImplementationOnce(async () => Response.json({ share, organization }, { status: 201 }))
-    .mockImplementationOnce(async () => Response.json({ revoked: true, organization }));
-
-  const created = await call("create_geo_analytics_share", { projectId: "p1", name: "Launch week" });
-  const revoked = await call("revoke_geo_analytics_share", { projectId: "p1", shareId: share.id });
-
-  expect(fetch.mock.calls[0][1].method).toBe("POST");
-  expect(new URL(fetch.mock.calls[0][0]).pathname).toBe("/v1/projects/p1/geo/traffic/shares");
-  expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ name: "Launch week" });
-  expect(created.result.structuredContent.share.url).toBe(share.url);
-  expect(fetch.mock.calls[1][1].method).toBe("DELETE");
-  expect(new URL(fetch.mock.calls[1][0]).pathname).toBe(`/v1/projects/p1/geo/traffic/shares/${share.id}`);
-  expect(revoked.result.structuredContent.revoked).toBe(true);
-});
-
 test("invalid filters are rejected before the API is called", async () => {
   const fetch = vi.spyOn(globalThis, "fetch");
 
   const badPath = await call("get_geo_web_analytics", { projectId: "p1", path: "pricing" });
-  const badShare = await call("revoke_geo_analytics_share", { projectId: "p1", shareId: "../x" });
 
   expect(badPath.result?.isError ?? Boolean(badPath.error)).toBe(true);
-  expect(badShare.result?.isError ?? Boolean(badShare.error)).toBe(true);
   expect(fetch).not.toHaveBeenCalled();
 });
 
@@ -206,7 +174,7 @@ test("get_geo_ingest_setup can ask for a project's web key", async () => {
   expect(result.result.structuredContent.webKey).toBe("nwk.org-1.p1.sig");
 });
 
-test("analytics tools are GEO tools; only share writes change anything", () => {
+test("analytics tools are read-only GEO tools", () => {
   const registered = new Map();
   vi.spyOn(McpServer.prototype, "registerTool").mockImplementation(function (name, config) {
     registered.set(name, config);
@@ -221,8 +189,7 @@ test("analytics tools are GEO tools; only share writes change anything", () => {
     expect(geo.has(name), name).toBe(true);
     expect(registered.has(name), name).toBe(false);
   }
-  const writes = TOOLS.filter((name) => !geo.get(name).annotations.readOnlyHint);
-  expect(writes).toEqual(["create_geo_analytics_share", "revoke_geo_analytics_share"]);
-  expect(geo.get("revoke_geo_analytics_share").annotations.destructiveHint).toBe(true);
+  expect(TOOLS.filter((name) => !geo.get(name).annotations.readOnlyHint)).toEqual([]);
   expect([...geo.keys()]).not.toContain("rotate_geo_web_key");
+  expect([...geo.keys()].filter((name) => name.includes("share") && name.includes("analytics"))).toEqual([]);
 });

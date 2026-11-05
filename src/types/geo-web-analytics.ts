@@ -63,7 +63,6 @@ export interface GeoWebAnalyticsBreakdownsResponse {
   countries: GeoWebBreakdown[];
   devices: GeoWebBreakdown[];
   outcomes: Array<{ source: string; sessions: number; pagesPerSession: number; engagedRate: number }>;
-  goals: Array<{ name: string; events: number; previousEvents: number; visitors: number; previousVisitors: number }>;
   outboundLinks: Array<{ url: string; clicks: number; previousClicks: number; visitors: number }>;
   vitals: Array<{ metric: "lcp" | "inp" | "cls" | "fcp" | "ttfb"; p75: number; samples: number }>;
   errors: Array<{ message: string; source: string; events: number; views: number }>;
@@ -126,27 +125,5 @@ export interface GeoAnalyticsImportsResponse {
     createdAt: string;
     completedAt: string | null;
   }>;
-  organization: Organization;
-}
-
-interface GeoAnalyticsShare {
-  id: string;
-  name: string;
-  url: string;
-  createdAt: string;
-}
-
-export interface GeoAnalyticsSharesResponse {
-  shares: GeoAnalyticsShare[];
-  organization: Organization;
-}
-
-export interface GeoAnalyticsShareResponse {
-  share: GeoAnalyticsShare;
-  organization: Organization;
-}
-
-export interface GeoAnalyticsShareRevokeResponse {
-  revoked: true;
   organization: Organization;
 }

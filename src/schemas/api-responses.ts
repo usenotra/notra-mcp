@@ -8,7 +8,6 @@ export type ApiOperationId =
   | "createBrandColor"
   | "createBrandIdentity"
   | "createEventTrigger"
-  | "createGeoAnalyticsShare"
   | "createGeoPrompt"
   | "createGeoPromptScan"
   | "createGeoScan"
@@ -81,7 +80,6 @@ export type ApiOperationId =
   | "listEventTriggers"
   | "listFeedback"
   | "listGeoAnalyticsImports"
-  | "listGeoAnalyticsShares"
   | "listGeoChanges"
   | "listGeoCompetitors"
   | "listGeoContentBriefs"
@@ -108,9 +106,7 @@ export type ApiOperationId =
   | "patchSkill"
   | "planGeoContentBrief"
   | "retryWebhookDelivery"
-  | "revokeGeoAnalyticsShare"
   | "rotateGeoIngestToken"
-  | "rotateGeoWebKey"
   | "runGeoSequence"
   | "runSchedule"
   | "schedulePost"
@@ -368,36 +364,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["eventTrigger", "organization"],
-  },
-  createGeoAnalyticsShare: {
-    type: "object",
-    properties: {
-      share: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          name: { type: "string" },
-          url: {
-            type: "string",
-            description:
-              "Public page anyone with the link can open. Append `?days=7`, `30` or `90` to change the window.",
-          },
-          createdAt: { type: "string" },
-        },
-        required: ["id", "name", "url", "createdAt"],
-      },
-      organization: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          slug: { type: "string" },
-          name: { type: "string" },
-          logo: { type: ["string", "null"] },
-        },
-        required: ["id", "slug", "name", "logo"],
-      },
-    },
-    required: ["share", "organization"],
   },
   createGeoPrompt: {
     type: "object",
@@ -3522,21 +3488,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         },
         description: "How sessions from AI assistants behave compared to others.",
       },
-      goals: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            name: { type: "string" },
-            events: { type: "integer" },
-            previousEvents: { type: "integer" },
-            visitors: { type: "integer" },
-            previousVisitors: { type: "integer" },
-          },
-          required: ["name", "events", "previousEvents", "visitors", "previousVisitors"],
-        },
-        description: "Custom events and goals sent by notra.js. Event properties are not returned.",
-      },
       outboundLinks: {
         type: "array",
         items: {
@@ -3637,7 +3588,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       "countries",
       "devices",
       "outcomes",
-      "goals",
       "outboundLinks",
       "vitals",
       "errors",
@@ -4673,39 +4623,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["imports", "organization"],
-  },
-  listGeoAnalyticsShares: {
-    type: "object",
-    properties: {
-      shares: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            id: { type: "string" },
-            name: { type: "string" },
-            url: {
-              type: "string",
-              description:
-                "Public page anyone with the link can open. Append `?days=7`, `30` or `90` to change the window.",
-            },
-            createdAt: { type: "string" },
-          },
-          required: ["id", "name", "url", "createdAt"],
-        },
-      },
-      organization: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          slug: { type: "string" },
-          name: { type: "string" },
-          logo: { type: ["string", "null"] },
-        },
-        required: ["id", "slug", "name", "logo"],
-      },
-    },
-    required: ["shares", "organization"],
   },
   listGeoChanges: {
     type: "object",
@@ -6290,23 +6207,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["briefId", "brief", "status", "runId", "postId", "organization"],
   },
   retryWebhookDelivery: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
-  revokeGeoAnalyticsShare: {
-    type: "object",
-    properties: {
-      revoked: { type: "boolean", enum: [true] },
-      organization: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          slug: { type: "string" },
-          name: { type: "string" },
-          logo: { type: ["string", "null"] },
-        },
-        required: ["id", "slug", "name", "logo"],
-      },
-    },
-    required: ["revoked", "organization"],
-  },
   rotateGeoIngestToken: {
     type: "object",
     properties: {
@@ -6348,86 +6248,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization", "token"],
-  },
-  rotateGeoWebKey: {
-    type: "object",
-    properties: {
-      ingestUrl: { type: "string", description: "Endpoint the tracking snippet posts events to." },
-      snippet: { type: "string", description: "Install snippet for the default framework (Next.js)." },
-      snippets: {
-        type: "object",
-        properties: {
-          next: { type: "string" },
-          nuxt: { type: "string" },
-          netlify: { type: "string" },
-          tanstack: { type: "string" },
-          astro: { type: "string" },
-          sveltekit: { type: "string" },
-          reactRouter: { type: "string" },
-        },
-        required: ["next", "nuxt", "netlify", "tanstack", "astro", "sveltekit", "reactRouter"],
-      },
-      drainUrls: {
-        type: "object",
-        properties: { vercel: { type: "string" }, cloudflare: { type: "string" } },
-        required: ["vercel", "cloudflare"],
-        description:
-          "Endpoints a Vercel log drain or Cloudflare Logpush job posts request logs to, authenticated with the tracking token.",
-      },
-      organization: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          slug: { type: "string" },
-          name: { type: "string" },
-          logo: { type: ["string", "null"] },
-        },
-        required: ["id", "slug", "name", "logo"],
-      },
-      webKey: {
-        type: "string",
-        description:
-          "Public key for the notra.js browser script. Safe to put in page HTML; it only records human page views on tracked domains and survives token rotation.",
-      },
-      webSnippet: { type: "string", description: "Script tag that installs notra.js with the public key." },
-      webScript: {
-        type: "object",
-        properties: {
-          url: { type: "string", description: "Always serves the latest build." },
-          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
-          integrity: {
-            type: "string",
-            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
-          },
-        },
-        required: ["url", "pinnedUrl", "integrity"],
-        description: "notra.js: the auto-updating URL and the current build pinned with Subresource Integrity.",
-      },
-      webPlusScript: {
-        type: "object",
-        properties: {
-          url: { type: "string", description: "Always serves the latest build." },
-          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
-          integrity: {
-            type: "string",
-            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
-          },
-        },
-        required: ["url", "pinnedUrl", "integrity"],
-        description: "notra.plus.js (notra.js with JavaScript error reporting), auto-updating and pinned.",
-      },
-    },
-    required: [
-      "ingestUrl",
-      "snippet",
-      "snippets",
-      "drainUrls",
-      "organization",
-      "webKey",
-      "webSnippet",
-      "webScript",
-      "webPlusScript",
-    ],
   },
   runGeoSequence: {
     type: "object",

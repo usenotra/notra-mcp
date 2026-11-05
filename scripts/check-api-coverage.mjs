@@ -37,7 +37,6 @@ const EXCLUDED_SPEC_ROUTES = {
   "POST /v1/webhooks": "signing-secret creation belongs in the dashboard",
   "POST /v1/geo/ingest/token": "credential issuance belongs in the dashboard",
   "POST /v1/geo/ingest/rotate-token": "credential rotation belongs in the dashboard",
-  "POST /v1/geo/ingest/rotate-web-key": "breaks every installed notra.js snippet; rotate in the dashboard",
   "GET /v1/posts/authors": "author assignment is not exposed through MCP; manage authors in the dashboard",
   "GET /v1/status": "unauthenticated reachability probe, no value inside an authenticated MCP session",
   "POST /v1/feedback":
@@ -63,9 +62,6 @@ const PENDING_API_ROUTES = {
   "GET /v1/projects/{projectId}/geo/traffic/web/breakdowns": "ships with usenotra/notra#2268",
   "GET /v1/projects/{projectId}/geo/traffic/journey-stats": "ships with usenotra/notra#2268",
   "GET /v1/projects/{projectId}/geo/traffic/imports": "ships with usenotra/notra#2268",
-  "GET /v1/projects/{projectId}/geo/traffic/shares": "ships with usenotra/notra#2268",
-  "POST /v1/projects/{projectId}/geo/traffic/shares": "ships with usenotra/notra#2268",
-  "DELETE /v1/projects/{projectId}/geo/traffic/shares/{shareId}": "ships with usenotra/notra#2268",
 };
 
 function normalizeSpecPath(specPath) {

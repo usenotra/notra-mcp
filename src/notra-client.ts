@@ -128,9 +128,6 @@ import type {
 } from "./types/geo-traffic.js";
 import type {
   GeoAnalyticsImportsResponse,
-  GeoAnalyticsShareResponse,
-  GeoAnalyticsShareRevokeResponse,
-  GeoAnalyticsSharesResponse,
   GeoTrafficFilterParams,
   GeoTrafficJourneyStatsResponse,
   GeoWebAnalyticsBreakdownsResponse,
@@ -991,26 +988,5 @@ export class NotraClient {
 
   async listGeoAnalyticsImports(projectId: string): Promise<GeoAnalyticsImportsResponse> {
     return this.request<GeoAnalyticsImportsResponse>("GET", this.geoPath(projectId, "/traffic/imports"));
-  }
-
-  async listGeoAnalyticsShares(projectId: string): Promise<GeoAnalyticsSharesResponse> {
-    return this.request<GeoAnalyticsSharesResponse>("GET", this.geoPath(projectId, "/traffic/shares"));
-  }
-
-  async createGeoAnalyticsShare(projectId: string, body: { name: string }): Promise<GeoAnalyticsShareResponse> {
-    return this.request<GeoAnalyticsShareResponse, { name: string }>(
-      "POST",
-      this.geoPath(projectId, "/traffic/shares"),
-      {
-        body,
-      },
-    );
-  }
-
-  async revokeGeoAnalyticsShare(projectId: string, shareId: string): Promise<GeoAnalyticsShareRevokeResponse> {
-    return this.request<GeoAnalyticsShareRevokeResponse>(
-      "DELETE",
-      this.geoPath(projectId, `/traffic/shares/${encodeURIComponent(shareId)}`),
-    );
   }
 }

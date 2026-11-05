@@ -5,8 +5,6 @@ export const GEO_TRAFFIC_VISITOR_TYPE_VALUES = ["crawler", "ai_referral"] as con
 export const GEO_TRAFFIC_CATEGORY_VALUES = ["training-crawler", "search-index", "assistant-browse"] as const;
 export const GEO_TRAFFIC_SITES_VALUES = ["exclude"] as const;
 export const GEO_ANALYTICS_PATH_MAX_LENGTH = 2048;
-export const GEO_ANALYTICS_SHARE_NAME_MAX_LENGTH = 80;
-export const GEO_ANALYTICS_SHARE_ID_MAX_LENGTH = 64;
 
 export const GEO_MAX_COMPETITORS = 2000;
 export const GEO_COMPETITOR_MAX_SYNONYMS = 8;
