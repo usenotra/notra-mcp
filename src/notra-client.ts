@@ -37,6 +37,7 @@ import type {
   ListSkillsResponse,
   SkillResponse,
   UpdateScheduleRequest,
+  CreateScheduleRequest,
   UpdateBrandColorRequest,
   UpdateBrandIdentityRequest,
   UpdatePostRequest,
@@ -405,8 +406,8 @@ export class NotraClient {
     });
   }
 
-  async createSchedule(body: UpdateScheduleRequest): Promise<ScheduleResponse> {
-    return this.request<ScheduleResponse, UpdateScheduleRequest>("POST", "/v1/schedules", { body });
+  async createSchedule(body: CreateScheduleRequest): Promise<ScheduleResponse> {
+    return this.request<ScheduleResponse, CreateScheduleRequest>("POST", "/v1/schedules", { body });
   }
 
   async updateSchedule(scheduleId: string, body: UpdateScheduleRequest): Promise<ScheduleResponse> {

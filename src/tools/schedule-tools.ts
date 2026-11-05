@@ -29,7 +29,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     "create_schedule",
     {
       description:
-        "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger. Generation uses AI credits. When autoPublish is true, generated content is automatically published to outputConfig.publishDestination.",
+        "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger. It reads from GitHub repositories (targets.repositoryIds), Linear integrations (targets.linearIntegrationIds), or both; get IDs from list_integrations. Generation uses AI credits. When autoPublish is true, generated content is automatically published to outputConfig.publishDestination.",
       annotations: { title: "Create Schedule", readOnlyHint: false, openWorldHint: true, destructiveHint: true },
       inputSchema: shareJsonSchema(schedulePayloadSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createSchedule")),
@@ -41,7 +41,7 @@ export function registerScheduleTools(server: McpServer, client: NotraClient) {
     "update_schedule",
     {
       description:
-        "Update an existing content generation schedule. When autoPublish is true, future generated content is automatically published to outputConfig.publishDestination.",
+        "Update an existing content generation schedule. Only the fields you pass change; for example { scheduleId, enabled: false } pauses it. targets and outputConfig merge field by field, sourceConfig replaces the cron as a whole, and null clears an outputConfig field. When autoPublish is true, future generated content is automatically published to outputConfig.publishDestination.",
       annotations: {
         title: "Update Schedule",
         readOnlyHint: false,

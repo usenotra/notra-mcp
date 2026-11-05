@@ -399,6 +399,7 @@ export interface Schedule {
   };
   targets: {
     repositoryIds: string[];
+    linearIntegrationIds?: string[];
   };
   outputType: GeneratableContentType;
   outputConfig: {
@@ -428,14 +429,15 @@ export interface ScheduleDeleteResponse {
   organization: Organization;
 }
 
-export interface UpdateScheduleRequest {
+export interface CreateScheduleRequest {
   name: string;
   sourceType: ScheduleSourceType;
   sourceConfig: {
     cron: ScheduleCronConfig;
   };
   targets: {
-    repositoryIds: string[];
+    repositoryIds?: string[];
+    linearIntegrationIds?: string[];
   };
   outputType: GeneratableContentType;
   outputConfig?: {
@@ -443,6 +445,26 @@ export interface UpdateScheduleRequest {
     brandVoiceId?: string;
   };
   enabled: boolean;
+  autoPublish?: boolean;
+  lookbackWindow?: LookbackWindow;
+}
+
+/** PATCH body: only the fields that are sent change. */
+export interface UpdateScheduleRequest {
+  name?: string;
+  sourceConfig?: {
+    cron: ScheduleCronConfig;
+  };
+  targets?: {
+    repositoryIds?: string[];
+    linearIntegrationIds?: string[];
+  };
+  outputType?: GeneratableContentType;
+  outputConfig?: {
+    publishDestination?: PublishDestination | null;
+    brandVoiceId?: string | null;
+  } | null;
+  enabled?: boolean;
   autoPublish?: boolean;
   lookbackWindow?: LookbackWindow;
 }
