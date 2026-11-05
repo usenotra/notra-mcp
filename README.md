@@ -390,7 +390,7 @@ Page views and outbound link clicks from the notra.js script, plus history impor
 | Tool                               | Description                                                                                  |
 | ---------------------------------- | -------------------------------------------------------------------------------------------- |
 | `get_geo_web_analytics`            | Views, visitors, sessions and AI visitors against the previous window, daily trend and hosts |
-| `get_geo_web_analytics_breakdowns` | Pages, sources, countries, devices, languages, campaigns, outbound links, vitals and errors  |
+| `get_geo_web_analytics_breakdowns` | Pages, sources, countries, devices, languages, outbound links, vitals and errors             |
 | `list_geo_analytics_imports`       | History imports and their progress                                                           |
 
 ### MCP server analytics

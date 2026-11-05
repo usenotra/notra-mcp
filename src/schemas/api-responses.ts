@@ -3544,32 +3544,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           required: ["value", "visitors"],
         },
       },
-      campaignTerms: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            value: { type: "string" },
-            visitors: { type: "integer" },
-            previousVisitors: { type: ["integer", "null"] },
-          },
-          required: ["value", "visitors"],
-        },
-        description: "utm_term values of landing sessions.",
-      },
-      campaignContents: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            value: { type: "string" },
-            visitors: { type: "integer" },
-            previousVisitors: { type: ["integer", "null"] },
-          },
-          required: ["value", "visitors"],
-        },
-        description: "utm_content values of landing sessions.",
-      },
       organization: {
         type: "object",
         properties: {
@@ -3592,8 +3566,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       "vitals",
       "errors",
       "languages",
-      "campaignTerms",
-      "campaignContents",
       "organization",
     ],
   },

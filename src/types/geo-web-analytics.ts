@@ -67,8 +67,6 @@ export interface GeoWebAnalyticsBreakdownsResponse {
   vitals: Array<{ metric: "lcp" | "inp" | "cls" | "fcp" | "ttfb"; p75: number; samples: number }>;
   errors: Array<{ message: string; source: string; events: number; views: number }>;
   languages: GeoWebBreakdown[];
-  campaignTerms: GeoWebBreakdown[];
-  campaignContents: GeoWebBreakdown[];
   organization: Organization;
 }
 

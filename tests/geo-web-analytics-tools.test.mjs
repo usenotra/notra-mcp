@@ -111,8 +111,6 @@ test("read tools reach their routes", async () => {
         vitals: [],
         errors: [],
         languages: [],
-        campaignTerms: [],
-        campaignContents: [],
         organization,
       });
     }
