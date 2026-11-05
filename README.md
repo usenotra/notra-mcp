@@ -373,14 +373,28 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 
 ### AI traffic
 
-| Tool                        | Description                                                  |
-| --------------------------- | ------------------------------------------------------------ |
-| `get_geo_traffic_overview`  | Crawler and AI-referral totals, sources and daily timeseries |
-| `get_geo_traffic_log`       | Most recent individual AI crawler/referral requests          |
-| `list_geo_traffic_journeys` | Sessions grouped by journey                                  |
-| `get_geo_traffic_journey`   | Every event in one journey                                   |
-| `list_geo_traffic_pages`    | Most visited pages by AI traffic                             |
-| `get_geo_ingest_setup`      | Tracking install snippets and ingest endpoint                |
+| Tool                            | Description                                                  |
+| ------------------------------- | ------------------------------------------------------------ |
+| `get_geo_traffic_overview`      | Crawler and AI-referral totals, sources and daily timeseries |
+| `get_geo_traffic_log`           | Most recent individual AI crawler/referral requests          |
+| `list_geo_traffic_journeys`     | Sessions grouped by journey                                  |
+| `get_geo_traffic_journey`       | Every event in one journey                                   |
+| `list_geo_traffic_pages`        | Most visited pages by AI traffic                             |
+| `get_geo_traffic_journey_stats` | Journey counts per AI source and per page                    |
+| `get_geo_ingest_setup`          | Install snippets, log drain URLs and the notra.js web key    |
+
+### Website analytics
+
+Page views and events from the notra.js script, plus history imports and public share links. Rotate the web key and start imports in the dashboard.
+
+| Tool                               | Description                                                                                        |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `get_geo_web_analytics`            | Views, visitors, sessions and AI visitors against the previous window, daily trend and hosts       |
+| `get_geo_web_analytics_breakdowns` | Pages, sources, countries, devices, languages, campaigns, goals, outbound links, vitals and errors |
+| `list_geo_analytics_imports`       | History imports and their progress                                                                 |
+| `list_geo_analytics_shares`        | Active public share links                                                                          |
+| `create_geo_analytics_share`       | Create a public share link (needs `analytics-sharing.write`)                                       |
+| `revoke_geo_analytics_share`       | Revoke a public share link (needs `analytics-sharing.write`)                                       |
 
 ### MCP server analytics
 

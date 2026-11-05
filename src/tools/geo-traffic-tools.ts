@@ -21,7 +21,7 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
     "get_geo_traffic_overview",
     {
       description:
-        "Get AI traffic totals for a project's website: crawler and AI-referral visit totals, a per-source breakdown and the daily timeseries behind it",
+        "Get AI traffic totals for a project's website: crawler and AI-referral visit totals, a per-source breakdown and the daily timeseries behind it. Filter by host, exact page path, or leave out Notra Sites traffic. Explicit from/to ranges can span at most 366 days.",
       annotations: {
         title: "Get AI Traffic Overview",
         readOnlyHint: true,
@@ -130,7 +130,7 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
     "get_geo_ingest_setup",
     {
       description:
-        "Get the AI traffic tracking install snippets (Next.js, Nuxt, Netlify) and the ingest endpoint. The snippets read the token from an environment variable; manage tracking credentials in the Notra dashboard.",
+        "Get the tracking install: server snippets for AI traffic (Next.js, Nuxt, Netlify, TanStack Start, Astro, SvelteKit, React Router), log drain URLs, and the notra.js website analytics script: its public web key, script tag, and pinned script URLs with Subresource Integrity values. The web key is public and belongs in page HTML. The server snippets read the tracking token from an environment variable; issue and rotate credentials in the Notra dashboard.",
       annotations: {
         title: "Get AI Traffic Ingest Setup",
         readOnlyHint: true,
@@ -140,6 +140,6 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
       inputSchema: shareJsonSchema(getGeoIngestSetupSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getGeoIngestSetup")),
     },
-    () => handleError(() => client.getGeoIngestSetup()),
+    (params) => handleError(() => client.getGeoIngestSetup(params)),
   );
 }

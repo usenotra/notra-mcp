@@ -1,10 +1,35 @@
 import * as z from "zod";
 import { GEO_TRAFFIC_CATEGORY_VALUES, GEO_TRAFFIC_VISITOR_TYPE_VALUES } from "../constants/geo.js";
-import { geoShortTextSchema, geoWindowShape, projectIdSchema } from "./geo-fields.js";
+import {
+  GEO_ANALYTICS_PATH_MAX_LENGTH,
+  GEO_ANALYTICS_SHARE_ID_MAX_LENGTH,
+  GEO_ANALYTICS_SHARE_NAME_MAX_LENGTH,
+  GEO_TRAFFIC_SITES_VALUES,
+} from "../constants/geo.js";
+import { geoResourceIdSchema, geoShortTextSchema, geoWindowShape, projectIdSchema } from "./geo-fields.js";
+
+/** The host, page and Notra Sites filters the dashboard's Analytics tab offers. */
+const geoTrafficFilterShape = {
+  host: geoShortTextSchema
+    .optional()
+    .describe("Only count this hostname, such as www.example.com. Subdomains are included."),
+  path: z
+    .string()
+    .trim()
+    .startsWith("/")
+    .max(GEO_ANALYTICS_PATH_MAX_LENGTH)
+    .optional()
+    .describe("Only count this exact page path, such as /pricing"),
+  sites: z
+    .enum(GEO_TRAFFIC_SITES_VALUES)
+    .optional()
+    .describe("exclude leaves out traffic to sites hosted on Notra Sites"),
+};
 
 export const getGeoTrafficOverviewSchema = z.object({
   projectId: projectIdSchema,
   ...geoWindowShape,
+  ...geoTrafficFilterShape,
 });
 
 export const getGeoTrafficLogSchema = z.object({
@@ -37,7 +62,41 @@ export const listGeoTrafficPagesSchema = z.object({
   ...geoWindowShape,
 });
 
-export const getGeoIngestSetupSchema = z.object({});
+export const getGeoIngestSetupSchema = z.object({
+  projectId: projectIdSchema
+    .optional()
+    .describe("Return the notra.js web key for this project. Omit for the organization-wide key."),
+});
+
+export const getGeoWebAnalyticsSchema = z.object({
+  projectId: projectIdSchema,
+  ...geoWindowShape,
+  ...geoTrafficFilterShape,
+});
+
+export const getGeoTrafficJourneyStatsSchema = z.object({
+  projectId: projectIdSchema,
+  ...geoWindowShape,
+});
+
+export const geoProjectOnlySchema = z.object({ projectId: projectIdSchema });
+
+export const createGeoAnalyticsShareSchema = z.object({
+  projectId: projectIdSchema,
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(GEO_ANALYTICS_SHARE_NAME_MAX_LENGTH)
+    .describe("Title of the public page, such as Launch week"),
+});
+
+export const revokeGeoAnalyticsShareSchema = z.object({
+  projectId: projectIdSchema,
+  shareId: geoResourceIdSchema
+    .max(GEO_ANALYTICS_SHARE_ID_MAX_LENGTH)
+    .describe("The share link ID from list_geo_analytics_shares"),
+});
 
 export const getGeoMcpAnalyticsSchema = z.object({
   projectId: projectIdSchema,

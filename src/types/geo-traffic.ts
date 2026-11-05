@@ -194,6 +194,12 @@ export interface GeoMcpToolDetailResponse {
   organization: Organization;
 }
 
+interface GeoWebScript {
+  url: string;
+  pinnedUrl: string;
+  integrity: string;
+}
+
 export interface GeoIngestSetupResponse {
   ingestUrl: string;
   snippet: string;
@@ -206,5 +212,10 @@ export interface GeoIngestSetupResponse {
     sveltekit: string;
     reactRouter: string;
   };
+  drainUrls: { vercel: string; cloudflare: string };
+  webKey: string;
+  webSnippet: string;
+  webScript: GeoWebScript;
+  webPlusScript: GeoWebScript;
   organization: Organization;
 }
