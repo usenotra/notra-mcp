@@ -227,9 +227,10 @@ export interface GeoIngestSetupResponse {
     reactRouter: string;
   };
   drainUrls: { vercel: string; cloudflare: string };
-  webKey: string;
-  webSnippet: string;
-  webScript: GeoWebScript;
-  webPlusScript: GeoWebScript;
+  /** notra.js fields, missing when web analytics is not enabled for the workspace. */
+  webKey?: string;
+  webSnippet?: string;
+  webScript?: GeoWebScript;
+  webPlusScript?: GeoWebScript;
   organization: Organization;
 }

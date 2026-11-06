@@ -130,7 +130,7 @@ export function registerGeoTrafficTools(server: McpServer, client: NotraClient) 
     "get_geo_ingest_setup",
     {
       description:
-        "Get the tracking install: server snippets for AI traffic (Next.js, Nuxt, Netlify, TanStack Start, Astro, SvelteKit, React Router), log drain URLs, and the notra.js website analytics script: its public web key, script tag, and pinned script URLs with Subresource Integrity values. The web key is public and belongs in page HTML. The server snippets read the tracking token from an environment variable; issue and rotate credentials in the Notra dashboard.",
+        "Get the tracking install: server snippets for AI traffic (Next.js, Nuxt, Netlify, TanStack Start, Astro, SvelteKit, React Router), log drain URLs, and the notra.js website analytics script: its public web key, script tag, and pinned script URLs with Subresource Integrity values. The notra.js fields are missing when website analytics is not enabled for the workspace. The web key is public, belongs to one project and belongs in page HTML. The server snippets read the tracking token from an environment variable; issue and rotate credentials in the Notra dashboard.",
       annotations: {
         title: "Get AI Traffic Ingest Setup",
         readOnlyHint: true,
