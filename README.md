@@ -397,15 +397,6 @@ Usage of your own MCP server, reported by the `@usenotra/geo` SDK. Captured argu
 | `get_geo_mcp_analytics`      | Calls, errors, latency, clients, models, intents, recent failures and unused tools |
 | `get_geo_mcp_tool_analytics` | One tool's failures and the tools agents call right before and after it            |
 
-### MCP server analytics
-
-Usage of your own MCP server, reported by the `@usenotra/geo` SDK. Captured arguments, responses and end-user IDs stay in the dashboard.
-
-| Tool                         | Description                                                                        |
-| ---------------------------- | ---------------------------------------------------------------------------------- |
-| `get_geo_mcp_analytics`      | Calls, errors, latency, clients, models, intents, recent failures and unused tools |
-| `get_geo_mcp_tool_analytics` | One tool's failures and the tools agents call right before and after it            |
-
 ### Feedback
 
 | Tool              | Description                                                                         |
