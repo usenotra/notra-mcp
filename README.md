@@ -153,25 +153,19 @@ Legacy 2025 sessions expire after 30 minutes of inactivity. Each OAuth user or A
 
 ## Hosted usage statistics
 
-The HTTP server tracks usage exclusively in PostHog, sending one `mcp_tool_called` event per dispatched tool call, including calls that fail tool input/output validation or return `isError: true` with HTTP 200. Initialization, discovery, health checks, and requests rejected before tool dispatch are not counted. Local stdio servers do not emit usage events or contact PostHog.
+The HTTP server reports MCP usage to Notra's MCP server analytics through [`@usenotra/geo/mcp`](https://github.com/usenotra/geo-sdk). Every JSON-RPC request the server answers is recorded with its method, tool name, status (`ok`, `tool_error` or `rpc_error`), latency, response size, session ID, and the client and server names and versions. `tools/list` answers also record the advertised tools. `ping` is skipped. Local stdio servers do not emit usage events.
 
-Set the PostHog project token on the hosted deployment to enable tracking:
+Set the Notra GEO token on the hosted deployment to enable tracking:
 
 ```env
-POSTHOG_PROJECT_TOKEN=your-project-token
+NOTRA_GEO_TOKEN=your-geo-token
 ```
 
-`POSTHOG_HOST` defaults to `https://us.i.posthog.com`; set it to `https://eu.i.posthog.com` for an EU project. Without a project token, tracking is disabled. There is no alternative collector or JSON usage-log fallback.
-
-Events include `tool_name`, `outcome` (`success`, `error`, or `cancelled`), `duration_ms`, `server_version`, `protocol_version`, `client_name`, `client_version`, and `auth_kind`. OAuth events also include the verified WorkOS `organization_id` and `user_id`; API-key calls have no user/workspace attribution and share the PostHog distinct ID `mcp:api-key`, which must not be counted as a unique user. Client identity is self-reported, bucketed into known client names, and unknown names are recorded as `other`; versions are only retained in numeric `major.minor.patch` form. Unknown tool names are recorded as `unknown`.
-
-Arguments, results, prompts, error messages, headers, IP addresses, tokens, API keys, and token hashes are never included in usage events. Delivery is asynchronous and best-effort, with a five-second timeout and at most 64 pending PostHog requests per process. Failed or dropped deliveries produce a credential-free warning without failing tool calls. Events are not sampled, but PostHog delivery is not an audit or billing ledger.
-
-In PostHog, filter on `mcp_tool_called` and break down by `tool_name`, `client_name`, or `outcome`. Count distinct `organization_id`/`user_id` only for OAuth calls, and use `duration_ms` for latency percentiles.
+Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS `user_id`; API-key calls carry no user. Unknown tool names are recorded as `unknown`. Tool arguments and results are never sent. Delivery is batched, asynchronous and best-effort: a failed delivery logs a credential-free warning without failing the tool call.
 
 ## Toolsets
 
-All 112 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 117 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                              |
 | --------- | -------------------------------------------------------------------------------------------------- |
@@ -205,6 +199,7 @@ Each MCP connection operates in the workspace bound to its bearer token, or for 
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `list_posts`                 | List post summaries with optional filters for sorting, pagination, status, content type, and brand identity |
 | `get_post`                   | Get a single post by ID                                                                                     |
+| `get_post_agent_reach`       | AI crawler, citation and referral visits to a post's live page on its Notra Site                            |
 | `create_post`                | Create a post from your own title and markdown                                                              |
 | `update_post`                | Update a post's title, markdown, or status                                                                  |
 | `delete_post`                | Delete a post                                                                                               |
@@ -245,8 +240,8 @@ Post publishing schedules are separate from the content-generation schedules bel
 | Tool                 | Description                                   |
 | -------------------- | --------------------------------------------- |
 | `list_schedules`     | List scheduled content generation jobs        |
-| `create_schedule`    | Create a scheduled content generation job     |
-| `update_schedule`    | Update a scheduled content generation job     |
+| `create_schedule`    | Create a schedule from GitHub and/or Linear   |
+| `update_schedule`    | Change only the fields you pass on a schedule |
 | `delete_schedule`    | Delete a scheduled content generation job     |
 | `run_schedule`       | Run a schedule once now (uses AI credits)     |
 | `list_schedule_runs` | List a schedule's recent runs and their posts |
@@ -402,6 +397,15 @@ Usage of your own MCP server, reported by the `@usenotra/geo` SDK. Captured argu
 | `get_geo_mcp_analytics`      | Calls, errors, latency, clients, models, intents, recent failures and unused tools |
 | `get_geo_mcp_tool_analytics` | One tool's failures and the tools agents call right before and after it            |
 
+### MCP server analytics
+
+Usage of your own MCP server, reported by the `@usenotra/geo` SDK. Captured arguments, responses and end-user IDs stay in the dashboard.
+
+| Tool                         | Description                                                                        |
+| ---------------------------- | ---------------------------------------------------------------------------------- |
+| `get_geo_mcp_analytics`      | Calls, errors, latency, clients, models, intents, recent failures and unused tools |
+| `get_geo_mcp_tool_analytics` | One tool's failures and the tools agents call right before and after it            |
+
 ### Feedback
 
 | Tool              | Description                                                                         |
@@ -424,12 +428,10 @@ Use Node 22.12+ (Node 22) or Node 24 and the pnpm version pinned in `package.jso
 ```sh
 corepack enable
 pnpm install --frozen-lockfile
-pnpm test
-pnpm run test:coverage
 pnpm run typecheck
 pnpm run format:check
 ```
 
 Tool output schemas in `src/schemas/api-responses.ts` are generated from the Notra OpenAPI spec. Run `pnpm run generate:output-schemas` after the API changes; CI fails when the file is stale.
 
-Vitest runs directly against the source with Zod compilation enabled. CI runs tests, typechecking, formatting checks, and the build on pull requests and pushes to `main`.
+CI runs typechecking, formatting checks, and the build on pull requests and pushes to `main`.

@@ -37,6 +37,7 @@ import type {
   ListSkillsResponse,
   SkillResponse,
   UpdateScheduleRequest,
+  CreateScheduleRequest,
   UpdateBrandColorRequest,
   UpdateBrandIdentityRequest,
   UpdatePostRequest,
@@ -125,6 +126,7 @@ import type {
   GeoTrafficOverviewResponse,
   GeoTrafficPagesParams,
   GeoTrafficPagesResponse,
+  PostAgentReachResponse,
 } from "./types/geo-traffic.js";
 import type {
   GeoAnalyticsImportsResponse,
@@ -265,6 +267,12 @@ export class NotraClient {
       throw new Error(`Post not found: ${postId}`);
     }
     return data;
+  }
+
+  async getPostAgentReach(postId: string, params?: GeoWindowParams): Promise<PostAgentReachResponse> {
+    return this.request<PostAgentReachResponse>("GET", `/v1/posts/${encodeURIComponent(postId)}/agent-reach`, {
+      params,
+    });
   }
 
   async updatePost(postId: string, body: UpdatePostRequest): Promise<PostResponse> {
@@ -412,8 +420,8 @@ export class NotraClient {
     });
   }
 
-  async createSchedule(body: UpdateScheduleRequest): Promise<ScheduleResponse> {
-    return this.request<ScheduleResponse, UpdateScheduleRequest>("POST", "/v1/schedules", { body });
+  async createSchedule(body: CreateScheduleRequest): Promise<ScheduleResponse> {
+    return this.request<ScheduleResponse, CreateScheduleRequest>("POST", "/v1/schedules", { body });
   }
 
   async updateSchedule(scheduleId: string, body: UpdateScheduleRequest): Promise<ScheduleResponse> {

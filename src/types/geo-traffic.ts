@@ -25,6 +25,20 @@ export interface GeoTrafficOverviewResponse {
   organization: Organization;
 }
 
+export interface PostAgentReachResponse {
+  agentReach: {
+    postId: string;
+    siteId: string;
+    path: string;
+    url: string;
+    configured: boolean;
+    totals: { crawled: number; cited: number; referred: number; total: number };
+    sources: GeoTrafficOverviewResponse["sources"];
+    points: GeoTrafficOverviewResponse["points"];
+  } | null;
+  organization: Organization;
+}
+
 export interface GeoTrafficLogParams {
   limit?: number;
   visitorTypes?: GeoTrafficVisitorTypeFilter[];

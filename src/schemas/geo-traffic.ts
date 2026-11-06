@@ -60,7 +60,7 @@ export const listGeoTrafficPagesSchema = z.object({
 export const getGeoIngestSetupSchema = z.object({
   projectId: projectIdSchema
     .optional()
-    .describe("Return the notra.js web key for this project. Omit for the organization-wide key."),
+    .describe("Return the notra.js web key for this project. Omit for the oldest project."),
 });
 
 export const getGeoWebAnalyticsSchema = z.object({

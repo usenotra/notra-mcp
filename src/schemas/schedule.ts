@@ -24,49 +24,90 @@ const scheduleCronConfigSchema = z
     }
   });
 
+const integrationIdsSchema = z.array(z.string().min(1));
+const repositoryIdsDescription = "GitHub integration IDs from list_integrations (github array)";
+const linearIntegrationIdsDescription = "Linear integration IDs from list_integrations (linear array)";
+
+const scheduleSourceConfigSchema = z
+  .object({
+    cron: scheduleCronConfigSchema,
+  })
+  .describe("Cron trigger configuration");
+
+const outputTypeSchema = z.enum(GENERATABLE_CONTENT_TYPE_VALUES).describe("Type of content to generate");
+const publishDestinationSchema = z
+  .enum(["webflow", "framer", "custom"])
+  .describe("Where generated content should be published");
+const lookbackWindowSchema = z
+  .enum(["current_day", "yesterday", "last_7_days", "last_14_days", "last_30_days"])
+  .describe("Time window for gathering data before generation (default: last_7_days)");
+
 export const schedulePayloadSchema = z.object({
   name: z.string().min(1).max(120).describe("Schedule name (1-120 characters)"),
   sourceType: z.literal("cron").describe("Schedule trigger type"),
-  sourceConfig: z
-    .object({
-      cron: scheduleCronConfigSchema,
-    })
-    .describe("Cron trigger configuration"),
+  sourceConfig: scheduleSourceConfigSchema,
   targets: z
     .object({
-      repositoryIds: z
-        .array(z.string().min(1))
-        .min(1)
-        .describe("Repository IDs to include in the scheduled generation"),
+      repositoryIds: integrationIdsSchema.optional().describe(repositoryIdsDescription),
+      linearIntegrationIds: integrationIdsSchema.optional().describe(linearIntegrationIdsDescription),
     })
-    .describe("Repositories the schedule should target"),
-  outputType: z.enum(GENERATABLE_CONTENT_TYPE_VALUES).describe("Type of content to generate"),
+    .refine(
+      ({ repositoryIds, linearIntegrationIds }) =>
+        (repositoryIds?.length ?? 0) > 0 || (linearIntegrationIds?.length ?? 0) > 0,
+      { message: "Set at least one GitHub or Linear integration" },
+    )
+    .describe("Data sources the schedule reads from: GitHub, Linear, or both"),
+  outputType: outputTypeSchema,
   outputConfig: z
     .object({
-      publishDestination: z
-        .enum(["webflow", "framer", "custom"])
-        .optional()
-        .describe("Where generated content should be published"),
+      publishDestination: publishDestinationSchema.optional(),
       brandVoiceId: z.string().min(1).optional().describe("Brand voice ID to use for scheduled output"),
     })
     .optional()
     .describe("Optional publishing and voice settings"),
   enabled: z.boolean().describe("Whether the schedule is active"),
   autoPublish: z.boolean().optional().describe("Whether to auto-publish generated content (default false)"),
-  lookbackWindow: z
-    .enum(["current_day", "yesterday", "last_7_days", "last_14_days", "last_30_days"])
-    .optional()
-    .describe("Time window for gathering data before generation (default: last_7_days)"),
+  lookbackWindow: lookbackWindowSchema.optional(),
 });
 
 export const listSchedulesSchema = z.object({
   repositoryIds: z.array(z.string().min(1)).optional().describe("Only return schedules targeting these repository IDs"),
 });
 
-export const updateScheduleSchema = z.object({
-  scheduleId: z.string().min(1).describe("The schedule ID to update"),
-  ...schedulePayloadSchema.shape,
-});
+export const updateScheduleSchema = z
+  .object({
+    scheduleId: z.string().min(1).describe("The schedule ID to update"),
+    name: z.string().min(1).max(120).optional().describe("New schedule name (1-120 characters)"),
+    sourceConfig: scheduleSourceConfigSchema.optional().describe("Replaces the cron configuration as a whole"),
+    targets: z
+      .object({
+        repositoryIds: integrationIdsSchema
+          .optional()
+          .describe(`${repositoryIdsDescription}. Replaces the GitHub targets; omit to keep them`),
+        linearIntegrationIds: integrationIdsSchema
+          .optional()
+          .describe(
+            `${linearIntegrationIdsDescription}. Replaces the Linear targets; omit to keep them, [] removes them`,
+          ),
+      })
+      .optional()
+      .describe("Data source changes; the schedule must keep at least one GitHub or Linear integration"),
+    outputType: outputTypeSchema.optional(),
+    outputConfig: z
+      .object({
+        publishDestination: publishDestinationSchema.nullable().optional(),
+        brandVoiceId: z.string().min(1).nullable().optional().describe("Brand voice ID to use for scheduled output"),
+      })
+      .nullable()
+      .optional()
+      .describe("Merged field by field into the current settings; null clears a field, or all of them"),
+    enabled: z.boolean().optional().describe("Whether the schedule is active"),
+    autoPublish: z.boolean().optional().describe("Whether to auto-publish generated content"),
+    lookbackWindow: lookbackWindowSchema.optional(),
+  })
+  .refine(({ scheduleId: _scheduleId, ...fields }) => Object.values(fields).some((value) => value !== undefined), {
+    message: "Pass at least one field to update",
+  });
 
 export const deleteScheduleSchema = z.object({
   scheduleId: z.string().min(1).describe("The schedule ID to delete"),
