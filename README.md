@@ -165,7 +165,7 @@ Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS 
 
 ## Toolsets
 
-All 112 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 113 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                              |
 | --------- | -------------------------------------------------------------------------------------------------- |
