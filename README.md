@@ -165,7 +165,7 @@ Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS 
 
 ## Toolsets
 
-All 112 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 113 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                              |
 | --------- | -------------------------------------------------------------------------------------------------- |
@@ -199,6 +199,7 @@ Each MCP connection operates in the workspace bound to its bearer token, or for 
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `list_posts`                 | List post summaries with optional filters for sorting, pagination, status, content type, and brand identity |
 | `get_post`                   | Get a single post by ID                                                                                     |
+| `get_post_agent_reach`       | AI crawler, citation and referral visits to a post's live page on its Notra Site                            |
 | `create_post`                | Create a post from your own title and markdown                                                              |
 | `update_post`                | Update a post's title, markdown, or status                                                                  |
 | `delete_post`                | Delete a post                                                                                               |

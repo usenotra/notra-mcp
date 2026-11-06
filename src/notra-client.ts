@@ -126,6 +126,7 @@ import type {
   GeoTrafficOverviewResponse,
   GeoTrafficPagesParams,
   GeoTrafficPagesResponse,
+  PostAgentReachResponse,
 } from "./types/geo-traffic.js";
 import type {
   GeoPromptResultDetailResponse,
@@ -259,6 +260,12 @@ export class NotraClient {
       throw new Error(`Post not found: ${postId}`);
     }
     return data;
+  }
+
+  async getPostAgentReach(postId: string, params?: GeoWindowParams): Promise<PostAgentReachResponse> {
+    return this.request<PostAgentReachResponse>("GET", `/v1/posts/${encodeURIComponent(postId)}/agent-reach`, {
+      params,
+    });
   }
 
   async updatePost(postId: string, body: UpdatePostRequest): Promise<PostResponse> {

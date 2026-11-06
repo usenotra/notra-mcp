@@ -60,6 +60,7 @@ export type ApiOperationId =
   | "getGeoVisibilityTimeseries"
   | "getGitHubActivity"
   | "getPost"
+  | "getPostAgentReach"
   | "getPostGeneration"
   | "getPostSchedule"
   | "getProject"
@@ -3370,6 +3371,100 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["organization", "post"],
+  },
+  getPostAgentReach: {
+    type: "object",
+    properties: {
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+      agentReach: {
+        type: ["object", "null"],
+        properties: {
+          postId: { type: "string" },
+          siteId: { type: "string" },
+          path: {
+            type: "string",
+            description:
+              "Path the post is served at on its Site. Visits to its Markdown copy (`<path>.md`) and index files are counted too.",
+          },
+          url: { type: "string" },
+          configured: {
+            type: "boolean",
+            description:
+              "False when the traffic backend is not configured for this deployment; the payload is then empty rather than an error.",
+          },
+          totals: {
+            type: "object",
+            properties: {
+              crawled: { type: "integer", description: "Training and search-index crawler visits." },
+              cited: {
+                type: "integer",
+                description: "Visits from assistants reading the page while answering someone.",
+              },
+              referred: { type: "integer", description: "People who clicked through from an AI answer." },
+              total: { type: "integer" },
+            },
+            required: ["crawled", "cited", "referred", "total"],
+          },
+          sources: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                source: { type: "string" },
+                visitorType: { type: "string", enum: ["crawler", "ai_referral", "human", "unknown"] },
+                agent: { type: "string" },
+                category: { type: "string" },
+                confidence: { type: "string" },
+                visits: { type: "integer" },
+                previousVisits: { type: "integer" },
+                markdownVisits: { type: "integer" },
+                previousMarkdownVisits: { type: "integer" },
+                paths: { type: "integer" },
+                previousPaths: { type: "integer" },
+                lastSeenAt: { type: "string" },
+              },
+              required: [
+                "source",
+                "visitorType",
+                "agent",
+                "category",
+                "confidence",
+                "visits",
+                "markdownVisits",
+                "paths",
+                "lastSeenAt",
+              ],
+            },
+          },
+          points: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                day: { type: "string" },
+                visitorType: { type: "string", enum: ["crawler", "ai_referral", "human", "unknown"] },
+                source: { type: "string" },
+                visits: { type: "integer" },
+              },
+              required: ["day", "visitorType", "source", "visits"],
+            },
+          },
+        },
+        required: ["postId", "siteId", "path", "url", "configured", "totals", "sources", "points"],
+        description:
+          "Null when the post isn't live on a Notra Site: never published to one, published to another branch, or the Site has no production deployment.",
+      },
+    },
+    required: ["organization", "agentReach"],
   },
   getPostGeneration: {
     type: "object",
