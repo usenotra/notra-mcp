@@ -6,6 +6,7 @@ import {
   POST_STATUS_VALUES,
 } from "../constants/post.js";
 import { apiResponsePropertySchema } from "../utils/output-schema.js";
+import { geoWindowShape } from "./geo-fields.js";
 import { brandIdentityIdFilterSchema, contentTypeFilterSchema, statusFilterSchema } from "./post-filters.js";
 
 export const listPostsSchema = z.object({
@@ -37,6 +38,11 @@ export const postSummaryListOutputSchema = z.object({
 
 export const getPostSchema = z.object({
   postId: z.string().min(1).describe("The post ID to retrieve"),
+});
+
+export const getPostAgentReachSchema = z.object({
+  postId: z.string().min(1).describe("The post ID (see list_posts)"),
+  ...geoWindowShape,
 });
 
 export const createPostSchema = z.object({

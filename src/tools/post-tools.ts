@@ -1,6 +1,7 @@
 import {
   listPostsSchema,
   getPostSchema,
+  getPostAgentReachSchema,
   createPostSchema,
   updatePostSchema,
   deletePostSchema,
@@ -39,6 +40,18 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
       outputSchema: shareJsonSchema(apiOutputSchema("getPost")),
     },
     ({ postId }) => handleError(() => client.getPost(postId)),
+  );
+
+  server.registerTool(
+    "get_post_agent_reach",
+    {
+      description:
+        "Get AI traffic to one post's live page on its Notra Site, including its Markdown copy: crawler, citation (assistants reading it while answering someone) and referral (people clicking through from an AI answer) totals, a per-source breakdown and the daily timeseries. Defaults to the last 30 days. agentReach is null when the post isn't live on a Notra Site; configured is false when AI traffic tracking is off.",
+      annotations: { title: "Get Post Agent Reach", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      inputSchema: shareJsonSchema(getPostAgentReachSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getPostAgentReach")),
+    },
+    ({ postId, ...params }) => handleError(() => client.getPostAgentReach(postId, params)),
   );
 
   server.registerTool(

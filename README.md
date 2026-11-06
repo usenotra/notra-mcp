@@ -199,6 +199,7 @@ Each MCP connection operates in the workspace bound to its bearer token, or for 
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `list_posts`                 | List post summaries with optional filters for sorting, pagination, status, content type, and brand identity |
 | `get_post`                   | Get a single post by ID                                                                                     |
+| `get_post_agent_reach`       | AI crawler, citation and referral visits to a post's live page on its Notra Site                            |
 | `create_post`                | Create a post from your own title and markdown                                                              |
 | `update_post`                | Update a post's title, markdown, or status                                                                  |
 | `delete_post`                | Delete a post                                                                                               |
