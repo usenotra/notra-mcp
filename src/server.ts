@@ -15,6 +15,7 @@ import { registerGeoSequenceTools } from "./tools/geo-sequence-tools.js";
 import { registerGeoSettingsTools } from "./tools/geo-settings-tools.js";
 import { registerGeoTrafficTools } from "./tools/geo-traffic-tools.js";
 import { registerGeoVisibilityTools } from "./tools/geo-visibility-tools.js";
+import { registerGeoWebAnalyticsTools } from "./tools/geo-web-analytics-tools.js";
 import { registerIntegrationTools } from "./tools/integration-tools.js";
 import { registerPostTools } from "./tools/post-tools.js";
 import { registerPostScheduleTools } from "./tools/post-schedule-tools.js";
@@ -57,6 +58,7 @@ const GEO_REGISTRARS: readonly Registrar[] = [
   registerGeoBriefTools,
   registerGeoAgentReadinessTools,
   registerGeoTrafficTools,
+  registerGeoWebAnalyticsTools,
 ];
 
 const SHARED_REGISTRARS: readonly Registrar[] = [

@@ -1,10 +1,30 @@
 import * as z from "zod";
 import { GEO_TRAFFIC_CATEGORY_VALUES, GEO_TRAFFIC_VISITOR_TYPE_VALUES } from "../constants/geo.js";
-import { geoShortTextSchema, geoWindowShape, projectIdSchema } from "./geo-fields.js";
+import { GEO_ANALYTICS_PATH_MAX_LENGTH, GEO_TRAFFIC_SITES_VALUES } from "../constants/geo.js";
+import { geoResourceIdSchema, geoShortTextSchema, geoWindowShape, projectIdSchema } from "./geo-fields.js";
+
+/** The host, page and Notra Sites filters the dashboard's Analytics tab offers. */
+const geoTrafficFilterShape = {
+  host: geoShortTextSchema
+    .optional()
+    .describe("Only count this hostname, such as www.example.com. Subdomains are included."),
+  path: z
+    .string()
+    .trim()
+    .startsWith("/")
+    .max(GEO_ANALYTICS_PATH_MAX_LENGTH)
+    .optional()
+    .describe("Only count this exact page path, such as /pricing"),
+  sites: z
+    .enum(GEO_TRAFFIC_SITES_VALUES)
+    .optional()
+    .describe("exclude leaves out traffic to sites hosted on Notra Sites"),
+};
 
 export const getGeoTrafficOverviewSchema = z.object({
   projectId: projectIdSchema,
   ...geoWindowShape,
+  ...geoTrafficFilterShape,
 });
 
 export const getGeoTrafficLogSchema = z.object({
@@ -37,7 +57,24 @@ export const listGeoTrafficPagesSchema = z.object({
   ...geoWindowShape,
 });
 
-export const getGeoIngestSetupSchema = z.object({});
+export const getGeoIngestSetupSchema = z.object({
+  projectId: projectIdSchema
+    .optional()
+    .describe("Return the notra.js web key for this project. Omit for the oldest project."),
+});
+
+export const getGeoWebAnalyticsSchema = z.object({
+  projectId: projectIdSchema,
+  ...geoWindowShape,
+  ...geoTrafficFilterShape,
+});
+
+export const getGeoTrafficJourneyStatsSchema = z.object({
+  projectId: projectIdSchema,
+  ...geoWindowShape,
+});
+
+export const geoProjectOnlySchema = z.object({ projectId: projectIdSchema });
 
 export const getGeoMcpAnalyticsSchema = z.object({
   projectId: projectIdSchema,

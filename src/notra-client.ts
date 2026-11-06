@@ -129,6 +129,13 @@ import type {
   PostAgentReachResponse,
 } from "./types/geo-traffic.js";
 import type {
+  GeoAnalyticsImportsResponse,
+  GeoTrafficFilterParams,
+  GeoTrafficJourneyStatsResponse,
+  GeoWebAnalyticsBreakdownsResponse,
+  GeoWebAnalyticsResponse,
+} from "./types/geo-web-analytics.js";
+import type {
   GeoPromptResultDetailResponse,
   GeoPromptResultSummariesResponse,
   GeoPromptResultSummaryParams,
@@ -903,7 +910,7 @@ export class NotraClient {
 
   async getGeoTrafficOverview(
     projectId: string,
-    params?: GeoWindowParams,
+    params?: GeoTrafficFilterParams,
     options?: RequestTimeoutOptions,
   ): Promise<GeoTrafficOverviewResponse> {
     return this.request<GeoTrafficOverviewResponse>("GET", this.geoPath(projectId, "/traffic/overview"), {
@@ -961,7 +968,33 @@ export class NotraClient {
     );
   }
 
-  async getGeoIngestSetup(): Promise<GeoIngestSetupResponse> {
-    return this.request<GeoIngestSetupResponse>("GET", "/v1/geo/ingest/setup");
+  async getGeoIngestSetup(params?: { projectId?: string }): Promise<GeoIngestSetupResponse> {
+    return this.request<GeoIngestSetupResponse>("GET", "/v1/geo/ingest/setup", { params });
+  }
+
+  async getGeoWebAnalytics(projectId: string, params?: GeoTrafficFilterParams): Promise<GeoWebAnalyticsResponse> {
+    return this.request<GeoWebAnalyticsResponse>("GET", this.geoPath(projectId, "/traffic/web"), { params });
+  }
+
+  async getGeoWebAnalyticsBreakdowns(
+    projectId: string,
+    params?: GeoTrafficFilterParams,
+  ): Promise<GeoWebAnalyticsBreakdownsResponse> {
+    return this.request<GeoWebAnalyticsBreakdownsResponse>("GET", this.geoPath(projectId, "/traffic/web/breakdowns"), {
+      params,
+    });
+  }
+
+  async getGeoTrafficJourneyStats(
+    projectId: string,
+    params?: GeoWindowParams,
+  ): Promise<GeoTrafficJourneyStatsResponse> {
+    return this.request<GeoTrafficJourneyStatsResponse>("GET", this.geoPath(projectId, "/traffic/journey-stats"), {
+      params,
+    });
+  }
+
+  async listGeoAnalyticsImports(projectId: string): Promise<GeoAnalyticsImportsResponse> {
+    return this.request<GeoAnalyticsImportsResponse>("GET", this.geoPath(projectId, "/traffic/imports"));
   }
 }
