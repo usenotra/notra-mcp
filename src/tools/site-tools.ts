@@ -68,7 +68,7 @@ export function registerSiteTools(server: McpServer, client: NotraClient) {
     "deploy_site",
     {
       description:
-        "Build and publish the newest commit on a Site's production branch. Changes the live site. Returns the queued deployment; poll get_site_deployment until its status is final.",
+        "Build the newest commit on a Site's production branch. It goes live unless production is pinned to an older build (rollbackActive in get_site), which someone has to promote in the dashboard. Returns the queued deployment; poll get_site_deployment until its status is final.",
       annotations: { title: "Deploy Site", readOnlyHint: false, openWorldHint: true, destructiveHint: true },
       inputSchema: shareJsonSchema(siteSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("startSiteDeployment")),
@@ -97,7 +97,7 @@ export function registerSiteTools(server: McpServer, client: NotraClient) {
     "preview_post_on_site",
     {
       description:
-        "Build a private preview of a Site with a saved blog post or changelog added, without changing the repository or the live site, and return its URL. Workspace members open it after signing in. Poll get_site_post_preview until live is true before sharing the link.",
+        "Build a private preview of a Site with a saved blog post or changelog added, without changing the repository or the live site, and return its URL. Workspace members open it after signing in; password-protected sharing is set up in the dashboard. Poll get_site_post_preview until live is true before sharing the link.",
       annotations: { title: "Preview Post on Site", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
       inputSchema: shareJsonSchema(createSitePostPreviewSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createSitePostPreview")),

@@ -121,7 +121,6 @@ export interface SitePostPreviewResponse {
 export interface CreateSitePostPreviewRequest {
   postId: string;
   lifetime?: "1h" | "1d" | "3d" | "7d";
-  password?: string;
 }
 
 export interface PublishSitePostResponse {

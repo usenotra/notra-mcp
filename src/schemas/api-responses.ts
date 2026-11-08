@@ -855,17 +855,22 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     type: "object",
     properties: {
       preview: {
-        type: ["object", "null"],
-        properties: {
-          status: { type: "string", description: "Status of the preview's latest build." },
-          live: { type: "boolean" },
-          deleting: { type: "boolean" },
-          errorMessage: { type: ["string", "null"] },
-          expiresAt: { type: "string" },
-          hasPassword: { type: "boolean" },
-          url: { type: "string" },
-        },
-        required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+        anyOf: [
+          {
+            type: "object",
+            properties: {
+              status: { type: "string", description: "Status of the preview's latest build." },
+              live: { type: "boolean" },
+              deleting: { type: "boolean" },
+              errorMessage: { type: ["string", "null"] },
+              expiresAt: { type: "string" },
+              hasPassword: { type: "boolean" },
+              url: { type: "string" },
+            },
+            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+          },
+          { type: "null" },
+        ],
         description: "Null when the post has no preview on this Site.",
       },
       organization: {
@@ -3850,7 +3855,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     type: "object",
     properties: {
       deployment: {
-        type: ["object", "null"],
+        type: "object",
         properties: {
           id: { type: "string" },
           kind: { type: "string", enum: ["production", "preview"] },
@@ -3949,17 +3954,22 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     type: "object",
     properties: {
       preview: {
-        type: ["object", "null"],
-        properties: {
-          status: { type: "string", description: "Status of the preview's latest build." },
-          live: { type: "boolean" },
-          deleting: { type: "boolean" },
-          errorMessage: { type: ["string", "null"] },
-          expiresAt: { type: "string" },
-          hasPassword: { type: "boolean" },
-          url: { type: "string" },
-        },
-        required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+        anyOf: [
+          {
+            type: "object",
+            properties: {
+              status: { type: "string", description: "Status of the preview's latest build." },
+              live: { type: "boolean" },
+              deleting: { type: "boolean" },
+              errorMessage: { type: ["string", "null"] },
+              expiresAt: { type: "string" },
+              hasPassword: { type: "boolean" },
+              url: { type: "string" },
+            },
+            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+          },
+          { type: "null" },
+        ],
         description: "Null when the post has no preview on this Site.",
       },
       organization: {
@@ -5860,7 +5870,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       deployments: {
         type: "array",
         items: {
-          type: ["object", "null"],
+          type: "object",
           properties: {
             id: { type: "string" },
             kind: { type: "string", enum: ["production", "preview"] },
@@ -6022,87 +6032,92 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               type: "object",
               properties: {
                 latestDeployment: {
-                  type: ["object", "null"],
-                  properties: {
-                    id: { type: "string" },
-                    kind: { type: "string", enum: ["production", "preview"] },
-                    previewKey: { type: ["string", "null"] },
-                    trigger: {
-                      type: "string",
-                      enum: ["push", "pull_request", "manual", "redeploy", "config", "toolchain"],
-                    },
-                    status: {
-                      type: "string",
-                      enum: [
-                        "queued",
-                        "building",
-                        "uploading",
-                        "ready",
-                        "superseded",
-                        "skipped",
-                        "failed",
-                        "canceled",
-                        "expired",
-                      ],
-                      description:
-                        "queued, building and uploading are in progress; ready, superseded, skipped, failed, canceled and expired are final.",
-                    },
-                    live: { type: "boolean" },
-                    liveSince: { type: ["string", "null"] },
-                    branch: { type: "string" },
-                    commitSha: { type: "string" },
-                    commitMessage: { type: ["string", "null"] },
-                    commitAuthor: { type: ["string", "null"] },
-                    pullRequestNumber: { type: ["integer", "null"] },
-                    url: { type: "string" },
-                    fileCount: { type: ["integer", "null"] },
-                    totalBytes: { type: ["integer", "null"] },
-                    buildDurationMs: { type: ["integer", "null"] },
-                    errorMessage: { type: ["string", "null"] },
-                    skipReason: { type: ["string", "null"] },
-                    diagnostics: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        properties: {
-                          severity: { type: "string", enum: ["error", "warning"] },
-                          file: { type: ["string", "null"] },
-                          line: { type: "integer" },
-                          column: { type: "integer" },
-                          code: { type: "string" },
-                          message: { type: "string" },
+                  anyOf: [
+                    {
+                      type: "object",
+                      properties: {
+                        id: { type: "string" },
+                        kind: { type: "string", enum: ["production", "preview"] },
+                        previewKey: { type: ["string", "null"] },
+                        trigger: {
+                          type: "string",
+                          enum: ["push", "pull_request", "manual", "redeploy", "config", "toolchain"],
                         },
-                        required: ["severity", "file", "code", "message"],
+                        status: {
+                          type: "string",
+                          enum: [
+                            "queued",
+                            "building",
+                            "uploading",
+                            "ready",
+                            "superseded",
+                            "skipped",
+                            "failed",
+                            "canceled",
+                            "expired",
+                          ],
+                          description:
+                            "queued, building and uploading are in progress; ready, superseded, skipped, failed, canceled and expired are final.",
+                        },
+                        live: { type: "boolean" },
+                        liveSince: { type: ["string", "null"] },
+                        branch: { type: "string" },
+                        commitSha: { type: "string" },
+                        commitMessage: { type: ["string", "null"] },
+                        commitAuthor: { type: ["string", "null"] },
+                        pullRequestNumber: { type: ["integer", "null"] },
+                        url: { type: "string" },
+                        fileCount: { type: ["integer", "null"] },
+                        totalBytes: { type: ["integer", "null"] },
+                        buildDurationMs: { type: ["integer", "null"] },
+                        errorMessage: { type: ["string", "null"] },
+                        skipReason: { type: ["string", "null"] },
+                        diagnostics: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              severity: { type: "string", enum: ["error", "warning"] },
+                              file: { type: ["string", "null"] },
+                              line: { type: "integer" },
+                              column: { type: "integer" },
+                              code: { type: "string" },
+                              message: { type: "string" },
+                            },
+                            required: ["severity", "file", "code", "message"],
+                          },
+                          description: "Compiler errors and warnings with file and line.",
+                        },
+                        createdAt: { type: "string" },
+                        startedAt: { type: ["string", "null"] },
+                        finishedAt: { type: ["string", "null"] },
                       },
-                      description: "Compiler errors and warnings with file and line.",
+                      required: [
+                        "id",
+                        "kind",
+                        "previewKey",
+                        "trigger",
+                        "status",
+                        "live",
+                        "liveSince",
+                        "branch",
+                        "commitSha",
+                        "commitMessage",
+                        "commitAuthor",
+                        "pullRequestNumber",
+                        "url",
+                        "fileCount",
+                        "totalBytes",
+                        "buildDurationMs",
+                        "errorMessage",
+                        "skipReason",
+                        "diagnostics",
+                        "createdAt",
+                        "startedAt",
+                        "finishedAt",
+                      ],
                     },
-                    createdAt: { type: "string" },
-                    startedAt: { type: ["string", "null"] },
-                    finishedAt: { type: ["string", "null"] },
-                  },
-                  required: [
-                    "id",
-                    "kind",
-                    "previewKey",
-                    "trigger",
-                    "status",
-                    "live",
-                    "liveSince",
-                    "branch",
-                    "commitSha",
-                    "commitMessage",
-                    "commitAuthor",
-                    "pullRequestNumber",
-                    "url",
-                    "fileCount",
-                    "totalBytes",
-                    "buildDurationMs",
-                    "errorMessage",
-                    "skipReason",
-                    "diagnostics",
-                    "createdAt",
-                    "startedAt",
-                    "finishedAt",
+                    { type: "null" },
                   ],
                 },
               },
@@ -6416,7 +6431,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     type: "object",
     properties: {
       deployment: {
-        type: ["object", "null"],
+        type: "object",
         properties: {
           id: { type: "string" },
           kind: { type: "string", enum: ["production", "preview"] },
@@ -6719,7 +6734,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     type: "object",
     properties: {
       deployment: {
-        type: ["object", "null"],
+        type: "object",
         properties: {
           id: { type: "string" },
           kind: { type: "string", enum: ["production", "preview"] },

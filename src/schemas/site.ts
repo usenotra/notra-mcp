@@ -27,12 +27,6 @@ export const createSitePostPreviewSchema = z.object({
   siteId,
   postId,
   lifetime: z.enum(["1h", "1d", "3d", "7d"]).optional().describe("How long the preview stays open (default 1d)"),
-  password: z
-    .string()
-    .min(8)
-    .max(128)
-    .optional()
-    .describe("Only when the user asks to share the preview outside the workspace and gives the password"),
 });
 
 export const sitePostSchema = z.object({ siteId, postId });
