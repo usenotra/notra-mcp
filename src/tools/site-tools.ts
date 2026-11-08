@@ -20,12 +20,12 @@ export function registerSiteTools(server: McpServer, client: NotraClient) {
     "list_sites",
     {
       description:
-        "List the workspace's Notra Sites, hosted blogs and changelogs built from a GitHub repository, with each Site's live URL, sections and newest production deployment.",
+        "List the workspace's Notra Sites, hosted blogs and changelogs built from a GitHub repository, with each Site's URL, whether it is live and its blog mount. Pass a Site's id to the other Site tools; get_site has its settings, domains and previews.",
       annotations: { title: "List Sites", ...READ },
       inputSchema: shareJsonSchema(listSitesSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listSites")),
     },
-    (params) => handleError(() => client.listSites(params)),
+    () => handleError(() => client.listSites()),
   );
 
   server.registerTool(

@@ -67,8 +67,14 @@ export interface SitePostPreview {
 }
 
 export interface ListSitesResponse {
-  organization: Organization;
-  sites: Array<Site & { latestDeployment: SiteDeployment | null }>;
+  sites: Array<{
+    id: string;
+    name: string;
+    url: string;
+    status: string;
+    live: boolean;
+    blogMount: string | null;
+  }>;
 }
 
 export interface GetSiteResponse {

@@ -4,9 +4,7 @@ const siteId = z.string().min(1).describe("Site ID (see list_sites)");
 const deploymentId = z.string().min(1).describe("Deployment ID (see list_site_deployments)");
 const postId = z.string().min(1).describe("ID of a saved blog post or changelog (see list_posts)");
 
-export const listSitesSchema = z.object({
-  projectId: z.string().min(1).optional().describe("Only list Sites in this project (see list_projects)"),
-});
+export const listSitesSchema = z.object({});
 
 export const siteSchema = z.object({ siteId });
 

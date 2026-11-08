@@ -217,7 +217,7 @@ Notra Sites are hosted blogs and changelogs built from a GitHub repository. Sett
 
 | Tool                       | Description                                                                                       |
 | -------------------------- | ------------------------------------------------------------------------------------------------- |
-| `list_sites`               | List Sites with their live URL, sections and newest production deployment                         |
+| `list_sites`               | List Sites with their URL, whether they are live and their blog mount                             |
 | `get_site`                 | Get a Site's settings, live deployment, custom domains and open previews                          |
 | `list_site_deployments`    | List production and preview builds with status, commit and compiler diagnostics                   |
 | `get_site_deployment`      | Get one deployment with its diagnostics and build log                                             |

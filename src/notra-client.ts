@@ -283,8 +283,8 @@ export class NotraClient {
     });
   }
 
-  async listSites(params?: { projectId?: string }): Promise<ListSitesResponse> {
-    return this.request<ListSitesResponse>("GET", "/v1/sites", { params });
+  async listSites(): Promise<ListSitesResponse> {
+    return this.request<ListSitesResponse>("GET", "/v1/sites");
   }
 
   async getSite(siteId: string): Promise<GetSiteResponse> {
