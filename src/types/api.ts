@@ -354,6 +354,7 @@ export interface UpdatePostRequest {
   slug?: string | null;
   markdown?: string;
   status?: PostStatus;
+  metadata?: { authorIds?: string[] };
 }
 
 export interface ListPostsParams {

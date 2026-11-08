@@ -20,6 +20,7 @@ import { registerPostTools } from "./tools/post-tools.js";
 import { registerPostScheduleTools } from "./tools/post-schedule-tools.js";
 import { registerProjectTools } from "./tools/project-tools.js";
 import { registerScheduleTools } from "./tools/schedule-tools.js";
+import { registerSiteTools } from "./tools/site-tools.js";
 import { registerSkillTools } from "./tools/skill-tools.js";
 import { registerWebhookTools } from "./tools/webhook-tools.js";
 import { registerListWorkspacesTool, registerWhoAmITool } from "./tools/workspace-tools.js";
@@ -36,6 +37,7 @@ type Registrar = (server: McpServer, client: NotraClient) => void;
 const CONTENT_REGISTRARS: readonly Registrar[] = [
   registerPostTools,
   registerPostScheduleTools,
+  registerSiteTools,
   registerBrandIdentityTools,
   registerIntegrationTools,
   registerScheduleTools,

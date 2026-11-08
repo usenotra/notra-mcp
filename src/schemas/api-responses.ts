@@ -3,6 +3,7 @@ import type { JSONSchema } from "zod/v4/core";
 export type ApiOperationId =
   | "acceptGeoPromptSuggestion"
   | "approveGeoContentBrief"
+  | "archiveGeoPersona"
   | "cancelPostSchedule"
   | "createAgentSession"
   | "createBrandColor"
@@ -29,9 +30,11 @@ export type ApiOperationId =
   | "deletePost"
   | "deleteProject"
   | "deleteSchedule"
+  | "deleteSiteAuthor"
   | "deleteSkill"
   | "deleteWebhookEndpoint"
   | "dismissGeoPromptSuggestion"
+  | "generateGeoPersonas"
   | "getBrandIdentity"
   | "getBrandIdentityGeneration"
   | "getChat"
@@ -43,6 +46,9 @@ export type ApiOperationId =
   | "getGeoIngestSetup"
   | "getGeoMcpAnalytics"
   | "getGeoMcpToolDetail"
+  | "getGeoPersonaActivity"
+  | "getGeoPersonaGeneration"
+  | "getGeoPersonaResults"
   | "getGeoPromptHistory"
   | "getGeoPromptResultDetail"
   | "getGeoScan"
@@ -70,6 +76,7 @@ export type ApiOperationId =
   | "getWorkspaces"
   | "importGeoCompetitors"
   | "importGeoPrompts"
+  | "importSiteAuthors"
   | "issueGeoIngestToken"
   | "listAgentChats"
   | "listBrandColors"
@@ -82,6 +89,7 @@ export type ApiOperationId =
   | "listGeoContentBriefs"
   | "listGeoContentGaps"
   | "listGeoEngines"
+  | "listGeoPersonas"
   | "listGeoPromptResultSummaries"
   | "listGeoPrompts"
   | "listGeoPromptSuggestions"
@@ -97,13 +105,18 @@ export type ApiOperationId =
   | "listProjects"
   | "listScheduleRuns"
   | "listSchedules"
+  | "listSiteAuthors"
+  | "listSites"
   | "listSkills"
   | "listWebhookDeliveries"
   | "listWebhookEndpoints"
   | "patchSkill"
   | "planGeoContentBrief"
+  | "publishSite"
+  | "restoreGeoPersona"
   | "retryWebhookDelivery"
   | "rotateGeoIngestToken"
+  | "runGeoPersona"
   | "runGeoSequence"
   | "runSchedule"
   | "schedulePost"
@@ -118,13 +131,16 @@ export type ApiOperationId =
   | "updateFeedback"
   | "updateGeoContentBrief"
   | "updateGeoContentGap"
+  | "updateGeoPersona"
   | "updateGeoPrompt"
   | "updateGeoSequence"
   | "updateGeoSettings"
   | "updatePost"
   | "updateProject"
   | "updateSchedule"
-  | "upsertGeoCompetitor";
+  | "updateSiteAuthorPage"
+  | "upsertGeoCompetitor"
+  | "upsertSiteAuthor";
 
 export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema> = {
   acceptGeoPromptSuggestion: {
@@ -171,6 +187,23 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["runId", "organization"],
+  },
+  archiveGeoPersona: {
+    type: "object",
+    properties: {
+      id: { type: "string" },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["id", "organization"],
   },
   cancelPostSchedule: {
     type: "object",
@@ -555,10 +588,35 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                     name: { type: "string" },
                     title: { type: ["string", "null"] },
                     avatarUrl: { type: ["string", "null"] },
+                    url: { type: ["string", "null"], description: "Author's website." },
+                    x: { type: ["string", "null"] },
+                    linkedin: { type: ["string", "null"] },
+                    github: { type: ["string", "null"] },
+                    youtube: { type: ["string", "null"] },
+                    bluesky: { type: ["string", "null"] },
+                    mastodon: { type: ["string", "null"] },
+                    threads: { type: ["string", "null"] },
+                    instagram: { type: ["string", "null"] },
                   },
-                  required: ["id", "slug", "name", "title", "avatarUrl"],
+                  required: [
+                    "id",
+                    "slug",
+                    "name",
+                    "title",
+                    "avatarUrl",
+                    "url",
+                    "x",
+                    "linkedin",
+                    "github",
+                    "youtube",
+                    "bluesky",
+                    "mastodon",
+                    "threads",
+                    "instagram",
+                  ],
                 },
-                description: "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+                description:
+                  "Credited authors in display order. Authors deleted since they were assigned are omitted. On blog posts that publish to a Notra Sites site, authors whose id starts with site: come from the site's blog.json, unpublished Design changes included.",
               },
               featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
               noindex: {
@@ -770,7 +828,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 type: "array",
                 items: { type: "string" },
                 description:
-                  "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations.",
+                  "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations. When omitted, runs read every enabled Linear integration; send [] to read none.",
               },
             },
             required: ["repositoryIds"],
@@ -1126,6 +1184,85 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["id", "organization"],
   },
+  deleteSiteAuthor: {
+    type: "object",
+    properties: {
+      site: {
+        type: "object",
+        properties: { id: { type: "string" }, name: { type: "string" } },
+        required: ["id", "name"],
+      },
+      authors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            ref: {
+              type: "string",
+              description:
+                "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
+            },
+            name: { type: "string" },
+            title: { type: ["string", "null"] },
+            bio: { type: ["string", "null"] },
+            avatar: {
+              type: ["string", "null"],
+              description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
+            },
+            avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+            url: { type: ["string", "null"] },
+            x: { type: ["string", "null"] },
+            linkedin: { type: ["string", "null"] },
+            github: { type: ["string", "null"] },
+            youtube: { type: ["string", "null"] },
+            bluesky: { type: ["string", "null"] },
+            mastodon: { type: ["string", "null"] },
+            threads: { type: ["string", "null"] },
+            instagram: { type: ["string", "null"] },
+            live: {
+              type: "boolean",
+              description:
+                "The author is in the published blog.json. False while it only exists in unpublished changes.",
+            },
+            posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
+          },
+          required: [
+            "id",
+            "ref",
+            "name",
+            "title",
+            "bio",
+            "avatar",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+            "live",
+            "posts",
+          ],
+        },
+        description: "Authors in blog.json order, including unpublished changes.",
+      },
+      authorPage: {
+        type: "string",
+        enum: ["inline", "stacked"],
+        description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+      },
+      hasUnpublishedChanges: {
+        type: "boolean",
+        description:
+          "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
+      },
+    },
+    required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+  },
   deleteSkill: { type: "object", properties: { success: { type: "boolean", enum: [true] } }, required: ["success"] },
   deleteWebhookEndpoint: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
   dismissGeoPromptSuggestion: {
@@ -1145,6 +1282,34 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["id", "dismissed", "organization"],
+  },
+  generateGeoPersonas: {
+    type: "object",
+    properties: {
+      job: {
+        type: ["object", "null"],
+        properties: {
+          id: { type: "string" },
+          status: { type: "string", enum: ["queued", "running", "completed", "failed"] },
+          personaId: { type: ["string", "null"] },
+          startedAt: { type: "string" },
+          error: { type: ["string", "null"] },
+        },
+        required: ["id", "status", "personaId", "startedAt", "error"],
+        description: "The project's latest generation job, or `null` when none ran recently.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["job", "organization"],
   },
   getBrandIdentity: {
     type: "object",
@@ -1491,7 +1656,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
           },
           eligibleChecks: { type: ["integer", "null"] },
-          reportUrl: { type: ["string", "null"] },
           errorMessage: { type: ["string", "null"] },
           scannedAt: { type: ["string", "null"] },
           createdAt: { type: "string" },
@@ -1505,7 +1669,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "scoreBreakdown",
           "issues",
           "eligibleChecks",
-          "reportUrl",
           "errorMessage",
           "scannedAt",
           "createdAt",
@@ -1569,7 +1732,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 },
               },
               eligibleChecks: { type: ["integer", "null"] },
-              reportUrl: { type: ["string", "null"] },
               errorMessage: { type: ["string", "null"] },
               scannedAt: { type: ["string", "null"] },
               createdAt: { type: "string" },
@@ -1583,7 +1745,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               "scoreBreakdown",
               "issues",
               "eligibleChecks",
-              "reportUrl",
               "errorMessage",
               "scannedAt",
               "createdAt",
@@ -2198,6 +2359,139 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["before", "after", "failures", "intents", "organization"],
+  },
+  getGeoPersonaActivity: {
+    type: "object",
+    properties: {
+      from: { type: "string" },
+      to: { type: "string" },
+      points: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            personaId: { type: "string" },
+            snapshotVersion: { type: "string" },
+            day: { type: "string" },
+            lastCheckedAt: { type: "string" },
+            checks: { type: "integer" },
+            mentions: { type: "integer" },
+          },
+          required: ["personaId", "snapshotVersion", "day", "lastCheckedAt", "checks", "mentions"],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["from", "to", "points", "organization"],
+  },
+  getGeoPersonaGeneration: {
+    type: "object",
+    properties: {
+      job: {
+        type: ["object", "null"],
+        properties: {
+          id: { type: "string" },
+          status: { type: "string", enum: ["queued", "running", "completed", "failed"] },
+          personaId: { type: ["string", "null"] },
+          startedAt: { type: "string" },
+          error: { type: ["string", "null"] },
+        },
+        required: ["id", "status", "personaId", "startedAt", "error"],
+        description: "The project's latest generation job, or `null` when none ran recently.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["job", "organization"],
+  },
+  getGeoPersonaResults: {
+    type: "object",
+    properties: {
+      results: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            scanId: { type: "string" },
+            turn: { type: "integer", description: "Conversation turn, starting at 1." },
+            engine: { type: "string" },
+            prompt: { type: "string" },
+            answer: { type: "string" },
+            mentioned: { type: "boolean" },
+            position: { type: ["number", "null"] },
+            sentiment: { type: ["string", "null"] },
+            excerpt: { type: "string" },
+            searchQueries: { type: "array", items: { type: "string" } },
+            sources: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: { title: { type: "string" }, url: { type: "string" }, domain: { type: "string" } },
+                required: ["title", "url", "domain"],
+              },
+            },
+            snapshotVersion: {
+              type: ["string", "null"],
+              description:
+                "Hash of the persona context this answer was played with. Changes when the persona is edited.",
+            },
+            lastCheckedAt: { type: "string" },
+          },
+          required: [
+            "scanId",
+            "turn",
+            "engine",
+            "prompt",
+            "answer",
+            "mentioned",
+            "position",
+            "sentiment",
+            "excerpt",
+            "searchQueries",
+            "sources",
+            "snapshotVersion",
+            "lastCheckedAt",
+          ],
+        },
+      },
+      scans: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { id: { type: "string" }, capturedAt: { type: "string" } },
+          required: ["id", "capturedAt"],
+        },
+      },
+      selectedScanId: { type: ["string", "null"] },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["results", "scans", "selectedScanId", "organization"],
   },
   getGeoPromptHistory: {
     type: "object",
@@ -3325,10 +3619,35 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                     name: { type: "string" },
                     title: { type: ["string", "null"] },
                     avatarUrl: { type: ["string", "null"] },
+                    url: { type: ["string", "null"], description: "Author's website." },
+                    x: { type: ["string", "null"] },
+                    linkedin: { type: ["string", "null"] },
+                    github: { type: ["string", "null"] },
+                    youtube: { type: ["string", "null"] },
+                    bluesky: { type: ["string", "null"] },
+                    mastodon: { type: ["string", "null"] },
+                    threads: { type: ["string", "null"] },
+                    instagram: { type: ["string", "null"] },
                   },
-                  required: ["id", "slug", "name", "title", "avatarUrl"],
+                  required: [
+                    "id",
+                    "slug",
+                    "name",
+                    "title",
+                    "avatarUrl",
+                    "url",
+                    "x",
+                    "linkedin",
+                    "github",
+                    "youtube",
+                    "bluesky",
+                    "mastodon",
+                    "threads",
+                    "instagram",
+                  ],
                 },
-                description: "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+                description:
+                  "Credited authors in display order. Authors deleted since they were assigned are omitted. On blog posts that publish to a Notra Sites site, authors whose id starts with site: come from the site's blog.json, unpublished Design changes included.",
               },
               featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
               noindex: {
@@ -3904,6 +4223,102 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["imported", "updated", "skipped", "issues", "organization"],
   },
+  importSiteAuthors: {
+    allOf: [
+      {
+        type: "object",
+        properties: {
+          site: {
+            type: "object",
+            properties: { id: { type: "string" }, name: { type: "string" } },
+            required: ["id", "name"],
+          },
+          authors: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                ref: {
+                  type: "string",
+                  description:
+                    "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
+                },
+                name: { type: "string" },
+                title: { type: ["string", "null"] },
+                bio: { type: ["string", "null"] },
+                avatar: {
+                  type: ["string", "null"],
+                  description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
+                },
+                avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+                url: { type: ["string", "null"] },
+                x: { type: ["string", "null"] },
+                linkedin: { type: ["string", "null"] },
+                github: { type: ["string", "null"] },
+                youtube: { type: ["string", "null"] },
+                bluesky: { type: ["string", "null"] },
+                mastodon: { type: ["string", "null"] },
+                threads: { type: ["string", "null"] },
+                instagram: { type: ["string", "null"] },
+                live: {
+                  type: "boolean",
+                  description:
+                    "The author is in the published blog.json. False while it only exists in unpublished changes.",
+                },
+                posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
+              },
+              required: [
+                "id",
+                "ref",
+                "name",
+                "title",
+                "bio",
+                "avatar",
+                "avatarUrl",
+                "url",
+                "x",
+                "linkedin",
+                "github",
+                "youtube",
+                "bluesky",
+                "mastodon",
+                "threads",
+                "instagram",
+                "live",
+                "posts",
+              ],
+            },
+            description: "Authors in blog.json order, including unpublished changes.",
+          },
+          authorPage: {
+            type: "string",
+            enum: ["inline", "stacked"],
+            description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+          },
+          hasUnpublishedChanges: {
+            type: "boolean",
+            description:
+              "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
+          },
+        },
+        required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+      },
+      {
+        type: "object",
+        properties: {
+          imported: { type: "array", items: { type: "string" }, description: "Ids written to blog.json." },
+          avatarsSkipped: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Ids whose avatar was a dashboard upload, which only the dashboard import can copy into the site. Set their avatar with PUT afterwards.",
+          },
+        },
+        required: ["imported", "avatarsSkipped"],
+      },
+    ],
+  },
   issueGeoIngestToken: {
     type: "object",
     properties: {
@@ -4454,6 +4869,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                   clicks: { type: "number" },
                   impressions: { type: "number" },
                   position: { type: "number" },
+                  page: { type: "string", description: "Page Google showed most for this query." },
+                  pagePosition: { type: "number", description: "Google position of that page for this query." },
+                  pageImpressions: { type: "number", description: "Impressions of that page for this query." },
                 },
                 required: ["query", "clicks", "impressions", "position"],
               },
@@ -4482,7 +4900,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                   type: "string",
                   enum: ["create", "update", "merge", "ignore"],
                   description:
-                    "What to do with this query cluster: create a new page, update the strongest existing page, merge overlapping pages, or ignore thin demand.",
+                    "What to do with this query cluster: create a new page, update the page Google already ranks or the strongest existing page, merge overlapping pages, or ignore thin demand.",
                 },
                 reason: { type: "string" },
                 targets: {
@@ -4495,6 +4913,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                       url: { type: ["string", "null"] },
                       title: { type: "string" },
                       score: { type: "number" },
+                      googlePosition: {
+                        type: "number",
+                        description:
+                          "Google position of the gap's queries on this page, when Search Console shows it already ranks there.",
+                      },
                     },
                     required: ["kind", "id", "url", "title", "score"],
                   },
@@ -4622,6 +5045,87 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["engines", "organization"],
+  },
+  listGeoPersonas: {
+    type: "object",
+    properties: {
+      configured: { type: "boolean" },
+      personas: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            name: { type: "string", description: "Buyer archetype label, such as Budgeter." },
+            role: { type: "string" },
+            company: { type: "string" },
+            summary: { type: "string" },
+            searchStyle: { type: "string" },
+            profile: {
+              type: "object",
+              properties: {
+                goals: { type: "array", items: { type: "string" } },
+                painPoints: { type: "array", items: { type: "string" } },
+                currentStack: { type: "array", items: { type: "string" } },
+                buyingTriggers: { type: "array", items: { type: "string" } },
+                objections: { type: "array", items: { type: "string" } },
+              },
+              required: ["goals", "painPoints", "currentStack", "buyingTriggers", "objections"],
+            },
+            conversationPrompts: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Opening prompts the persona plays against each engine. Cleared when its details change; regenerate them with `promptsOnly` before the next run.",
+            },
+            enabled: { type: "boolean", description: "Whether scheduled scans play this persona." },
+            archivedAt: { type: ["string", "null"] },
+            createdAt: { type: "string" },
+            updatedAt: { type: "string" },
+            memories: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  kind: { type: "string", enum: ["background", "experience", "preference", "constraint"] },
+                  content: { type: "string" },
+                },
+                required: ["id", "kind", "content"],
+              },
+            },
+          },
+          required: [
+            "id",
+            "name",
+            "role",
+            "company",
+            "summary",
+            "searchStyle",
+            "profile",
+            "conversationPrompts",
+            "enabled",
+            "archivedAt",
+            "createdAt",
+            "updatedAt",
+            "memories",
+          ],
+        },
+        description:
+          "Active personas first in creation order, then archived ones. A project keeps at most 5 active personas.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["configured", "personas", "organization"],
   },
   listGeoPromptResultSummaries: {
     type: "object",
@@ -5187,12 +5691,33 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             title: { type: ["string", "null"] },
             bio: { type: ["string", "null"] },
             avatarUrl: { type: ["string", "null"] },
-            url: { type: ["string", "null"] },
+            url: { type: ["string", "null"], description: "Author's website." },
             x: { type: ["string", "null"] },
             linkedin: { type: ["string", "null"] },
             github: { type: ["string", "null"] },
+            youtube: { type: ["string", "null"] },
+            bluesky: { type: ["string", "null"] },
+            mastodon: { type: ["string", "null"] },
+            threads: { type: ["string", "null"] },
+            instagram: { type: ["string", "null"] },
           },
-          required: ["id", "slug", "name", "title", "bio", "avatarUrl", "url", "x", "linkedin", "github"],
+          required: [
+            "id",
+            "slug",
+            "name",
+            "title",
+            "bio",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+          ],
         },
       },
     },
@@ -5278,11 +5803,35 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                       name: { type: "string" },
                       title: { type: ["string", "null"] },
                       avatarUrl: { type: ["string", "null"] },
+                      url: { type: ["string", "null"], description: "Author's website." },
+                      x: { type: ["string", "null"] },
+                      linkedin: { type: ["string", "null"] },
+                      github: { type: ["string", "null"] },
+                      youtube: { type: ["string", "null"] },
+                      bluesky: { type: ["string", "null"] },
+                      mastodon: { type: ["string", "null"] },
+                      threads: { type: ["string", "null"] },
+                      instagram: { type: ["string", "null"] },
                     },
-                    required: ["id", "slug", "name", "title", "avatarUrl"],
+                    required: [
+                      "id",
+                      "slug",
+                      "name",
+                      "title",
+                      "avatarUrl",
+                      "url",
+                      "x",
+                      "linkedin",
+                      "github",
+                      "youtube",
+                      "bluesky",
+                      "mastodon",
+                      "threads",
+                      "instagram",
+                    ],
                   },
                   description:
-                    "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+                    "Credited authors in display order. Authors deleted since they were assigned are omitted. On blog posts that publish to a Notra Sites site, authors whose id starts with site: come from the site's blog.json, unpublished Design changes included.",
                 },
                 featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
                 noindex: {
@@ -5484,7 +6033,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                   type: "array",
                   items: { type: "string" },
                   description:
-                    "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations.",
+                    "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations. When omitted, runs read every enabled Linear integration; send [] to read none.",
                 },
               },
               required: ["repositoryIds"],
@@ -5557,6 +6106,110 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["schedules", "repositoryMap", "organization"],
+  },
+  listSiteAuthors: {
+    type: "object",
+    properties: {
+      site: {
+        type: "object",
+        properties: { id: { type: "string" }, name: { type: "string" } },
+        required: ["id", "name"],
+      },
+      authors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            ref: {
+              type: "string",
+              description:
+                "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
+            },
+            name: { type: "string" },
+            title: { type: ["string", "null"] },
+            bio: { type: ["string", "null"] },
+            avatar: {
+              type: ["string", "null"],
+              description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
+            },
+            avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+            url: { type: ["string", "null"] },
+            x: { type: ["string", "null"] },
+            linkedin: { type: ["string", "null"] },
+            github: { type: ["string", "null"] },
+            youtube: { type: ["string", "null"] },
+            bluesky: { type: ["string", "null"] },
+            mastodon: { type: ["string", "null"] },
+            threads: { type: ["string", "null"] },
+            instagram: { type: ["string", "null"] },
+            live: {
+              type: "boolean",
+              description:
+                "The author is in the published blog.json. False while it only exists in unpublished changes.",
+            },
+            posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
+          },
+          required: [
+            "id",
+            "ref",
+            "name",
+            "title",
+            "bio",
+            "avatar",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+            "live",
+            "posts",
+          ],
+        },
+        description: "Authors in blog.json order, including unpublished changes.",
+      },
+      authorPage: {
+        type: "string",
+        enum: ["inline", "stacked"],
+        description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+      },
+      hasUnpublishedChanges: {
+        type: "boolean",
+        description:
+          "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
+      },
+    },
+    required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+  },
+  listSites: {
+    type: "object",
+    properties: {
+      sites: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            name: { type: "string" },
+            url: { type: "string", description: "Where the site serves its first area, such as its blog." },
+            status: { type: "string", description: "active, or suspended while the site is paused." },
+            live: { type: "boolean", description: "The site has a production deployment serving visitors." },
+            blogMount: {
+              type: ["string", "null"],
+              description:
+                "Path the blog is served under, or null when the site has no blog. Only sites with a blog have authors.",
+            },
+          },
+          required: ["id", "name", "url", "status", "live", "blogMount"],
+        },
+      },
+    },
+    required: ["sites"],
   },
   listSkills: {
     type: "object",
@@ -5825,6 +6478,94 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["briefId", "brief", "status", "runId", "postId", "organization"],
   },
+  publishSite: {
+    type: "object",
+    properties: {
+      published: { type: "boolean", description: "False when there was nothing to publish." },
+      commitSha: { type: ["string", "null"], description: "The commit that put the changes live." },
+      deploymentQueued: {
+        type: "boolean",
+        description:
+          "A production deployment of the commit was queued. False when it could not be queued yet; the site then deploys on its next push.",
+      },
+    },
+    required: ["published", "commitSha", "deploymentQueued"],
+  },
+  restoreGeoPersona: {
+    type: "object",
+    properties: {
+      persona: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          name: { type: "string", description: "Buyer archetype label, such as Budgeter." },
+          role: { type: "string" },
+          company: { type: "string" },
+          summary: { type: "string" },
+          searchStyle: { type: "string" },
+          profile: {
+            type: "object",
+            properties: {
+              goals: { type: "array", items: { type: "string" } },
+              painPoints: { type: "array", items: { type: "string" } },
+              currentStack: { type: "array", items: { type: "string" } },
+              buyingTriggers: { type: "array", items: { type: "string" } },
+              objections: { type: "array", items: { type: "string" } },
+            },
+            required: ["goals", "painPoints", "currentStack", "buyingTriggers", "objections"],
+          },
+          conversationPrompts: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Opening prompts the persona plays against each engine. Cleared when its details change; regenerate them with `promptsOnly` before the next run.",
+          },
+          enabled: { type: "boolean", description: "Whether scheduled scans play this persona." },
+          archivedAt: { type: ["string", "null"] },
+          createdAt: { type: "string" },
+          updatedAt: { type: "string" },
+          memories: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                kind: { type: "string", enum: ["background", "experience", "preference", "constraint"] },
+                content: { type: "string" },
+              },
+              required: ["id", "kind", "content"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "name",
+          "role",
+          "company",
+          "summary",
+          "searchStyle",
+          "profile",
+          "conversationPrompts",
+          "enabled",
+          "archivedAt",
+          "createdAt",
+          "updatedAt",
+          "memories",
+        ],
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["persona", "organization"],
+  },
   retryWebhookDelivery: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
   rotateGeoIngestToken: {
     type: "object",
@@ -5867,6 +6608,35 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization", "token"],
+  },
+  runGeoPersona: {
+    type: "object",
+    properties: {
+      checks: {
+        type: "integer",
+        description: "Answers recorded during this request by the API-based engines that responded.",
+      },
+      mentions: { type: "integer" },
+      engines: { type: "array", items: { type: "string" } },
+      queuedScanId: {
+        type: ["string", "null"],
+        default: null,
+        description:
+          "Scan that plays the persona in the tracked consumer apps in the background, or `null`. Poll `GET /v1/projects/{projectId}/geo/scans/{scanId}`.",
+      },
+      queuedEngines: { type: "array", items: { type: "string" }, default: [] },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["checks", "mentions", "engines", "organization"],
   },
   runGeoSequence: {
     type: "object",
@@ -6563,6 +7333,81 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["promptId", "ignored", "organization"],
   },
+  updateGeoPersona: {
+    type: "object",
+    properties: {
+      persona: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          name: { type: "string", description: "Buyer archetype label, such as Budgeter." },
+          role: { type: "string" },
+          company: { type: "string" },
+          summary: { type: "string" },
+          searchStyle: { type: "string" },
+          profile: {
+            type: "object",
+            properties: {
+              goals: { type: "array", items: { type: "string" } },
+              painPoints: { type: "array", items: { type: "string" } },
+              currentStack: { type: "array", items: { type: "string" } },
+              buyingTriggers: { type: "array", items: { type: "string" } },
+              objections: { type: "array", items: { type: "string" } },
+            },
+            required: ["goals", "painPoints", "currentStack", "buyingTriggers", "objections"],
+          },
+          conversationPrompts: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Opening prompts the persona plays against each engine. Cleared when its details change; regenerate them with `promptsOnly` before the next run.",
+          },
+          enabled: { type: "boolean", description: "Whether scheduled scans play this persona." },
+          archivedAt: { type: ["string", "null"] },
+          createdAt: { type: "string" },
+          updatedAt: { type: "string" },
+          memories: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                kind: { type: "string", enum: ["background", "experience", "preference", "constraint"] },
+                content: { type: "string" },
+              },
+              required: ["id", "kind", "content"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "name",
+          "role",
+          "company",
+          "summary",
+          "searchStyle",
+          "profile",
+          "conversationPrompts",
+          "enabled",
+          "archivedAt",
+          "createdAt",
+          "updatedAt",
+          "memories",
+        ],
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["persona", "organization"],
+  },
   updateGeoPrompt: {
     type: "object",
     properties: {
@@ -6761,10 +7606,35 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                     name: { type: "string" },
                     title: { type: ["string", "null"] },
                     avatarUrl: { type: ["string", "null"] },
+                    url: { type: ["string", "null"], description: "Author's website." },
+                    x: { type: ["string", "null"] },
+                    linkedin: { type: ["string", "null"] },
+                    github: { type: ["string", "null"] },
+                    youtube: { type: ["string", "null"] },
+                    bluesky: { type: ["string", "null"] },
+                    mastodon: { type: ["string", "null"] },
+                    threads: { type: ["string", "null"] },
+                    instagram: { type: ["string", "null"] },
                   },
-                  required: ["id", "slug", "name", "title", "avatarUrl"],
+                  required: [
+                    "id",
+                    "slug",
+                    "name",
+                    "title",
+                    "avatarUrl",
+                    "url",
+                    "x",
+                    "linkedin",
+                    "github",
+                    "youtube",
+                    "bluesky",
+                    "mastodon",
+                    "threads",
+                    "instagram",
+                  ],
                 },
-                description: "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+                description:
+                  "Credited authors in display order. Authors deleted since they were assigned are omitted. On blog posts that publish to a Notra Sites site, authors whose id starts with site: come from the site's blog.json, unpublished Design changes included.",
               },
               featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
               noindex: {
@@ -6910,7 +7780,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 type: "array",
                 items: { type: "string" },
                 description:
-                  "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations.",
+                  "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations. When omitted, runs read every enabled Linear integration; send [] to read none.",
               },
             },
             required: ["repositoryIds"],
@@ -6982,6 +7852,85 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["schedule", "organization"],
   },
+  updateSiteAuthorPage: {
+    type: "object",
+    properties: {
+      site: {
+        type: "object",
+        properties: { id: { type: "string" }, name: { type: "string" } },
+        required: ["id", "name"],
+      },
+      authors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            ref: {
+              type: "string",
+              description:
+                "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
+            },
+            name: { type: "string" },
+            title: { type: ["string", "null"] },
+            bio: { type: ["string", "null"] },
+            avatar: {
+              type: ["string", "null"],
+              description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
+            },
+            avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+            url: { type: ["string", "null"] },
+            x: { type: ["string", "null"] },
+            linkedin: { type: ["string", "null"] },
+            github: { type: ["string", "null"] },
+            youtube: { type: ["string", "null"] },
+            bluesky: { type: ["string", "null"] },
+            mastodon: { type: ["string", "null"] },
+            threads: { type: ["string", "null"] },
+            instagram: { type: ["string", "null"] },
+            live: {
+              type: "boolean",
+              description:
+                "The author is in the published blog.json. False while it only exists in unpublished changes.",
+            },
+            posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
+          },
+          required: [
+            "id",
+            "ref",
+            "name",
+            "title",
+            "bio",
+            "avatar",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+            "live",
+            "posts",
+          ],
+        },
+        description: "Authors in blog.json order, including unpublished changes.",
+      },
+      authorPage: {
+        type: "string",
+        enum: ["inline", "stacked"],
+        description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+      },
+      hasUnpublishedChanges: {
+        type: "boolean",
+        description:
+          "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
+      },
+    },
+    required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+  },
   upsertGeoCompetitor: {
     type: "object",
     properties: {
@@ -7012,5 +7961,84 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["competitors", "organization"],
+  },
+  upsertSiteAuthor: {
+    type: "object",
+    properties: {
+      site: {
+        type: "object",
+        properties: { id: { type: "string" }, name: { type: "string" } },
+        required: ["id", "name"],
+      },
+      authors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            ref: {
+              type: "string",
+              description:
+                "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
+            },
+            name: { type: "string" },
+            title: { type: ["string", "null"] },
+            bio: { type: ["string", "null"] },
+            avatar: {
+              type: ["string", "null"],
+              description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
+            },
+            avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+            url: { type: ["string", "null"] },
+            x: { type: ["string", "null"] },
+            linkedin: { type: ["string", "null"] },
+            github: { type: ["string", "null"] },
+            youtube: { type: ["string", "null"] },
+            bluesky: { type: ["string", "null"] },
+            mastodon: { type: ["string", "null"] },
+            threads: { type: ["string", "null"] },
+            instagram: { type: ["string", "null"] },
+            live: {
+              type: "boolean",
+              description:
+                "The author is in the published blog.json. False while it only exists in unpublished changes.",
+            },
+            posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
+          },
+          required: [
+            "id",
+            "ref",
+            "name",
+            "title",
+            "bio",
+            "avatar",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+            "live",
+            "posts",
+          ],
+        },
+        description: "Authors in blog.json order, including unpublished changes.",
+      },
+      authorPage: {
+        type: "string",
+        enum: ["inline", "stacked"],
+        description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+      },
+      hasUnpublishedChanges: {
+        type: "boolean",
+        description:
+          "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
+      },
+    },
+    required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
   },
 };
