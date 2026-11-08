@@ -46,6 +46,16 @@ import type {
   UpdateSkillRequest,
 } from "./types/api.js";
 import type { AuthContext } from "./types/auth.js";
+import type {
+  ImportSiteAuthorsRequest,
+  ImportSiteAuthorsResponse,
+  PublishSiteDesignRequest,
+  PublishSiteDesignResponse,
+  SetSiteAuthorPageRequest,
+  SiteAuthorsResponse,
+  SiteListResponse,
+  UpsertSiteAuthorRequest,
+} from "./types/site.js";
 import type { CancelPostScheduleResponse, PostScheduleResponse, SchedulePostRequest } from "./types/post-schedule.js";
 import type {
   EventTriggerDeleteResponse,
@@ -450,6 +460,58 @@ export class NotraClient {
     return this.request<ScheduleRunListResponse>("GET", `/v1/schedules/${encodeURIComponent(scheduleId)}/runs`, {
       params,
     });
+  }
+
+  async listSites(): Promise<SiteListResponse> {
+    return this.request<SiteListResponse>("GET", "/v1/sites");
+  }
+
+  async listSiteAuthors(siteId: string): Promise<SiteAuthorsResponse> {
+    return this.request<SiteAuthorsResponse>("GET", `/v1/sites/${encodeURIComponent(siteId)}/authors`);
+  }
+
+  async upsertSiteAuthor(
+    siteId: string,
+    authorId: string,
+    body: UpsertSiteAuthorRequest,
+  ): Promise<SiteAuthorsResponse> {
+    return this.request<SiteAuthorsResponse, UpsertSiteAuthorRequest>(
+      "PUT",
+      `/v1/sites/${encodeURIComponent(siteId)}/authors/${encodeURIComponent(authorId)}`,
+      { body },
+    );
+  }
+
+  async deleteSiteAuthor(siteId: string, authorId: string, force?: boolean): Promise<SiteAuthorsResponse> {
+    return this.request<SiteAuthorsResponse>(
+      "DELETE",
+      `/v1/sites/${encodeURIComponent(siteId)}/authors/${encodeURIComponent(authorId)}`,
+      { params: force ? { force: "true" } : undefined },
+    );
+  }
+
+  async importSiteAuthors(siteId: string, body: ImportSiteAuthorsRequest): Promise<ImportSiteAuthorsResponse> {
+    return this.request<ImportSiteAuthorsResponse, ImportSiteAuthorsRequest>(
+      "POST",
+      `/v1/sites/${encodeURIComponent(siteId)}/authors/import`,
+      { body },
+    );
+  }
+
+  async setSiteAuthorPage(siteId: string, body: SetSiteAuthorPageRequest): Promise<SiteAuthorsResponse> {
+    return this.request<SiteAuthorsResponse, SetSiteAuthorPageRequest>(
+      "PATCH",
+      `/v1/sites/${encodeURIComponent(siteId)}/author-page`,
+      { body },
+    );
+  }
+
+  async publishSiteDesign(siteId: string, body: PublishSiteDesignRequest): Promise<PublishSiteDesignResponse> {
+    return this.request<PublishSiteDesignResponse, PublishSiteDesignRequest>(
+      "POST",
+      `/v1/sites/${encodeURIComponent(siteId)}/publish`,
+      { body, timeoutMs: 120_000 },
+    );
   }
 
   async listSkills(): Promise<ListSkillsResponse> {

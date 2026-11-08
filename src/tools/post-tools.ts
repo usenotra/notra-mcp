@@ -35,7 +35,8 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
   server.registerTool(
     "get_post",
     {
-      description: "Get a single post by its ID, including full content in HTML and markdown",
+      description:
+        "Get a single post by its ID, including full content in HTML and markdown. For blog posts and changelogs, metadata.authors lists the credited authors; ids starting with site: are authors from the post's Notra Site (see list_site_authors).",
       annotations: { title: "Get Post", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: shareJsonSchema(getPostSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getPost")),
@@ -71,7 +72,7 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
     "update_post",
     {
       description:
-        "Update a post's title, slug, markdown, or publication status. Changes to title, slug, or markdown also sync a post linked to GitHub: an open pull request gets a new commit, and a repository set to publish directly gets a direct commit when its live branch allows one. Otherwise, including closed or merged pull requests, GitHub is left as is and no new pull request is opened. Publishing can expose content on a hosted site and request a visibility rescan. A sync failure can occur after the post is saved; check the post and linked PR before retrying.",
+        "Update a post's title, slug, markdown, publication status, or credited authors. Changes to title, slug, markdown, or authors also sync a post linked to GitHub: an open pull request gets a new commit, and a repository set to publish directly gets a direct commit when its live branch allows one. Otherwise, including closed or merged pull requests, GitHub is left as is and no new pull request is opened. Publishing can expose content on a hosted site and request a visibility rescan. A sync failure can occur after the post is saved; check the post and linked PR before retrying.",
       annotations: {
         title: "Update Post",
         readOnlyHint: false,
@@ -82,7 +83,10 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
       inputSchema: shareJsonSchema(updatePostSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("updatePost")),
     },
-    ({ postId, ...body }) => handleError(() => client.updatePost(postId, body)),
+    ({ postId, authorIds, ...body }) =>
+      handleError(() =>
+        client.updatePost(postId, authorIds === undefined ? body : { ...body, metadata: { authorIds } }),
+      ),
   );
 
   server.registerTool(

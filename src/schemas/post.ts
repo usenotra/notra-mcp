@@ -72,6 +72,13 @@ export const updatePostSchema = z.object({
     .describe("New URL slug (lowercase kebab-case)"),
   markdown: z.string().min(1).max(100000).optional().describe("New markdown content"),
   status: z.enum(["draft", "published"]).optional().describe("Set status to draft or published"),
+  authorIds: z
+    .array(z.string().min(1).max(64))
+    .max(5)
+    .optional()
+    .describe(
+      "Replace the credited authors of a blog post or changelog, in display order (up to 5); [] clears them. On a blog post that publishes to a Notra Site, credit the site's authors with their ref from list_site_authors, e.g. site:jane-doe. Keep a Notra author by passing the id get_post shows for it.",
+    ),
 });
 
 export const deletePostSchema = z.object({
