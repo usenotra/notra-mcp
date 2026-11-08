@@ -105,8 +105,8 @@ export interface RunGeoPersonaResponse {
   checks: number;
   mentions: number;
   engines: string[];
-  queuedScanId: string | null;
-  queuedEngines: string[];
+  queuedScanId?: string | null;
+  queuedEngines?: string[];
   organization: Organization;
 }
 

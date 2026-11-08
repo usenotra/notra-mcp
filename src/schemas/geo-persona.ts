@@ -38,6 +38,9 @@ export const updateGeoPersonaSchema = z
         buyingTriggers: personaProfileListSchema.optional(),
         objections: personaProfileListSchema.optional(),
       })
+      .refine((lists) => Object.values(lists).some((list) => list !== undefined), {
+        message: "Provide at least one profile list to replace",
+      })
       .optional()
       .describe("Profile lists to replace (up to 6 entries each). Omitted lists keep their value."),
   })
