@@ -105,6 +105,17 @@ import type {
   UpsertGeoCompetitorRequest,
 } from "./types/geo-competitor.js";
 import type {
+  GenerateGeoPersonasRequest,
+  GeoPersonaActivityResponse,
+  GeoPersonaArchiveResponse,
+  GeoPersonaGenerationResponse,
+  GeoPersonaListResponse,
+  GeoPersonaResponse,
+  GeoPersonaResultsResponse,
+  RunGeoPersonaResponse,
+  UpdateGeoPersonaRequest,
+} from "./types/geo-persona.js";
+import type {
   DismissGeoPromptSuggestionResponse,
   GeoPromptDeleteResponse,
   GeoPromptListResponse,
@@ -794,6 +805,77 @@ export class NotraClient {
       this.geoPath(projectId, `/sequences/${encodeURIComponent(sequenceId)}/run`),
       { timeoutMs: GEO_LONG_RUNNING_TIMEOUT_MS },
     );
+  }
+
+  async listGeoPersonas(projectId: string): Promise<GeoPersonaListResponse> {
+    return this.request<GeoPersonaListResponse>("GET", this.geoPath(projectId, "/personas"));
+  }
+
+  async updateGeoPersona(
+    projectId: string,
+    personaId: string,
+    body: UpdateGeoPersonaRequest,
+  ): Promise<GeoPersonaResponse> {
+    return this.request<GeoPersonaResponse, UpdateGeoPersonaRequest>(
+      "PATCH",
+      this.geoPath(projectId, `/personas/${encodeURIComponent(personaId)}`),
+      { body },
+    );
+  }
+
+  async archiveGeoPersona(projectId: string, personaId: string): Promise<GeoPersonaArchiveResponse> {
+    return this.request<GeoPersonaArchiveResponse>(
+      "DELETE",
+      this.geoPath(projectId, `/personas/${encodeURIComponent(personaId)}`),
+    );
+  }
+
+  async restoreGeoPersona(projectId: string, personaId: string): Promise<GeoPersonaResponse> {
+    return this.request<GeoPersonaResponse>(
+      "POST",
+      this.geoPath(projectId, `/personas/${encodeURIComponent(personaId)}/restore`),
+    );
+  }
+
+  async getGeoPersonaResults(
+    projectId: string,
+    personaId: string,
+    scanId?: string,
+  ): Promise<GeoPersonaResultsResponse> {
+    return this.request<GeoPersonaResultsResponse>(
+      "GET",
+      this.geoPath(projectId, `/personas/${encodeURIComponent(personaId)}/results`),
+      { params: { scanId } },
+    );
+  }
+
+  async getGeoPersonaActivity(projectId: string, params?: GeoWindowParams): Promise<GeoPersonaActivityResponse> {
+    return this.request<GeoPersonaActivityResponse>("GET", this.geoPath(projectId, "/personas/activity"), {
+      params,
+    });
+  }
+
+  async runGeoPersona(projectId: string, personaId: string): Promise<RunGeoPersonaResponse> {
+    return this.request<RunGeoPersonaResponse>(
+      "POST",
+      this.geoPath(projectId, `/personas/${encodeURIComponent(personaId)}/run`),
+      { timeoutMs: GEO_LONG_RUNNING_TIMEOUT_MS },
+    );
+  }
+
+  async generateGeoPersonas(
+    projectId: string,
+    body: GenerateGeoPersonasRequest,
+  ): Promise<GeoPersonaGenerationResponse> {
+    return this.request<GeoPersonaGenerationResponse, GenerateGeoPersonasRequest>(
+      "POST",
+      this.geoPath(projectId, "/personas/generate"),
+      { body },
+    );
+  }
+
+  async getGeoPersonaGeneration(projectId: string): Promise<GeoPersonaGenerationResponse> {
+    return this.request<GeoPersonaGenerationResponse>("GET", this.geoPath(projectId, "/personas/generation"));
   }
 
   async listGeoCompetitors(projectId: string): Promise<GeoCompetitorListResponse> {

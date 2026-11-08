@@ -165,7 +165,7 @@ Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS 
 
 ## Toolsets
 
-All 129 tools are exposed by default, which costs roughly 21k tokens of agent context (about 10k for `geo` alone, 11k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 138 tools are exposed by default, which costs roughly 23k tokens of agent context (about 12k for `geo` alone, 11k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                                     |
 | --------- | --------------------------------------------------------------------------------------------------------- |
@@ -342,6 +342,20 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `update_geo_sequence`           | Update a sequence's name, steps or enabled state                 |
 | `delete_geo_sequence`           | Delete a sequence                                                |
 | `run_geo_sequence`              | Run a sequence now; consumer apps queue a scan (uses AI credits) |
+
+### GEO personas
+
+| Tool                                | Description                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------- |
+| `list_geo_personas`                 | List buyer personas with their profile, memories and conversation prompts             |
+| `update_geo_persona`                | Turn a persona on or off, or edit its details (clears its conversation prompts)       |
+| `archive_geo_persona`               | Archive a persona; its past results stay readable                                     |
+| `restore_geo_persona`               | Restore an archived persona, disabled                                                 |
+| `get_geo_persona_results`           | Get one scan's persona conversation turns per engine                                  |
+| `get_geo_persona_activity`          | Get daily checks and mentions per persona                                             |
+| `run_geo_persona`                   | Play a persona's conversation now; consumer apps queue a scan (uses AI credits at 2x) |
+| `generate_geo_personas`             | Generate a full set, add one from a brief, or regenerate one (uses AI credits)        |
+| `get_geo_persona_generation_status` | Check the latest persona generation job                                               |
 
 ### GEO competitors
 
