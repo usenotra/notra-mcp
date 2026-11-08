@@ -7,6 +7,7 @@ import {
   deletePostSchema,
   generatePostSchema,
   getPostGenerationStatusSchema,
+  createPostPullRequestSchema,
   postSummaryListOutputSchema,
 } from "../schemas/post.js";
 import type { McpServer } from "@modelcontextprotocol/server";
@@ -109,12 +110,30 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
     "generate_post",
     {
       description:
-        "Queue an async post generation job. Notra will analyze your GitHub activity and generate content. Use get_post_generation_status to poll for completion.",
+        "Queue an async post generation job. Notra analyzes your GitHub activity and generates content. Pass pullRequest to write about one pull request, and brief to say what the post should cover in your own words. Use get_post_generation_status to poll for completion, then create_post_pull_request to put a blog post or changelog into a draft pull request.",
       annotations: { title: "Generate Post", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
       inputSchema: shareJsonSchema(generatePostSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createPostGeneration")),
     },
     (params) => handleError(() => client.generatePost(params)),
+  );
+
+  server.registerTool(
+    "create_post_pull_request",
+    {
+      description:
+        "Open a draft GitHub pull request for a saved blog post or changelog, using the repository's configured content path, site metadata and images, the same as the dashboard. Always a draft pull request, never merged, even for repositories that publish directly. Calling it again for the same post and repository updates its open pull request instead of opening another. Omit integrationId and github when only one repository is connected. Returns the pull request URL.",
+      annotations: {
+        title: "Create Post Pull Request",
+        readOnlyHint: false,
+        openWorldHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(createPostPullRequestSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("createPostPullRequest")),
+    },
+    ({ postId, ...body }) => handleError(() => client.createPostPullRequest(postId, body)),
   );
 
   server.registerTool(

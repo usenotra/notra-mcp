@@ -16,6 +16,7 @@ export type ApiOperationId =
   | "createGitHubIntegration"
   | "createPost"
   | "createPostGeneration"
+  | "createPostPullRequest"
   | "createProject"
   | "createSchedule"
   | "createSkill"
@@ -725,6 +726,38 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["organization", "job"],
+  },
+  createPostPullRequest: {
+    type: "object",
+    properties: {
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+      pullRequest: {
+        type: "object",
+        properties: {
+          number: { type: "integer", exclusiveMinimum: 0 },
+          url: { type: "string", format: "uri" },
+          branchName: { type: "string" },
+          path: { type: "string", description: "Repository path of the post file on the branch." },
+          operation: {
+            type: "string",
+            enum: ["created", "updated"],
+            description:
+              "created for a new draft pull request, updated when the post's open pull request was refreshed instead.",
+          },
+        },
+        required: ["number", "url", "branchName", "path", "operation"],
+      },
+    },
+    required: ["organization", "pullRequest"],
   },
   createProject: {
     type: "object",

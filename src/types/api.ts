@@ -121,6 +121,24 @@ export interface GeneratePostRequest {
     releaseTagNames?: Array<string | { repositoryId: string; tagName: string }>;
     linearIssueIds?: Array<{ integrationId: string; issueId: string }>;
   };
+  pullRequest?: { owner: string; repo: string; number: number };
+  brief?: string;
+}
+
+export interface CreatePostPullRequestRequest {
+  integrationId?: string;
+  github?: { owner: string; repo: string };
+}
+
+export interface CreatePostPullRequestResponse {
+  organization: Organization;
+  pullRequest: {
+    number: number;
+    url: string;
+    branchName: string;
+    path: string;
+    operation: "created" | "updated";
+  };
 }
 
 type JobStatus = "queued" | "running" | "completed" | "failed" | "skipped";
