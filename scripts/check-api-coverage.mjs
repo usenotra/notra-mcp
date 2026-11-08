@@ -57,15 +57,7 @@ const MANUAL_COVERAGE = {
 };
 
 /** Client routes the production API has not shipped yet. Remove entries once they appear in the spec. */
-const PENDING_API_ROUTES = {
-  "GET /v1/sites": "usenotra/notra#2384",
-  "GET /v1/sites/{siteId}/authors": "usenotra/notra#2384",
-  "PUT /v1/sites/{siteId}/authors/{authorId}": "usenotra/notra#2384",
-  "DELETE /v1/sites/{siteId}/authors/{authorId}": "usenotra/notra#2384",
-  "POST /v1/sites/{siteId}/authors/import": "usenotra/notra#2384",
-  "PATCH /v1/sites/{siteId}/author-page": "usenotra/notra#2384",
-  "POST /v1/sites/{siteId}/publish": "usenotra/notra#2384",
-};
+const PENDING_API_ROUTES = {};
 
 function normalizeSpecPath(specPath) {
   return specPath.replace(/\{[^}]+\}/g, PLACEHOLDER);
