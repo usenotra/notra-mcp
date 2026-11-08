@@ -79,12 +79,12 @@ export function registerSiteTools(server: McpServer, client: NotraClient) {
   server.registerTool(
     "import_site_authors",
     {
-      description: `Copy the workspace's Notra authors into a Notra Site's blog.json, using each author's slug as its id. Avatars on https URLs are kept; avatars uploaded to Notra are listed in avatarsSkipped, set them afterwards with upsert_site_author. ${STAGED}`,
+      description: `Copy the workspace's Notra authors into a Notra Site's blog.json, using each author's slug as its id; with replace, authors that already use that id are overwritten. Avatars on https URLs are kept; avatars uploaded to Notra are listed in avatarsSkipped, set them afterwards with upsert_site_author. ${STAGED}`,
       annotations: {
         title: "Import Site Authors",
         readOnlyHint: false,
         openWorldHint: false,
-        destructiveHint: false,
+        destructiveHint: true,
       },
       inputSchema: shareJsonSchema(importSiteAuthorsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("importSiteAuthors")),

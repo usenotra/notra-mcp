@@ -1,5 +1,9 @@
 import * as z from "zod";
-import { SITE_AUTHOR_ID_PATTERN, SITE_AUTHOR_PAGE_LAYOUT_VALUES } from "../constants/site.js";
+import {
+  SITE_AUTHOR_AVATAR_PATTERN,
+  SITE_AUTHOR_ID_PATTERN,
+  SITE_AUTHOR_PAGE_LAYOUT_VALUES,
+} from "../constants/site.js";
 
 const siteIdSchema = z.string().min(1).describe("Site ID from list_sites");
 
@@ -32,6 +36,7 @@ export const upsertSiteAuthorSchema = z.object({
   avatar: z
     .string()
     .trim()
+    .regex(SITE_AUTHOR_AVATAR_PATTERN)
     .nullable()
     .optional()
     .describe("Avatar image: a path in the site's public folder such as /images/jane.png, or an https:// URL"),
