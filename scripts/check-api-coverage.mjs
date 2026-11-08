@@ -57,7 +57,17 @@ const MANUAL_COVERAGE = {
 };
 
 /** Client routes the production API has not shipped yet. Remove entries once they appear in the spec. */
-const PENDING_API_ROUTES = {};
+const PENDING_API_ROUTES = {
+  "GET /v1/sites": "usenotra/notra#2382",
+  "GET /v1/sites/{siteId}": "usenotra/notra#2382",
+  "GET /v1/sites/{siteId}/deployments": "usenotra/notra#2382",
+  "POST /v1/sites/{siteId}/deployments": "usenotra/notra#2382",
+  "GET /v1/sites/{siteId}/deployments/{deploymentId}": "usenotra/notra#2382",
+  "POST /v1/sites/{siteId}/deployments/{deploymentId}/redeploy": "usenotra/notra#2382",
+  "POST /v1/sites/{siteId}/post-previews": "usenotra/notra#2382",
+  "GET /v1/sites/{siteId}/post-previews/{postId}": "usenotra/notra#2382",
+  "POST /v1/sites/{siteId}/publications": "usenotra/notra#2382",
+};
 
 function normalizeSpecPath(specPath) {
   return specPath.replace(/\{[^}]+\}/g, PLACEHOLDER);
