@@ -72,90 +72,156 @@ export const updatePostSchema = z.object({
     .describe("New URL slug (lowercase kebab-case)"),
   markdown: z.string().min(1).max(100000).optional().describe("New markdown content"),
   status: z.enum(["draft", "published"]).optional().describe("Set status to draft or published"),
+  authorIds: z
+    .array(z.string().min(1).max(64))
+    .max(5)
+    .optional()
+    .describe(
+      "Replace the credited authors of a blog post or changelog, in display order (up to 5); [] clears them. On a blog post that publishes to a Notra Site, credit the site's authors with their ref from list_site_authors, e.g. site:jane-doe. Keep a Notra author by passing the id get_post shows for it.",
+    ),
 });
 
 export const deletePostSchema = z.object({
   postId: z.string().min(1).describe("The post ID to delete"),
 });
 
-export const generatePostSchema = z.object({
-  contentType: z.enum(GENERATABLE_CONTENT_TYPE_VALUES).describe("Type of content to generate"),
-  lookbackWindow: z
-    .enum(["current_day", "yesterday", "last_7_days", "last_14_days", "last_30_days"])
-    .optional()
-    .describe("Time window for gathering data (default: last_7_days)"),
-  brandVoiceId: z.string().min(1).optional().describe("Brand voice ID to use for generation"),
-  brandIdentityId: z.string().min(1).optional().nullable().describe("Brand identity ID to use"),
-  repositoryIds: z
-    .array(z.string().min(1))
-    .optional()
-    .describe("Repository IDs to include. Deprecated; prefer integrations.github IDs from list_integrations."),
-  linearIntegrationIds: z
-    .array(z.string().min(1))
-    .optional()
-    .describe("Linear integration IDs to include. Deprecated; prefer integrations.linear."),
-  integrations: z
-    .object({
-      github: z
-        .array(z.string().min(1))
-        .min(1)
-        .optional()
-        .describe("Connected GitHub integration IDs from list_integrations to include"),
-      linear: z.array(z.string().min(1)).min(1).optional().describe("Linear integration IDs to include"),
-    })
-    .optional()
-    .describe("Integration IDs to use for generation"),
-  github: z
-    .object({
-      repositories: z
-        .array(
-          z.object({
-            owner: z.string().min(1).describe("GitHub repository owner"),
-            repo: z.string().min(1).describe("GitHub repository name"),
-          }),
-        )
-        .min(1),
-    })
-    .optional()
-    .describe("Connected GitHub repositories to analyze. Use owner/repo values returned by list_integrations."),
-  dataPoints: z
-    .object({
-      includePullRequests: z.boolean().optional().describe("Include pull requests (default true)"),
-      includeCommits: z.boolean().optional().describe("Include commits (default true)"),
-      includeReleases: z.boolean().optional().describe("Include releases (default true)"),
-      includeLinearData: z.boolean().optional().describe("Include Linear data (default false)"),
-    })
-    .optional()
-    .describe("Types of data to include in generation"),
-  selectedItems: z
-    .object({
-      commitShas: z.array(z.string().min(1)).optional().describe("Specific commit SHAs to include"),
-      pullRequestNumbers: z
-        .array(
-          z.object({
-            repositoryId: z.string().min(1),
-            number: z.number().int().min(1),
-          }),
-        )
-        .optional()
-        .describe("Specific pull requests to include"),
-      releaseTagNames: z
-        .array(z.union([z.string().min(1), z.object({ repositoryId: z.string().min(1), tagName: z.string().min(1) })]))
-        .optional()
-        .describe("Specific release tags to include"),
-      linearIssueIds: z
-        .array(
-          z.object({
-            integrationId: z.string().min(1),
-            issueId: z.string().min(1),
-          }),
-        )
-        .optional()
-        .describe("Specific Linear issues to include"),
-    })
-    .optional()
-    .describe("Specific items to include in generation"),
-});
+export const generatePostSchema = z
+  .object({
+    contentType: z.enum(GENERATABLE_CONTENT_TYPE_VALUES).describe("Type of content to generate"),
+    lookbackWindow: z
+      .enum(["current_day", "yesterday", "last_7_days", "last_14_days", "last_30_days"])
+      .optional()
+      .describe("Time window for gathering data (default: last_7_days)"),
+    brandVoiceId: z.string().min(1).optional().describe("Brand voice ID to use for generation"),
+    brandIdentityId: z.string().min(1).optional().nullable().describe("Brand identity ID to use"),
+    repositoryIds: z
+      .array(z.string().min(1))
+      .optional()
+      .describe("Repository IDs to include. Deprecated; prefer integrations.github IDs from list_integrations."),
+    linearIntegrationIds: z
+      .array(z.string().min(1))
+      .optional()
+      .describe("Linear integration IDs to include. Deprecated; prefer integrations.linear."),
+    integrations: z
+      .object({
+        github: z
+          .array(z.string().min(1))
+          .min(1)
+          .optional()
+          .describe("Connected GitHub integration IDs from list_integrations to include"),
+        linear: z.array(z.string().min(1)).min(1).optional().describe("Linear integration IDs to include"),
+      })
+      .optional()
+      .describe("Integration IDs to use for generation"),
+    github: z
+      .object({
+        repositories: z
+          .array(
+            z.object({
+              owner: z.string().min(1).describe("GitHub repository owner"),
+              repo: z.string().min(1).describe("GitHub repository name"),
+            }),
+          )
+          .min(1),
+      })
+      .optional()
+      .describe("Connected GitHub repositories to analyze. Use owner/repo values returned by list_integrations."),
+    dataPoints: z
+      .object({
+        includePullRequests: z.boolean().optional().describe("Include pull requests (default true)"),
+        includeCommits: z.boolean().optional().describe("Include commits (default true)"),
+        includeReleases: z.boolean().optional().describe("Include releases (default true)"),
+        includeLinearData: z.boolean().optional().describe("Include Linear data (default false)"),
+      })
+      .optional()
+      .describe("Types of data to include in generation"),
+    selectedItems: z
+      .object({
+        commitShas: z.array(z.string().min(1)).optional().describe("Specific commit SHAs to include"),
+        pullRequestNumbers: z
+          .array(
+            z.object({
+              repositoryId: z.string().min(1),
+              number: z.number().int().min(1),
+            }),
+          )
+          .optional()
+          .describe("Specific pull requests to include"),
+        releaseTagNames: z
+          .array(
+            z.union([z.string().min(1), z.object({ repositoryId: z.string().min(1), tagName: z.string().min(1) })]),
+          )
+          .optional()
+          .describe("Specific release tags to include"),
+        linearIssueIds: z
+          .array(
+            z.object({
+              integrationId: z.string().min(1),
+              issueId: z.string().min(1),
+            }),
+          )
+          .optional()
+          .describe("Specific Linear issues to include"),
+      })
+      .optional()
+      .describe("Specific items to include in generation"),
+    pullRequest: z
+      .object({
+        owner: z.string().min(1).describe("GitHub repository owner"),
+        repo: z.string().min(1).describe("GitHub repository name"),
+        number: z.number().int().min(1).describe("Pull request number"),
+      })
+      .optional()
+      .describe(
+        "Write about exactly this pull request in a connected repository, open or merged, whatever its age. Do not combine with integrations, repositoryIds, linearIntegrationIds, github or selectedItems; dataPoints and lookbackWindow do not apply.",
+      ),
+    brief: z
+      .string()
+      .min(1)
+      .max(4000)
+      .optional()
+      .describe(
+        "What the post should be about and cover, in your own words. Steers topic, angle and structure; facts still come from the sources.",
+      ),
+  })
+  .refine(
+    (input) =>
+      !input.pullRequest ||
+      !(
+        input.repositoryIds?.length ||
+        input.linearIntegrationIds?.length ||
+        input.integrations?.github?.length ||
+        input.integrations?.linear?.length ||
+        input.github?.repositories?.length ||
+        input.selectedItems
+      ),
+    {
+      message:
+        "pullRequest selects its own source. Do not combine it with integrations, repositoryIds, linearIntegrationIds, github or selectedItems.",
+      path: ["pullRequest"],
+    },
+  );
+
+export const createPostPullRequestSchema = z
+  .object({
+    postId: z.string().min(1).describe("ID of a saved blog post or changelog"),
+    integrationId: z
+      .string()
+      .min(1)
+      .optional()
+      .describe("GitHub integration ID from list_integrations to open the pull request in"),
+    github: z
+      .object({
+        owner: z.string().min(1).describe("GitHub repository owner"),
+        repo: z.string().min(1).describe("GitHub repository name"),
+      })
+      .optional()
+      .describe("Connected repository by owner and name, instead of integrationId"),
+  })
+  .refine(({ integrationId, github }) => !(integrationId && github), {
+    message: "Provide either integrationId or github, not both",
+    path: ["github"],
+  });
 
 export const getPostGenerationStatusSchema = z.object({
   jobId: z.string().min(1).describe("The generation job ID to check"),

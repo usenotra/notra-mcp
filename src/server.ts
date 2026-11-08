@@ -30,20 +30,20 @@ import type { Toolset } from "./types/toolset.js";
 import { parseToolsets } from "./utils/toolsets.js";
 import { instrumentMcpUsage } from "./utils/mcp-usage.js";
 
-export const SERVER_VERSION = "1.4.0";
+export const SERVER_VERSION = "1.5.0";
 
 type Registrar = (server: McpServer, client: NotraClient) => void;
 
 const CONTENT_REGISTRARS: readonly Registrar[] = [
   registerPostTools,
   registerPostScheduleTools,
+  registerSiteTools,
   registerBrandIdentityTools,
   registerIntegrationTools,
   registerScheduleTools,
   registerEventTriggerTools,
   registerWebhookTools,
   registerSkillTools,
-  registerSiteTools,
   registerFeedbackInboxTools,
 ];
 
