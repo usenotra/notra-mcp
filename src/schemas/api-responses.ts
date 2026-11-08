@@ -19,6 +19,7 @@ export type ApiOperationId =
   | "createPostPullRequest"
   | "createProject"
   | "createSchedule"
+  | "createSitePostPreview"
   | "createSkill"
   | "createWebhookEndpoint"
   | "deleteBrandColor"
@@ -72,6 +73,9 @@ export type ApiOperationId =
   | "getPostSchedule"
   | "getProject"
   | "getPublicApiStatus"
+  | "getSite"
+  | "getSiteDeployment"
+  | "getSitePostPreview"
   | "getSkill"
   | "getWebhookDelivery"
   | "getWorkspaces"
@@ -107,13 +111,16 @@ export type ApiOperationId =
   | "listScheduleRuns"
   | "listSchedules"
   | "listSiteAuthors"
+  | "listSiteDeployments"
   | "listSites"
   | "listSkills"
   | "listWebhookDeliveries"
   | "listWebhookEndpoints"
   | "patchSkill"
   | "planGeoContentBrief"
+  | "publishPostToSite"
   | "publishSite"
+  | "redeploySiteDeployment"
   | "restoreGeoPersona"
   | "retryWebhookDelivery"
   | "rotateGeoIngestToken"
@@ -123,6 +130,7 @@ export type ApiOperationId =
   | "schedulePost"
   | "sendAgentSessionMessage"
   | "startGeoAgentReadinessScan"
+  | "startSiteDeployment"
   | "submitFeedback"
   | "submitOrganizationFeedback"
   | "suggestGeoCompetitors"
@@ -932,6 +940,41 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["schedule", "organization"],
+  },
+  createSitePostPreview: {
+    type: "object",
+    properties: {
+      preview: {
+        anyOf: [
+          {
+            type: "object",
+            properties: {
+              status: { type: "string", description: "Status of the preview's latest build." },
+              live: { type: "boolean" },
+              deleting: { type: "boolean" },
+              errorMessage: { type: ["string", "null"] },
+              expiresAt: { type: "string" },
+              hasPassword: { type: "boolean" },
+              url: { type: "string" },
+            },
+            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+          },
+          { type: "null" },
+        ],
+        description: "Null when the post has no preview on this Site.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["preview", "organization"],
   },
   createSkill: {
     type: "object",
@@ -4031,6 +4074,268 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["status", "service", "version", "public", "authentication"],
   },
+  getSite: {
+    type: "object",
+    properties: {
+      site: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          projectId: { type: "string" },
+          name: { type: "string" },
+          slug: { type: "string" },
+          status: { type: "string", enum: ["active", "suspended"] },
+          suspendedReason: { type: ["string", "null"] },
+          repository: {
+            type: ["object", "null"],
+            properties: { id: { type: ["string", "null"] }, owner: { type: "string" }, name: { type: "string" } },
+            required: ["id", "owner", "name"],
+          },
+          productionBranch: { type: "string" },
+          rootDirectory: { type: "string", description: "Directory in the repository that holds blog.json." },
+          liveUrl: { type: "string", description: "Public URL of the Site's first section." },
+          publicOrigin: { type: "string" },
+          aliasOrigin: { type: "string", description: "Notra-hosted address that always serves the Site." },
+          mounts: { type: "object", properties: { blog: { type: "string" }, changelog: { type: "string" } } },
+          previewsEnabled: { type: "boolean" },
+          previewVisibility: { type: "string", enum: ["public", "protected"] },
+          smartDeployments: { type: "boolean" },
+          analyticsEnabled: { type: "boolean" },
+          liveDeploymentId: { type: ["string", "null"] },
+          rollbackActive: {
+            type: "boolean",
+            description:
+              "Production is pinned to an older build; new builds finish but don't go live until someone promotes one in the dashboard.",
+          },
+          liveSince: { type: ["string", "null"] },
+          createdAt: { type: "string" },
+        },
+        required: [
+          "id",
+          "projectId",
+          "name",
+          "slug",
+          "status",
+          "suspendedReason",
+          "repository",
+          "productionBranch",
+          "rootDirectory",
+          "liveUrl",
+          "publicOrigin",
+          "aliasOrigin",
+          "mounts",
+          "previewsEnabled",
+          "previewVisibility",
+          "smartDeployments",
+          "analyticsEnabled",
+          "liveDeploymentId",
+          "rollbackActive",
+          "liveSince",
+          "createdAt",
+        ],
+      },
+      domains: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            hostname: { type: "string" },
+            kind: { type: "string", enum: ["subdomain", "proxy"] },
+            status: { type: "string", enum: ["pending", "verifying", "active", "failed"] },
+            isPrimary: { type: "boolean" },
+            records: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  type: { type: "string", enum: ["CNAME", "TXT", "A"] },
+                  name: { type: "string" },
+                  value: { type: "string" },
+                  purpose: { type: "string", enum: ["routing", "ownership", "certificate"] },
+                },
+                required: ["type", "name", "value", "purpose"],
+              },
+            },
+            lastError: { type: ["string", "null"] },
+            verifiedAt: { type: ["string", "null"] },
+          },
+          required: ["id", "hostname", "kind", "status", "isPrimary", "records", "lastError", "verifiedAt"],
+        },
+      },
+      previews: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            previewKey: { type: "string" },
+            deploymentId: { type: "string" },
+            visibility: { type: "string", enum: ["public", "protected"] },
+            url: { type: "string" },
+            branch: { type: ["string", "null"] },
+            pullRequestNumber: { type: ["integer", "null"] },
+            commitSha: { type: ["string", "null"] },
+            activatedAt: { type: "string" },
+          },
+          required: [
+            "previewKey",
+            "deploymentId",
+            "visibility",
+            "url",
+            "branch",
+            "pullRequestNumber",
+            "commitSha",
+            "activatedAt",
+          ],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["site", "domains", "previews", "organization"],
+  },
+  getSiteDeployment: {
+    type: "object",
+    properties: {
+      deployment: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          kind: { type: "string", enum: ["production", "preview"] },
+          previewKey: { type: ["string", "null"] },
+          trigger: { type: "string", enum: ["push", "pull_request", "manual", "redeploy", "config", "toolchain"] },
+          status: {
+            type: "string",
+            enum: [
+              "queued",
+              "building",
+              "uploading",
+              "ready",
+              "superseded",
+              "skipped",
+              "failed",
+              "canceled",
+              "expired",
+            ],
+            description:
+              "queued, building and uploading are in progress; ready, superseded, skipped, failed, canceled and expired are final.",
+          },
+          live: { type: "boolean" },
+          liveSince: { type: ["string", "null"] },
+          branch: { type: "string" },
+          commitSha: { type: "string" },
+          commitMessage: { type: ["string", "null"] },
+          commitAuthor: { type: ["string", "null"] },
+          pullRequestNumber: { type: ["integer", "null"] },
+          url: { type: "string" },
+          fileCount: { type: ["integer", "null"] },
+          totalBytes: { type: ["integer", "null"] },
+          buildDurationMs: { type: ["integer", "null"] },
+          errorMessage: { type: ["string", "null"] },
+          skipReason: { type: ["string", "null"] },
+          diagnostics: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                severity: { type: "string", enum: ["error", "warning"] },
+                file: { type: ["string", "null"] },
+                line: { type: "integer" },
+                column: { type: "integer" },
+                code: { type: "string" },
+                message: { type: "string" },
+              },
+              required: ["severity", "file", "code", "message"],
+            },
+            description: "Compiler errors and warnings with file and line.",
+          },
+          createdAt: { type: "string" },
+          startedAt: { type: ["string", "null"] },
+          finishedAt: { type: ["string", "null"] },
+        },
+        required: [
+          "id",
+          "kind",
+          "previewKey",
+          "trigger",
+          "status",
+          "live",
+          "liveSince",
+          "branch",
+          "commitSha",
+          "commitMessage",
+          "commitAuthor",
+          "pullRequestNumber",
+          "url",
+          "fileCount",
+          "totalBytes",
+          "buildDurationMs",
+          "errorMessage",
+          "skipReason",
+          "diagnostics",
+          "createdAt",
+          "startedAt",
+          "finishedAt",
+        ],
+      },
+      log: { type: ["string", "null"], description: "Newest build log output, trimmed at the start when long." },
+      logTruncated: { type: "boolean" },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["deployment", "log", "logTruncated", "organization"],
+  },
+  getSitePostPreview: {
+    type: "object",
+    properties: {
+      preview: {
+        anyOf: [
+          {
+            type: "object",
+            properties: {
+              status: { type: "string", description: "Status of the preview's latest build." },
+              live: { type: "boolean" },
+              deleting: { type: "boolean" },
+              errorMessage: { type: ["string", "null"] },
+              expiresAt: { type: "string" },
+              hasPassword: { type: "boolean" },
+              url: { type: "string" },
+            },
+            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+          },
+          { type: "null" },
+        ],
+        description: "Null when the post has no preview on this Site.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["preview", "organization"],
+  },
   getSkill: {
     type: "object",
     properties: {
@@ -6219,6 +6524,106 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
   },
+  listSiteDeployments: {
+    type: "object",
+    properties: {
+      deployments: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            kind: { type: "string", enum: ["production", "preview"] },
+            previewKey: { type: ["string", "null"] },
+            trigger: { type: "string", enum: ["push", "pull_request", "manual", "redeploy", "config", "toolchain"] },
+            status: {
+              type: "string",
+              enum: [
+                "queued",
+                "building",
+                "uploading",
+                "ready",
+                "superseded",
+                "skipped",
+                "failed",
+                "canceled",
+                "expired",
+              ],
+              description:
+                "queued, building and uploading are in progress; ready, superseded, skipped, failed, canceled and expired are final.",
+            },
+            live: { type: "boolean" },
+            liveSince: { type: ["string", "null"] },
+            branch: { type: "string" },
+            commitSha: { type: "string" },
+            commitMessage: { type: ["string", "null"] },
+            commitAuthor: { type: ["string", "null"] },
+            pullRequestNumber: { type: ["integer", "null"] },
+            url: { type: "string" },
+            fileCount: { type: ["integer", "null"] },
+            totalBytes: { type: ["integer", "null"] },
+            buildDurationMs: { type: ["integer", "null"] },
+            errorMessage: { type: ["string", "null"] },
+            skipReason: { type: ["string", "null"] },
+            diagnostics: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  severity: { type: "string", enum: ["error", "warning"] },
+                  file: { type: ["string", "null"] },
+                  line: { type: "integer" },
+                  column: { type: "integer" },
+                  code: { type: "string" },
+                  message: { type: "string" },
+                },
+                required: ["severity", "file", "code", "message"],
+              },
+              description: "Compiler errors and warnings with file and line.",
+            },
+            createdAt: { type: "string" },
+            startedAt: { type: ["string", "null"] },
+            finishedAt: { type: ["string", "null"] },
+          },
+          required: [
+            "id",
+            "kind",
+            "previewKey",
+            "trigger",
+            "status",
+            "live",
+            "liveSince",
+            "branch",
+            "commitSha",
+            "commitMessage",
+            "commitAuthor",
+            "pullRequestNumber",
+            "url",
+            "fileCount",
+            "totalBytes",
+            "buildDurationMs",
+            "errorMessage",
+            "skipReason",
+            "diagnostics",
+            "createdAt",
+            "startedAt",
+            "finishedAt",
+          ],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["deployments", "organization"],
+  },
   listSites: {
     type: "object",
     properties: {
@@ -6511,6 +6916,27 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["briefId", "brief", "status", "runId", "postId", "organization"],
   },
+  publishPostToSite: {
+    type: "object",
+    properties: {
+      operation: { type: "string", enum: ["created", "updated"] },
+      branchName: { type: "string" },
+      path: { type: "string" },
+      pullRequestNumber: { type: "integer" },
+      pullRequestUrl: { type: "string" },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["operation", "branchName", "path", "pullRequestNumber", "pullRequestUrl", "organization"],
+  },
   publishSite: {
     type: "object",
     properties: {
@@ -6523,6 +6949,103 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["published", "commitSha", "deploymentQueued"],
+  },
+  redeploySiteDeployment: {
+    type: "object",
+    properties: {
+      deployment: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          kind: { type: "string", enum: ["production", "preview"] },
+          previewKey: { type: ["string", "null"] },
+          trigger: { type: "string", enum: ["push", "pull_request", "manual", "redeploy", "config", "toolchain"] },
+          status: {
+            type: "string",
+            enum: [
+              "queued",
+              "building",
+              "uploading",
+              "ready",
+              "superseded",
+              "skipped",
+              "failed",
+              "canceled",
+              "expired",
+            ],
+            description:
+              "queued, building and uploading are in progress; ready, superseded, skipped, failed, canceled and expired are final.",
+          },
+          live: { type: "boolean" },
+          liveSince: { type: ["string", "null"] },
+          branch: { type: "string" },
+          commitSha: { type: "string" },
+          commitMessage: { type: ["string", "null"] },
+          commitAuthor: { type: ["string", "null"] },
+          pullRequestNumber: { type: ["integer", "null"] },
+          url: { type: "string" },
+          fileCount: { type: ["integer", "null"] },
+          totalBytes: { type: ["integer", "null"] },
+          buildDurationMs: { type: ["integer", "null"] },
+          errorMessage: { type: ["string", "null"] },
+          skipReason: { type: ["string", "null"] },
+          diagnostics: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                severity: { type: "string", enum: ["error", "warning"] },
+                file: { type: ["string", "null"] },
+                line: { type: "integer" },
+                column: { type: "integer" },
+                code: { type: "string" },
+                message: { type: "string" },
+              },
+              required: ["severity", "file", "code", "message"],
+            },
+            description: "Compiler errors and warnings with file and line.",
+          },
+          createdAt: { type: "string" },
+          startedAt: { type: ["string", "null"] },
+          finishedAt: { type: ["string", "null"] },
+        },
+        required: [
+          "id",
+          "kind",
+          "previewKey",
+          "trigger",
+          "status",
+          "live",
+          "liveSince",
+          "branch",
+          "commitSha",
+          "commitMessage",
+          "commitAuthor",
+          "pullRequestNumber",
+          "url",
+          "fileCount",
+          "totalBytes",
+          "buildDurationMs",
+          "errorMessage",
+          "skipReason",
+          "diagnostics",
+          "createdAt",
+          "startedAt",
+          "finishedAt",
+        ],
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["deployment", "organization"],
   },
   restoreGeoPersona: {
     type: "object",
@@ -6833,6 +7356,103 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["reportId", "alreadyRunning", "organization"],
+  },
+  startSiteDeployment: {
+    type: "object",
+    properties: {
+      deployment: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          kind: { type: "string", enum: ["production", "preview"] },
+          previewKey: { type: ["string", "null"] },
+          trigger: { type: "string", enum: ["push", "pull_request", "manual", "redeploy", "config", "toolchain"] },
+          status: {
+            type: "string",
+            enum: [
+              "queued",
+              "building",
+              "uploading",
+              "ready",
+              "superseded",
+              "skipped",
+              "failed",
+              "canceled",
+              "expired",
+            ],
+            description:
+              "queued, building and uploading are in progress; ready, superseded, skipped, failed, canceled and expired are final.",
+          },
+          live: { type: "boolean" },
+          liveSince: { type: ["string", "null"] },
+          branch: { type: "string" },
+          commitSha: { type: "string" },
+          commitMessage: { type: ["string", "null"] },
+          commitAuthor: { type: ["string", "null"] },
+          pullRequestNumber: { type: ["integer", "null"] },
+          url: { type: "string" },
+          fileCount: { type: ["integer", "null"] },
+          totalBytes: { type: ["integer", "null"] },
+          buildDurationMs: { type: ["integer", "null"] },
+          errorMessage: { type: ["string", "null"] },
+          skipReason: { type: ["string", "null"] },
+          diagnostics: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                severity: { type: "string", enum: ["error", "warning"] },
+                file: { type: ["string", "null"] },
+                line: { type: "integer" },
+                column: { type: "integer" },
+                code: { type: "string" },
+                message: { type: "string" },
+              },
+              required: ["severity", "file", "code", "message"],
+            },
+            description: "Compiler errors and warnings with file and line.",
+          },
+          createdAt: { type: "string" },
+          startedAt: { type: ["string", "null"] },
+          finishedAt: { type: ["string", "null"] },
+        },
+        required: [
+          "id",
+          "kind",
+          "previewKey",
+          "trigger",
+          "status",
+          "live",
+          "liveSince",
+          "branch",
+          "commitSha",
+          "commitMessage",
+          "commitAuthor",
+          "pullRequestNumber",
+          "url",
+          "fileCount",
+          "totalBytes",
+          "buildDurationMs",
+          "errorMessage",
+          "skipReason",
+          "diagnostics",
+          "createdAt",
+          "startedAt",
+          "finishedAt",
+        ],
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["deployment", "organization"],
   },
   submitFeedback: {
     type: "object",

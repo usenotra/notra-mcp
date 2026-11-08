@@ -165,12 +165,12 @@ Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS 
 
 ## Toolsets
 
-All 121 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 129 tools are exposed by default, which costs roughly 21k tokens of agent context (about 10k for `geo` alone, 11k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
-| Toolset   | Tools                                                                                                             |
-| --------- | ----------------------------------------------------------------------------------------------------------------- |
-| `content` | Posts, Sites authors, brand identities, integrations, schedules, event triggers, webhooks, skills, feedback inbox |
-| `geo`     | Projects and every GEO tool                                                                                       |
+| Toolset   | Tools                                                                                                     |
+| --------- | --------------------------------------------------------------------------------------------------------- |
+| `content` | Posts, Sites, brand identities, integrations, schedules, event triggers, webhooks, skills, feedback inbox |
+| `geo`     | Projects and every GEO tool                                                                               |
 
 Workspace tools and `submit_feedback` are always available.
 
@@ -214,19 +214,31 @@ To turn a pull request into a post, call `generate_post` with `pullRequest` (`ow
 
 Post publishing schedules are separate from the content-generation schedules below. `schedule_post` requires an ISO 8601 `scheduledAt` timestamp, accepts an optional IANA `timeZone` (default `UTC`), and supports at most two external destinations. GitHub destinations use `repositoryId` from `list_integrations` and an optional `merge` flag (default `true`); social destinations use a connected X or LinkedIn `accountId`. Omitting destinations schedules publishing in Notra only.
 
-### Sites authors
+### Sites
 
-| Tool                   | Description                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------ |
-| `list_sites`           | List Notra Sites with their URL, live state and blog mount                     |
-| `list_site_authors`    | List a site's blog.json authors, unpublished changes included, with post usage |
-| `upsert_site_author`   | Create or replace a site author, or rename one with `previousId`               |
-| `delete_site_author`   | Remove a site author                                                           |
-| `import_site_authors`  | Copy Notra authors into a site's blog.json                                     |
-| `set_site_author_page` | Set the author page layout (`inline` or `stacked`)                             |
-| `publish_site_design`  | Publish the site's unpublished blog.json changes and deploy it                 |
+Notra Sites are hosted blogs and changelogs built from a GitHub repository. Settings, domains, rollbacks and deletion stay in the dashboard. These tools need the `sites.read` and `sites.write` scopes.
 
-Author changes are saved to the site's `blog.json` as unpublished Design changes, the same draft the dashboard's Design tab shows, and go live with `publish_site_design` or the dashboard's Publish. Author ids are 1 to 40 lowercase letters, digits and dashes, and links must be `https://` URLs. Renaming or deleting an author that is live or credited on posts needs `force`. `publish_site_design` refuses while other files on the site have unpublished changes. To credit a site author on a blog post, pass its `site:<id>` ref in `update_post`'s `authorIds`. These tools need the `sites.read` and `sites.write` scopes.
+| Tool                       | Description                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------- |
+| `list_sites`               | List Notra Sites with their URL, live state and blog mount                                        |
+| `get_site`                 | Get a Site's settings, live deployment, custom domains and open previews                          |
+| `list_site_deployments`    | List production and preview builds with status, commit and compiler diagnostics                   |
+| `get_site_deployment`      | Get one deployment with its diagnostics and build log                                             |
+| `deploy_site`              | Build and publish the newest commit on the production branch                                      |
+| `redeploy_site_deployment` | Rebuild the same commit, for example to retry a failed build                                      |
+| `preview_post_on_site`     | Build a private preview of a Site with a saved post added, without touching the repository        |
+| `get_site_post_preview`    | Get the status and URL of a post's preview                                                        |
+| `publish_post_to_site`     | Open or update a pull request that adds a post to the Site's repository; it goes live once merged |
+| `list_site_authors`        | List a site's blog.json authors, unpublished changes included, with post usage                    |
+| `upsert_site_author`       | Create or replace a site author, or rename one with `previousId`                                  |
+| `delete_site_author`       | Remove a site author                                                                              |
+| `import_site_authors`      | Copy Notra authors into a site's blog.json                                                        |
+| `set_site_author_page`     | Set the author page layout (`inline` or `stacked`)                                                |
+| `publish_site_design`      | Publish the site's unpublished blog.json changes and deploy it                                    |
+
+`publish_post_to_site` always opens or updates a pull request, even when the repository publishes directly from the dashboard.
+
+Author changes are saved to the site's `blog.json` as unpublished Design changes, the same draft the dashboard's Design tab shows, and go live with `publish_site_design` or the dashboard's Publish. Author ids are 1 to 40 lowercase letters, digits and dashes, and links must be `https://` URLs. Renaming or deleting an author that is live or credited on posts needs `force`. `publish_site_design` refuses while other files on the site have unpublished changes. To credit a site author on a blog post, pass its `site:<id>` ref in `update_post`'s `authorIds`.
 
 ### Brand Identities
 

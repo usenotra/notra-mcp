@@ -102,3 +102,29 @@ export const publishSiteDesignSchema = z.object({
     .optional()
     .describe("Commit message. Written from the changes if omitted."),
 });
+
+const deploymentIdSchema = z.string().min(1).describe("Deployment ID (see list_site_deployments)");
+const postIdSchema = z.string().min(1).describe("ID of a saved blog post or changelog (see list_posts)");
+
+export const siteSchema = z.object({ siteId: siteIdSchema });
+
+export const listSiteDeploymentsSchema = z.object({
+  siteId: siteIdSchema,
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe("Newest deployments to return (1-100, default 20). Live deployments are always included."),
+});
+
+export const siteDeploymentSchema = z.object({ siteId: siteIdSchema, deploymentId: deploymentIdSchema });
+
+export const createSitePostPreviewSchema = z.object({
+  siteId: siteIdSchema,
+  postId: postIdSchema,
+  lifetime: z.enum(["1h", "1d", "3d", "7d"]).optional().describe("How long the preview stays open (default 1d)"),
+});
+
+export const sitePostSchema = z.object({ siteId: siteIdSchema, postId: postIdSchema });

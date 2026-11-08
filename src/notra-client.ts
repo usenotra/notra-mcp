@@ -1,5 +1,6 @@
 import { GEO_LONG_RUNNING_TIMEOUT_MS } from "./constants/geo.js";
 import { ORGANIZATION_ID_HEADER } from "./constants/organization.js";
+import { SITE_PUBLISH_TIMEOUT_MS } from "./constants/site.js";
 import type {
   BrandColorDeleteResponse,
   BrandColorListResponse,
@@ -159,12 +160,25 @@ import type {
   UpdateProjectRequest,
 } from "./types/project.js";
 import type { RequestOptions, RequestTimeoutOptions } from "./types/request.js";
+import type {
+  CreateSitePostPreviewRequest,
+  GetSiteDeploymentResponse,
+  GetSiteResponse,
+  ListSiteDeploymentsResponse,
+  PublishSitePostResponse,
+  SitePostPreviewResponse,
+  StartSiteDeploymentResponse,
+} from "./types/site.js";
 import type { WorkspaceContextResponse } from "./types/workspace.js";
 import { describeApiError } from "./utils/api-error.js";
 import { withoutHiddenReadinessChecks } from "./utils/geo-agent-readiness.js";
 import { appendQueryParams } from "./utils/query-params.js";
 import { describeOrganizationError } from "./utils/organization.js";
 import { createRequestSignal } from "./utils/request-signal.js";
+
+function sitePath(siteId: string, suffix: string): string {
+  return `/v1/sites/${encodeURIComponent(siteId)}${suffix}`;
+}
 
 const NOTRA_API_BASE = process.env.NOTRA_API_BASE ?? "https://api.usenotra.com";
 
@@ -277,6 +291,54 @@ export class NotraClient {
   async getPostAgentReach(postId: string, params?: GeoWindowParams): Promise<PostAgentReachResponse> {
     return this.request<PostAgentReachResponse>("GET", `/v1/posts/${encodeURIComponent(postId)}/agent-reach`, {
       params,
+    });
+  }
+
+  async getSite(siteId: string): Promise<GetSiteResponse> {
+    return this.request<GetSiteResponse>("GET", sitePath(siteId, ""));
+  }
+
+  async listSiteDeployments(siteId: string, params?: { limit?: number }): Promise<ListSiteDeploymentsResponse> {
+    return this.request<ListSiteDeploymentsResponse>("GET", sitePath(siteId, "/deployments"), { params });
+  }
+
+  async getSiteDeployment(siteId: string, deploymentId: string): Promise<GetSiteDeploymentResponse> {
+    return this.request<GetSiteDeploymentResponse>(
+      "GET",
+      sitePath(siteId, `/deployments/${encodeURIComponent(deploymentId)}`),
+    );
+  }
+
+  async startSiteDeployment(siteId: string): Promise<StartSiteDeploymentResponse> {
+    return this.request<StartSiteDeploymentResponse>("POST", sitePath(siteId, "/deployments"));
+  }
+
+  async redeploySiteDeployment(siteId: string, deploymentId: string): Promise<StartSiteDeploymentResponse> {
+    return this.request<StartSiteDeploymentResponse>(
+      "POST",
+      sitePath(siteId, `/deployments/${encodeURIComponent(deploymentId)}/redeploy`),
+    );
+  }
+
+  async createSitePostPreview(siteId: string, body: CreateSitePostPreviewRequest): Promise<SitePostPreviewResponse> {
+    return this.request<SitePostPreviewResponse, CreateSitePostPreviewRequest>(
+      "POST",
+      sitePath(siteId, "/post-previews"),
+      { body },
+    );
+  }
+
+  async getSitePostPreview(siteId: string, postId: string): Promise<SitePostPreviewResponse> {
+    return this.request<SitePostPreviewResponse>(
+      "GET",
+      sitePath(siteId, `/post-previews/${encodeURIComponent(postId)}`),
+    );
+  }
+
+  async publishPostToSite(siteId: string, postId: string): Promise<PublishSitePostResponse> {
+    return this.request<PublishSitePostResponse, { postId: string }>("POST", sitePath(siteId, "/publications"), {
+      body: { postId },
+      timeoutMs: SITE_PUBLISH_TIMEOUT_MS,
     });
   }
 
