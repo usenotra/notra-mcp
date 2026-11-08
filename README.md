@@ -165,7 +165,7 @@ Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS 
 
 ## Toolsets
 
-All 113 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 114 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                              |
 | --------- | -------------------------------------------------------------------------------------------------- |
@@ -203,11 +203,14 @@ Each MCP connection operates in the workspace bound to its bearer token, or for 
 | `create_post`                | Create a post from your own title and markdown                                                              |
 | `update_post`                | Update a post's title, markdown, or status                                                                  |
 | `delete_post`                | Delete a post                                                                                               |
-| `generate_post`              | Queue async post generation from GitHub activity                                                            |
+| `generate_post`              | Queue async post generation from GitHub activity, one pull request, or your own brief                       |
 | `get_post_generation_status` | Check the status of a post generation job                                                                   |
+| `create_post_pull_request`   | Open a draft GitHub pull request for a saved blog post or changelog                                         |
 | `get_post_schedule`          | Get a post's publishing schedule and per-destination status                                                 |
 | `schedule_post`              | Schedule an existing post for publishing in Notra and optionally GitHub, X, or LinkedIn                     |
 | `cancel_post_schedule`       | Cancel pending publishing destinations; already-publishing destinations finish on their own                 |
+
+To turn a pull request into a post, call `generate_post` with `pullRequest` (`owner`, `repo`, `number`) and optionally a `brief`, poll `get_post_generation_status` for the `postId`, then call `create_post_pull_request` to open a draft pull request with the post. Calling it again updates that pull request. A `brief` also works on its own to say what a post from recent activity should cover.
 
 Post publishing schedules are separate from the content-generation schedules below. `schedule_post` requires an ISO 8601 `scheduledAt` timestamp, accepts an optional IANA `timeZone` (default `UTC`), and supports at most two external destinations. GitHub destinations use `repositoryId` from `list_integrations` and an optional `merge` flag (default `true`); social destinations use a connected X or LinkedIn `accountId`. Omitting destinations schedules publishing in Notra only.
 

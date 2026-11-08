@@ -27,6 +27,8 @@ import type {
   ListSchedulesParams,
   PostDeleteResponse,
   PostGenerationStatusResponse,
+  CreatePostPullRequestRequest,
+  CreatePostPullRequestResponse,
   PostListResponse,
   PostResponse,
   RunScheduleResponse,
@@ -282,6 +284,17 @@ export class NotraClient {
 
   async generatePost(body: GeneratePostRequest): Promise<GeneratePostResponse> {
     return this.request<GeneratePostResponse, GeneratePostRequest>("POST", "/v1/posts/generate", { body });
+  }
+
+  async createPostPullRequest(
+    postId: string,
+    body: CreatePostPullRequestRequest,
+  ): Promise<CreatePostPullRequestResponse> {
+    return this.request<CreatePostPullRequestResponse, CreatePostPullRequestRequest>(
+      "POST",
+      `/v1/posts/${encodeURIComponent(postId)}/pull-request`,
+      { body },
+    );
   }
 
   async getPostGenerationStatus(jobId: string): Promise<PostGenerationStatusResponse> {

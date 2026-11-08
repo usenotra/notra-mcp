@@ -155,6 +155,40 @@ export const generatePostSchema = z.object({
     })
     .optional()
     .describe("Specific items to include in generation"),
+  pullRequest: z
+    .object({
+      owner: z.string().min(1).describe("GitHub repository owner"),
+      repo: z.string().min(1).describe("GitHub repository name"),
+      number: z.number().int().min(1).describe("Pull request number"),
+    })
+    .optional()
+    .describe(
+      "Write about exactly this pull request in a connected repository, open or merged, whatever its age. Do not combine with integrations, repositoryIds, linearIntegrationIds, github or selectedItems; dataPoints and lookbackWindow do not apply.",
+    ),
+  brief: z
+    .string()
+    .min(1)
+    .max(4000)
+    .optional()
+    .describe(
+      "What the post should be about and cover, in your own words. Steers topic, angle and structure; facts still come from the sources.",
+    ),
+});
+
+export const createPostPullRequestSchema = z.object({
+  postId: z.string().min(1).describe("ID of a saved blog post or changelog"),
+  integrationId: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("GitHub integration ID from list_integrations to open the pull request in"),
+  github: z
+    .object({
+      owner: z.string().min(1).describe("GitHub repository owner"),
+      repo: z.string().min(1).describe("GitHub repository name"),
+    })
+    .optional()
+    .describe("Connected repository by owner and name, instead of integrationId"),
 });
 
 export const getPostGenerationStatusSchema = z.object({
