@@ -165,12 +165,12 @@ Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS 
 
 ## Toolsets
 
-All 117 tools are exposed by default, which costs roughly 18k tokens of agent context (about 10k for `geo` alone, 8k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 138 tools are exposed by default, which costs roughly 23k tokens of agent context (about 12k for `geo` alone, 11k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
-| Toolset   | Tools                                                                                              |
-| --------- | -------------------------------------------------------------------------------------------------- |
-| `content` | Posts, brand identities, integrations, schedules, event triggers, webhooks, skills, feedback inbox |
-| `geo`     | Projects and every GEO tool                                                                        |
+| Toolset   | Tools                                                                                                     |
+| --------- | --------------------------------------------------------------------------------------------------------- |
+| `content` | Posts, Sites, brand identities, integrations, schedules, event triggers, webhooks, skills, feedback inbox |
+| `geo`     | Projects and every GEO tool                                                                               |
 
 Workspace tools and `submit_feedback` are always available.
 
@@ -201,15 +201,44 @@ Each MCP connection operates in the workspace bound to its bearer token, or for 
 | `get_post`                   | Get a single post by ID                                                                                     |
 | `get_post_agent_reach`       | AI crawler, citation and referral visits to a post's live page on its Notra Site                            |
 | `create_post`                | Create a post from your own title and markdown                                                              |
-| `update_post`                | Update a post's title, markdown, or status                                                                  |
+| `update_post`                | Update a post's title, markdown, status, or credited authors                                                |
 | `delete_post`                | Delete a post                                                                                               |
-| `generate_post`              | Queue async post generation from GitHub activity                                                            |
+| `generate_post`              | Queue async post generation from GitHub activity, one pull request, or your own brief                       |
 | `get_post_generation_status` | Check the status of a post generation job                                                                   |
+| `create_post_pull_request`   | Open a draft GitHub pull request for a saved blog post or changelog                                         |
 | `get_post_schedule`          | Get a post's publishing schedule and per-destination status                                                 |
 | `schedule_post`              | Schedule an existing post for publishing in Notra and optionally GitHub, X, or LinkedIn                     |
 | `cancel_post_schedule`       | Cancel pending publishing destinations; already-publishing destinations finish on their own                 |
 
+To turn a pull request into a post, call `generate_post` with `pullRequest` (`owner`, `repo`, `number`) and optionally a `brief`, poll `get_post_generation_status` for the `postId`, then call `create_post_pull_request` to open a draft pull request with the post. Calling it again updates that pull request. A `brief` also works on its own to say what a post from recent activity should cover.
+
 Post publishing schedules are separate from the content-generation schedules below. `schedule_post` requires an ISO 8601 `scheduledAt` timestamp, accepts an optional IANA `timeZone` (default `UTC`), and supports at most two external destinations. GitHub destinations use `repositoryId` from `list_integrations` and an optional `merge` flag (default `true`); social destinations use a connected X or LinkedIn `accountId`. Omitting destinations schedules publishing in Notra only.
+
+### Sites
+
+Notra Sites are hosted blogs and changelogs built from a GitHub repository. Settings, domains, rollbacks and deletion stay in the dashboard. These tools need the `sites.read` and `sites.write` scopes.
+
+| Tool                       | Description                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------- |
+| `list_sites`               | List Notra Sites with their URL, live state and blog mount                                        |
+| `get_site`                 | Get a Site's settings, live deployment, custom domains and open previews                          |
+| `list_site_deployments`    | List production and preview builds with status, commit and compiler diagnostics                   |
+| `get_site_deployment`      | Get one deployment with its diagnostics and build log                                             |
+| `deploy_site`              | Build and publish the newest commit on the production branch                                      |
+| `redeploy_site_deployment` | Rebuild the same commit, for example to retry a failed build                                      |
+| `preview_post_on_site`     | Build a private preview of a Site with a saved post added, without touching the repository        |
+| `get_site_post_preview`    | Get the status and URL of a post's preview                                                        |
+| `publish_post_to_site`     | Open or update a pull request that adds a post to the Site's repository; it goes live once merged |
+| `list_site_authors`        | List a site's blog.json authors, unpublished changes included, with post usage                    |
+| `upsert_site_author`       | Create or replace a site author, or rename one with `previousId`                                  |
+| `delete_site_author`       | Remove a site author                                                                              |
+| `import_site_authors`      | Copy Notra authors into a site's blog.json                                                        |
+| `set_site_author_page`     | Set the author page layout (`inline` or `stacked`)                                                |
+| `publish_site_design`      | Publish the site's unpublished blog.json changes and deploy it                                    |
+
+`publish_post_to_site` always opens or updates a pull request, even when the repository publishes directly from the dashboard.
+
+Author changes are saved to the site's `blog.json` as unpublished Design changes, the same draft the dashboard's Design tab shows, and go live with `publish_site_design` or the dashboard's Publish. Author ids are 1 to 40 lowercase letters, digits and dashes, and links must be `https://` URLs. Renaming or deleting an author that is live or credited on posts needs `force`. `publish_site_design` refuses while other files on the site have unpublished changes. To credit a site author on a blog post, pass its `site:<id>` ref in `update_post`'s `authorIds`.
 
 ### Brand Identities
 
@@ -313,6 +342,20 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `update_geo_sequence`           | Update a sequence's name, steps or enabled state                 |
 | `delete_geo_sequence`           | Delete a sequence                                                |
 | `run_geo_sequence`              | Run a sequence now; consumer apps queue a scan (uses AI credits) |
+
+### GEO personas
+
+| Tool                                | Description                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------- |
+| `list_geo_personas`                 | List buyer personas with their profile, memories and conversation prompts             |
+| `update_geo_persona`                | Turn a persona on or off, or edit its details (clears its conversation prompts)       |
+| `archive_geo_persona`               | Archive a persona; its past results stay readable                                     |
+| `restore_geo_persona`               | Restore an archived persona, disabled                                                 |
+| `get_geo_persona_results`           | Get one scan's persona conversation turns per engine                                  |
+| `get_geo_persona_activity`          | Get daily checks and mentions per persona                                             |
+| `run_geo_persona`                   | Play a persona's conversation now; consumer apps queue a scan (uses AI credits at 2x) |
+| `generate_geo_personas`             | Generate a full set, add one from a brief, or regenerate one (uses AI credits)        |
+| `get_geo_persona_generation_status` | Check the latest persona generation job                                               |
 
 ### GEO competitors
 

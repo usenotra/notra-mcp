@@ -3,6 +3,7 @@ import type { JSONSchema } from "zod/v4/core";
 export type ApiOperationId =
   | "acceptGeoPromptSuggestion"
   | "approveGeoContentBrief"
+  | "archiveGeoPersona"
   | "cancelPostSchedule"
   | "createAgentSession"
   | "createBrandColor"
@@ -15,8 +16,10 @@ export type ApiOperationId =
   | "createGitHubIntegration"
   | "createPost"
   | "createPostGeneration"
+  | "createPostPullRequest"
   | "createProject"
   | "createSchedule"
+  | "createSitePostPreview"
   | "createSkill"
   | "createWebhookEndpoint"
   | "deleteBrandColor"
@@ -29,9 +32,11 @@ export type ApiOperationId =
   | "deletePost"
   | "deleteProject"
   | "deleteSchedule"
+  | "deleteSiteAuthor"
   | "deleteSkill"
   | "deleteWebhookEndpoint"
   | "dismissGeoPromptSuggestion"
+  | "generateGeoPersonas"
   | "getBrandIdentity"
   | "getBrandIdentityGeneration"
   | "getChat"
@@ -43,6 +48,9 @@ export type ApiOperationId =
   | "getGeoIngestSetup"
   | "getGeoMcpAnalytics"
   | "getGeoMcpToolDetail"
+  | "getGeoPersonaActivity"
+  | "getGeoPersonaGeneration"
+  | "getGeoPersonaResults"
   | "getGeoPromptHistory"
   | "getGeoPromptResultDetail"
   | "getGeoScan"
@@ -50,7 +58,6 @@ export type ApiOperationId =
   | "getGeoSentimentAnalysis"
   | "getGeoSettings"
   | "getGeoTrafficJourney"
-  | "getGeoTrafficJourneyStats"
   | "getGeoTrafficLog"
   | "getGeoTrafficOverview"
   | "getGeoVisibilityCompetitorDetail"
@@ -59,8 +66,6 @@ export type ApiOperationId =
   | "getGeoVisibilityOverview"
   | "getGeoVisibilityPromptResults"
   | "getGeoVisibilityTimeseries"
-  | "getGeoWebAnalytics"
-  | "getGeoWebAnalyticsBreakdowns"
   | "getGitHubActivity"
   | "getPost"
   | "getPostAgentReach"
@@ -68,11 +73,15 @@ export type ApiOperationId =
   | "getPostSchedule"
   | "getProject"
   | "getPublicApiStatus"
+  | "getSite"
+  | "getSiteDeployment"
+  | "getSitePostPreview"
   | "getSkill"
   | "getWebhookDelivery"
   | "getWorkspaces"
   | "importGeoCompetitors"
   | "importGeoPrompts"
+  | "importSiteAuthors"
   | "issueGeoIngestToken"
   | "listAgentChats"
   | "listBrandColors"
@@ -80,12 +89,12 @@ export type ApiOperationId =
   | "listChats"
   | "listEventTriggers"
   | "listFeedback"
-  | "listGeoAnalyticsImports"
   | "listGeoChanges"
   | "listGeoCompetitors"
   | "listGeoContentBriefs"
   | "listGeoContentGaps"
   | "listGeoEngines"
+  | "listGeoPersonas"
   | "listGeoPromptResultSummaries"
   | "listGeoPrompts"
   | "listGeoPromptSuggestions"
@@ -101,18 +110,27 @@ export type ApiOperationId =
   | "listProjects"
   | "listScheduleRuns"
   | "listSchedules"
+  | "listSiteAuthors"
+  | "listSiteDeployments"
+  | "listSites"
   | "listSkills"
   | "listWebhookDeliveries"
   | "listWebhookEndpoints"
   | "patchSkill"
   | "planGeoContentBrief"
+  | "publishPostToSite"
+  | "publishSite"
+  | "redeploySiteDeployment"
+  | "restoreGeoPersona"
   | "retryWebhookDelivery"
   | "rotateGeoIngestToken"
+  | "runGeoPersona"
   | "runGeoSequence"
   | "runSchedule"
   | "schedulePost"
   | "sendAgentSessionMessage"
   | "startGeoAgentReadinessScan"
+  | "startSiteDeployment"
   | "submitFeedback"
   | "submitOrganizationFeedback"
   | "suggestGeoCompetitors"
@@ -122,13 +140,16 @@ export type ApiOperationId =
   | "updateFeedback"
   | "updateGeoContentBrief"
   | "updateGeoContentGap"
+  | "updateGeoPersona"
   | "updateGeoPrompt"
   | "updateGeoSequence"
   | "updateGeoSettings"
   | "updatePost"
   | "updateProject"
   | "updateSchedule"
-  | "upsertGeoCompetitor";
+  | "updateSiteAuthorPage"
+  | "upsertGeoCompetitor"
+  | "upsertSiteAuthor";
 
 export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema> = {
   acceptGeoPromptSuggestion: {
@@ -175,6 +196,23 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["runId", "organization"],
+  },
+  archiveGeoPersona: {
+    type: "object",
+    properties: {
+      id: { type: "string" },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["id", "organization"],
   },
   cancelPostSchedule: {
     type: "object",
@@ -559,10 +597,35 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                     name: { type: "string" },
                     title: { type: ["string", "null"] },
                     avatarUrl: { type: ["string", "null"] },
+                    url: { type: ["string", "null"], description: "Author's website." },
+                    x: { type: ["string", "null"] },
+                    linkedin: { type: ["string", "null"] },
+                    github: { type: ["string", "null"] },
+                    youtube: { type: ["string", "null"] },
+                    bluesky: { type: ["string", "null"] },
+                    mastodon: { type: ["string", "null"] },
+                    threads: { type: ["string", "null"] },
+                    instagram: { type: ["string", "null"] },
                   },
-                  required: ["id", "slug", "name", "title", "avatarUrl"],
+                  required: [
+                    "id",
+                    "slug",
+                    "name",
+                    "title",
+                    "avatarUrl",
+                    "url",
+                    "x",
+                    "linkedin",
+                    "github",
+                    "youtube",
+                    "bluesky",
+                    "mastodon",
+                    "threads",
+                    "instagram",
+                  ],
                 },
-                description: "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+                description:
+                  "Credited authors in display order. Authors deleted since they were assigned are omitted. On blog posts that publish to a Notra Sites site, authors whose id starts with site: come from the site's blog.json, unpublished Design changes included.",
               },
               featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
               noindex: {
@@ -672,6 +735,38 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["organization", "job"],
   },
+  createPostPullRequest: {
+    type: "object",
+    properties: {
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+      pullRequest: {
+        type: "object",
+        properties: {
+          number: { type: "integer", exclusiveMinimum: 0 },
+          url: { type: "string", format: "uri" },
+          branchName: { type: "string" },
+          path: { type: "string", description: "Repository path of the post file on the branch." },
+          operation: {
+            type: "string",
+            enum: ["created", "updated"],
+            description:
+              "created for a new draft pull request, updated when the post's open pull request was refreshed instead.",
+          },
+        },
+        required: ["number", "url", "branchName", "path", "operation"],
+      },
+    },
+    required: ["organization", "pullRequest"],
+  },
   createProject: {
     type: "object",
     properties: {
@@ -774,7 +869,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 type: "array",
                 items: { type: "string" },
                 description:
-                  "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations.",
+                  "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations. When omitted, runs read every enabled Linear integration; send [] to read none.",
               },
             },
             required: ["repositoryIds"],
@@ -845,6 +940,41 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["schedule", "organization"],
+  },
+  createSitePostPreview: {
+    type: "object",
+    properties: {
+      preview: {
+        anyOf: [
+          {
+            type: "object",
+            properties: {
+              status: { type: "string", description: "Status of the preview's latest build." },
+              live: { type: "boolean" },
+              deleting: { type: "boolean" },
+              errorMessage: { type: ["string", "null"] },
+              expiresAt: { type: "string" },
+              hasPassword: { type: "boolean" },
+              url: { type: "string" },
+            },
+            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+          },
+          { type: "null" },
+        ],
+        description: "Null when the post has no preview on this Site.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["preview", "organization"],
   },
   createSkill: {
     type: "object",
@@ -1130,6 +1260,85 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["id", "organization"],
   },
+  deleteSiteAuthor: {
+    type: "object",
+    properties: {
+      site: {
+        type: "object",
+        properties: { id: { type: "string" }, name: { type: "string" } },
+        required: ["id", "name"],
+      },
+      authors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            ref: {
+              type: "string",
+              description:
+                "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
+            },
+            name: { type: "string" },
+            title: { type: ["string", "null"] },
+            bio: { type: ["string", "null"] },
+            avatar: {
+              type: ["string", "null"],
+              description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
+            },
+            avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+            url: { type: ["string", "null"] },
+            x: { type: ["string", "null"] },
+            linkedin: { type: ["string", "null"] },
+            github: { type: ["string", "null"] },
+            youtube: { type: ["string", "null"] },
+            bluesky: { type: ["string", "null"] },
+            mastodon: { type: ["string", "null"] },
+            threads: { type: ["string", "null"] },
+            instagram: { type: ["string", "null"] },
+            live: {
+              type: "boolean",
+              description:
+                "The author is in the published blog.json. False while it only exists in unpublished changes.",
+            },
+            posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
+          },
+          required: [
+            "id",
+            "ref",
+            "name",
+            "title",
+            "bio",
+            "avatar",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+            "live",
+            "posts",
+          ],
+        },
+        description: "Authors in blog.json order, including unpublished changes.",
+      },
+      authorPage: {
+        type: "string",
+        enum: ["inline", "stacked"],
+        description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+      },
+      hasUnpublishedChanges: {
+        type: "boolean",
+        description:
+          "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
+      },
+    },
+    required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+  },
   deleteSkill: { type: "object", properties: { success: { type: "boolean", enum: [true] } }, required: ["success"] },
   deleteWebhookEndpoint: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
   dismissGeoPromptSuggestion: {
@@ -1149,6 +1358,34 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["id", "dismissed", "organization"],
+  },
+  generateGeoPersonas: {
+    type: "object",
+    properties: {
+      job: {
+        type: ["object", "null"],
+        properties: {
+          id: { type: "string" },
+          status: { type: "string", enum: ["queued", "running", "completed", "failed"] },
+          personaId: { type: ["string", "null"] },
+          startedAt: { type: "string" },
+          error: { type: ["string", "null"] },
+        },
+        required: ["id", "status", "personaId", "startedAt", "error"],
+        description: "The project's latest generation job, or `null` when none ran recently.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["job", "organization"],
   },
   getBrandIdentity: {
     type: "object",
@@ -1495,7 +1732,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
           },
           eligibleChecks: { type: ["integer", "null"] },
-          reportUrl: { type: ["string", "null"] },
           errorMessage: { type: ["string", "null"] },
           scannedAt: { type: ["string", "null"] },
           createdAt: { type: "string" },
@@ -1509,7 +1745,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "scoreBreakdown",
           "issues",
           "eligibleChecks",
-          "reportUrl",
           "errorMessage",
           "scannedAt",
           "createdAt",
@@ -1573,7 +1808,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 },
               },
               eligibleChecks: { type: ["integer", "null"] },
-              reportUrl: { type: ["string", "null"] },
               errorMessage: { type: ["string", "null"] },
               scannedAt: { type: ["string", "null"] },
               createdAt: { type: "string" },
@@ -1587,7 +1821,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               "scoreBreakdown",
               "issues",
               "eligibleChecks",
-              "reportUrl",
               "errorMessage",
               "scannedAt",
               "createdAt",
@@ -1904,44 +2137,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         },
         required: ["id", "slug", "name", "logo"],
       },
-      webKey: {
-        type: "string",
-        description:
-          "Public key for the notra.js browser script, bound to one project. Safe to put in page HTML; it only records human page views on that project's tracked domains and survives token rotation. Only present when web analytics is enabled for the workspace and it has a project.",
-      },
-      webSnippet: {
-        type: "string",
-        description:
-          "Script tag that installs notra.js with the public key. Only present when web analytics is enabled for the workspace.",
-      },
-      webScript: {
-        type: "object",
-        properties: {
-          url: { type: "string", description: "Always serves the latest build." },
-          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
-          integrity: {
-            type: "string",
-            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
-          },
-        },
-        required: ["url", "pinnedUrl", "integrity"],
-        description:
-          "notra.js: the auto-updating URL and the current build pinned with Subresource Integrity. Only present when web analytics is enabled for the workspace.",
-      },
-      webPlusScript: {
-        type: "object",
-        properties: {
-          url: { type: "string", description: "Always serves the latest build." },
-          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
-          integrity: {
-            type: "string",
-            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
-          },
-        },
-        required: ["url", "pinnedUrl", "integrity"],
-        description:
-          "notra.plus.js (notra.js with JavaScript error reporting), auto-updating and pinned. Only present when web analytics is enabled for the workspace.",
-      },
     },
     required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization"],
   },
@@ -2240,6 +2435,139 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["before", "after", "failures", "intents", "organization"],
+  },
+  getGeoPersonaActivity: {
+    type: "object",
+    properties: {
+      from: { type: "string" },
+      to: { type: "string" },
+      points: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            personaId: { type: "string" },
+            snapshotVersion: { type: "string" },
+            day: { type: "string" },
+            lastCheckedAt: { type: "string" },
+            checks: { type: "integer" },
+            mentions: { type: "integer" },
+          },
+          required: ["personaId", "snapshotVersion", "day", "lastCheckedAt", "checks", "mentions"],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["from", "to", "points", "organization"],
+  },
+  getGeoPersonaGeneration: {
+    type: "object",
+    properties: {
+      job: {
+        type: ["object", "null"],
+        properties: {
+          id: { type: "string" },
+          status: { type: "string", enum: ["queued", "running", "completed", "failed"] },
+          personaId: { type: ["string", "null"] },
+          startedAt: { type: "string" },
+          error: { type: ["string", "null"] },
+        },
+        required: ["id", "status", "personaId", "startedAt", "error"],
+        description: "The project's latest generation job, or `null` when none ran recently.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["job", "organization"],
+  },
+  getGeoPersonaResults: {
+    type: "object",
+    properties: {
+      results: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            scanId: { type: "string" },
+            turn: { type: "integer", description: "Conversation turn, starting at 1." },
+            engine: { type: "string" },
+            prompt: { type: "string" },
+            answer: { type: "string" },
+            mentioned: { type: "boolean" },
+            position: { type: ["number", "null"] },
+            sentiment: { type: ["string", "null"] },
+            excerpt: { type: "string" },
+            searchQueries: { type: "array", items: { type: "string" } },
+            sources: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: { title: { type: "string" }, url: { type: "string" }, domain: { type: "string" } },
+                required: ["title", "url", "domain"],
+              },
+            },
+            snapshotVersion: {
+              type: ["string", "null"],
+              description:
+                "Hash of the persona context this answer was played with. Changes when the persona is edited.",
+            },
+            lastCheckedAt: { type: "string" },
+          },
+          required: [
+            "scanId",
+            "turn",
+            "engine",
+            "prompt",
+            "answer",
+            "mentioned",
+            "position",
+            "sentiment",
+            "excerpt",
+            "searchQueries",
+            "sources",
+            "snapshotVersion",
+            "lastCheckedAt",
+          ],
+        },
+      },
+      scans: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { id: { type: "string" }, capturedAt: { type: "string" } },
+          required: ["id", "capturedAt"],
+        },
+      },
+      selectedScanId: { type: ["string", "null"] },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["results", "scans", "selectedScanId", "organization"],
   },
   getGeoPromptHistory: {
     type: "object",
@@ -3367,10 +3695,35 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                     name: { type: "string" },
                     title: { type: ["string", "null"] },
                     avatarUrl: { type: ["string", "null"] },
+                    url: { type: ["string", "null"], description: "Author's website." },
+                    x: { type: ["string", "null"] },
+                    linkedin: { type: ["string", "null"] },
+                    github: { type: ["string", "null"] },
+                    youtube: { type: ["string", "null"] },
+                    bluesky: { type: ["string", "null"] },
+                    mastodon: { type: ["string", "null"] },
+                    threads: { type: ["string", "null"] },
+                    instagram: { type: ["string", "null"] },
                   },
-                  required: ["id", "slug", "name", "title", "avatarUrl"],
+                  required: [
+                    "id",
+                    "slug",
+                    "name",
+                    "title",
+                    "avatarUrl",
+                    "url",
+                    "x",
+                    "linkedin",
+                    "github",
+                    "youtube",
+                    "bluesky",
+                    "mastodon",
+                    "threads",
+                    "instagram",
+                  ],
                 },
-                description: "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+                description:
+                  "Credited authors in display order. Authors deleted since they were assigned are omitted. On blog posts that publish to a Notra Sites site, authors whose id starts with site: come from the site's blog.json, unpublished Design changes included.",
               },
               featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
               noindex: {
@@ -3721,6 +4074,268 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["status", "service", "version", "public", "authentication"],
   },
+  getSite: {
+    type: "object",
+    properties: {
+      site: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          projectId: { type: "string" },
+          name: { type: "string" },
+          slug: { type: "string" },
+          status: { type: "string", enum: ["active", "suspended"] },
+          suspendedReason: { type: ["string", "null"] },
+          repository: {
+            type: ["object", "null"],
+            properties: { id: { type: ["string", "null"] }, owner: { type: "string" }, name: { type: "string" } },
+            required: ["id", "owner", "name"],
+          },
+          productionBranch: { type: "string" },
+          rootDirectory: { type: "string", description: "Directory in the repository that holds blog.json." },
+          liveUrl: { type: "string", description: "Public URL of the Site's first section." },
+          publicOrigin: { type: "string" },
+          aliasOrigin: { type: "string", description: "Notra-hosted address that always serves the Site." },
+          mounts: { type: "object", properties: { blog: { type: "string" }, changelog: { type: "string" } } },
+          previewsEnabled: { type: "boolean" },
+          previewVisibility: { type: "string", enum: ["public", "protected"] },
+          smartDeployments: { type: "boolean" },
+          analyticsEnabled: { type: "boolean" },
+          liveDeploymentId: { type: ["string", "null"] },
+          rollbackActive: {
+            type: "boolean",
+            description:
+              "Production is pinned to an older build; new builds finish but don't go live until someone promotes one in the dashboard.",
+          },
+          liveSince: { type: ["string", "null"] },
+          createdAt: { type: "string" },
+        },
+        required: [
+          "id",
+          "projectId",
+          "name",
+          "slug",
+          "status",
+          "suspendedReason",
+          "repository",
+          "productionBranch",
+          "rootDirectory",
+          "liveUrl",
+          "publicOrigin",
+          "aliasOrigin",
+          "mounts",
+          "previewsEnabled",
+          "previewVisibility",
+          "smartDeployments",
+          "analyticsEnabled",
+          "liveDeploymentId",
+          "rollbackActive",
+          "liveSince",
+          "createdAt",
+        ],
+      },
+      domains: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            hostname: { type: "string" },
+            kind: { type: "string", enum: ["subdomain", "proxy"] },
+            status: { type: "string", enum: ["pending", "verifying", "active", "failed"] },
+            isPrimary: { type: "boolean" },
+            records: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  type: { type: "string", enum: ["CNAME", "TXT", "A"] },
+                  name: { type: "string" },
+                  value: { type: "string" },
+                  purpose: { type: "string", enum: ["routing", "ownership", "certificate"] },
+                },
+                required: ["type", "name", "value", "purpose"],
+              },
+            },
+            lastError: { type: ["string", "null"] },
+            verifiedAt: { type: ["string", "null"] },
+          },
+          required: ["id", "hostname", "kind", "status", "isPrimary", "records", "lastError", "verifiedAt"],
+        },
+      },
+      previews: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            previewKey: { type: "string" },
+            deploymentId: { type: "string" },
+            visibility: { type: "string", enum: ["public", "protected"] },
+            url: { type: "string" },
+            branch: { type: ["string", "null"] },
+            pullRequestNumber: { type: ["integer", "null"] },
+            commitSha: { type: ["string", "null"] },
+            activatedAt: { type: "string" },
+          },
+          required: [
+            "previewKey",
+            "deploymentId",
+            "visibility",
+            "url",
+            "branch",
+            "pullRequestNumber",
+            "commitSha",
+            "activatedAt",
+          ],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["site", "domains", "previews", "organization"],
+  },
+  getSiteDeployment: {
+    type: "object",
+    properties: {
+      deployment: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          kind: { type: "string", enum: ["production", "preview"] },
+          previewKey: { type: ["string", "null"] },
+          trigger: { type: "string", enum: ["push", "pull_request", "manual", "redeploy", "config", "toolchain"] },
+          status: {
+            type: "string",
+            enum: [
+              "queued",
+              "building",
+              "uploading",
+              "ready",
+              "superseded",
+              "skipped",
+              "failed",
+              "canceled",
+              "expired",
+            ],
+            description:
+              "queued, building and uploading are in progress; ready, superseded, skipped, failed, canceled and expired are final.",
+          },
+          live: { type: "boolean" },
+          liveSince: { type: ["string", "null"] },
+          branch: { type: "string" },
+          commitSha: { type: "string" },
+          commitMessage: { type: ["string", "null"] },
+          commitAuthor: { type: ["string", "null"] },
+          pullRequestNumber: { type: ["integer", "null"] },
+          url: { type: "string" },
+          fileCount: { type: ["integer", "null"] },
+          totalBytes: { type: ["integer", "null"] },
+          buildDurationMs: { type: ["integer", "null"] },
+          errorMessage: { type: ["string", "null"] },
+          skipReason: { type: ["string", "null"] },
+          diagnostics: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                severity: { type: "string", enum: ["error", "warning"] },
+                file: { type: ["string", "null"] },
+                line: { type: "integer" },
+                column: { type: "integer" },
+                code: { type: "string" },
+                message: { type: "string" },
+              },
+              required: ["severity", "file", "code", "message"],
+            },
+            description: "Compiler errors and warnings with file and line.",
+          },
+          createdAt: { type: "string" },
+          startedAt: { type: ["string", "null"] },
+          finishedAt: { type: ["string", "null"] },
+        },
+        required: [
+          "id",
+          "kind",
+          "previewKey",
+          "trigger",
+          "status",
+          "live",
+          "liveSince",
+          "branch",
+          "commitSha",
+          "commitMessage",
+          "commitAuthor",
+          "pullRequestNumber",
+          "url",
+          "fileCount",
+          "totalBytes",
+          "buildDurationMs",
+          "errorMessage",
+          "skipReason",
+          "diagnostics",
+          "createdAt",
+          "startedAt",
+          "finishedAt",
+        ],
+      },
+      log: { type: ["string", "null"], description: "Newest build log output, trimmed at the start when long." },
+      logTruncated: { type: "boolean" },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["deployment", "log", "logTruncated", "organization"],
+  },
+  getSitePostPreview: {
+    type: "object",
+    properties: {
+      preview: {
+        anyOf: [
+          {
+            type: "object",
+            properties: {
+              status: { type: "string", description: "Status of the preview's latest build." },
+              live: { type: "boolean" },
+              deleting: { type: "boolean" },
+              errorMessage: { type: ["string", "null"] },
+              expiresAt: { type: "string" },
+              hasPassword: { type: "boolean" },
+              url: { type: "string" },
+            },
+            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+          },
+          { type: "null" },
+        ],
+        description: "Null when the post has no preview on this Site.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["preview", "organization"],
+  },
   getSkill: {
     type: "object",
     properties: {
@@ -3946,6 +4561,102 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["imported", "updated", "skipped", "issues", "organization"],
   },
+  importSiteAuthors: {
+    allOf: [
+      {
+        type: "object",
+        properties: {
+          site: {
+            type: "object",
+            properties: { id: { type: "string" }, name: { type: "string" } },
+            required: ["id", "name"],
+          },
+          authors: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                ref: {
+                  type: "string",
+                  description:
+                    "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
+                },
+                name: { type: "string" },
+                title: { type: ["string", "null"] },
+                bio: { type: ["string", "null"] },
+                avatar: {
+                  type: ["string", "null"],
+                  description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
+                },
+                avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+                url: { type: ["string", "null"] },
+                x: { type: ["string", "null"] },
+                linkedin: { type: ["string", "null"] },
+                github: { type: ["string", "null"] },
+                youtube: { type: ["string", "null"] },
+                bluesky: { type: ["string", "null"] },
+                mastodon: { type: ["string", "null"] },
+                threads: { type: ["string", "null"] },
+                instagram: { type: ["string", "null"] },
+                live: {
+                  type: "boolean",
+                  description:
+                    "The author is in the published blog.json. False while it only exists in unpublished changes.",
+                },
+                posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
+              },
+              required: [
+                "id",
+                "ref",
+                "name",
+                "title",
+                "bio",
+                "avatar",
+                "avatarUrl",
+                "url",
+                "x",
+                "linkedin",
+                "github",
+                "youtube",
+                "bluesky",
+                "mastodon",
+                "threads",
+                "instagram",
+                "live",
+                "posts",
+              ],
+            },
+            description: "Authors in blog.json order, including unpublished changes.",
+          },
+          authorPage: {
+            type: "string",
+            enum: ["inline", "stacked"],
+            description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+          },
+          hasUnpublishedChanges: {
+            type: "boolean",
+            description:
+              "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
+          },
+        },
+        required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+      },
+      {
+        type: "object",
+        properties: {
+          imported: { type: "array", items: { type: "string" }, description: "Ids written to blog.json." },
+          avatarsSkipped: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Ids whose avatar was a dashboard upload, which only the dashboard import can copy into the site. Set their avatar with PUT afterwards.",
+          },
+        },
+        required: ["imported", "avatarsSkipped"],
+      },
+    ],
+  },
   issueGeoIngestToken: {
     type: "object",
     properties: {
@@ -3984,44 +4695,6 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       token: {
         type: "string",
         description: "Tracking token. Shown once per request; rotating invalidates every previously issued token.",
-      },
-      webKey: {
-        type: "string",
-        description:
-          "Public key for the notra.js browser script, bound to one project. Safe to put in page HTML; it only records human page views on that project's tracked domains and survives token rotation. Only present when web analytics is enabled for the workspace and it has a project.",
-      },
-      webSnippet: {
-        type: "string",
-        description:
-          "Script tag that installs notra.js with the public key. Only present when web analytics is enabled for the workspace.",
-      },
-      webScript: {
-        type: "object",
-        properties: {
-          url: { type: "string", description: "Always serves the latest build." },
-          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
-          integrity: {
-            type: "string",
-            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
-          },
-        },
-        required: ["url", "pinnedUrl", "integrity"],
-        description:
-          "notra.js: the auto-updating URL and the current build pinned with Subresource Integrity. Only present when web analytics is enabled for the workspace.",
-      },
-      webPlusScript: {
-        type: "object",
-        properties: {
-          url: { type: "string", description: "Always serves the latest build." },
-          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
-          integrity: {
-            type: "string",
-            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
-          },
-        },
-        required: ["url", "pinnedUrl", "integrity"],
-        description:
-          "notra.plus.js (notra.js with JavaScript error reporting), auto-updating and pinned. Only present when web analytics is enabled for the workspace.",
       },
     },
     required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization", "token"],
@@ -4534,6 +5207,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                   clicks: { type: "number" },
                   impressions: { type: "number" },
                   position: { type: "number" },
+                  page: { type: "string", description: "Page Google showed most for this query." },
+                  pagePosition: { type: "number", description: "Google position of that page for this query." },
+                  pageImpressions: { type: "number", description: "Impressions of that page for this query." },
                 },
                 required: ["query", "clicks", "impressions", "position"],
               },
@@ -4562,7 +5238,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                   type: "string",
                   enum: ["create", "update", "merge", "ignore"],
                   description:
-                    "What to do with this query cluster: create a new page, update the strongest existing page, merge overlapping pages, or ignore thin demand.",
+                    "What to do with this query cluster: create a new page, update the page Google already ranks or the strongest existing page, merge overlapping pages, or ignore thin demand.",
                 },
                 reason: { type: "string" },
                 targets: {
@@ -4575,6 +5251,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                       url: { type: ["string", "null"] },
                       title: { type: "string" },
                       score: { type: "number" },
+                      googlePosition: {
+                        type: "number",
+                        description:
+                          "Google position of the gap's queries on this page, when Search Console shows it already ranks there.",
+                      },
                     },
                     required: ["kind", "id", "url", "title", "score"],
                   },
@@ -4702,6 +5383,87 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["engines", "organization"],
+  },
+  listGeoPersonas: {
+    type: "object",
+    properties: {
+      configured: { type: "boolean" },
+      personas: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            name: { type: "string", description: "Buyer archetype label, such as Budgeter." },
+            role: { type: "string" },
+            company: { type: "string" },
+            summary: { type: "string" },
+            searchStyle: { type: "string" },
+            profile: {
+              type: "object",
+              properties: {
+                goals: { type: "array", items: { type: "string" } },
+                painPoints: { type: "array", items: { type: "string" } },
+                currentStack: { type: "array", items: { type: "string" } },
+                buyingTriggers: { type: "array", items: { type: "string" } },
+                objections: { type: "array", items: { type: "string" } },
+              },
+              required: ["goals", "painPoints", "currentStack", "buyingTriggers", "objections"],
+            },
+            conversationPrompts: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Opening prompts the persona plays against each engine. Cleared when its details change; regenerate them with `promptsOnly` before the next run.",
+            },
+            enabled: { type: "boolean", description: "Whether scheduled scans play this persona." },
+            archivedAt: { type: ["string", "null"] },
+            createdAt: { type: "string" },
+            updatedAt: { type: "string" },
+            memories: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  kind: { type: "string", enum: ["background", "experience", "preference", "constraint"] },
+                  content: { type: "string" },
+                },
+                required: ["id", "kind", "content"],
+              },
+            },
+          },
+          required: [
+            "id",
+            "name",
+            "role",
+            "company",
+            "summary",
+            "searchStyle",
+            "profile",
+            "conversationPrompts",
+            "enabled",
+            "archivedAt",
+            "createdAt",
+            "updatedAt",
+            "memories",
+          ],
+        },
+        description:
+          "Active personas first in creation order, then archived ones. A project keeps at most 5 active personas.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["configured", "personas", "organization"],
   },
   listGeoPromptResultSummaries: {
     type: "object",
@@ -5267,12 +6029,33 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             title: { type: ["string", "null"] },
             bio: { type: ["string", "null"] },
             avatarUrl: { type: ["string", "null"] },
-            url: { type: ["string", "null"] },
+            url: { type: ["string", "null"], description: "Author's website." },
             x: { type: ["string", "null"] },
             linkedin: { type: ["string", "null"] },
             github: { type: ["string", "null"] },
+            youtube: { type: ["string", "null"] },
+            bluesky: { type: ["string", "null"] },
+            mastodon: { type: ["string", "null"] },
+            threads: { type: ["string", "null"] },
+            instagram: { type: ["string", "null"] },
           },
-          required: ["id", "slug", "name", "title", "bio", "avatarUrl", "url", "x", "linkedin", "github"],
+          required: [
+            "id",
+            "slug",
+            "name",
+            "title",
+            "bio",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+          ],
         },
       },
     },
@@ -5358,11 +6141,35 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                       name: { type: "string" },
                       title: { type: ["string", "null"] },
                       avatarUrl: { type: ["string", "null"] },
+                      url: { type: ["string", "null"], description: "Author's website." },
+                      x: { type: ["string", "null"] },
+                      linkedin: { type: ["string", "null"] },
+                      github: { type: ["string", "null"] },
+                      youtube: { type: ["string", "null"] },
+                      bluesky: { type: ["string", "null"] },
+                      mastodon: { type: ["string", "null"] },
+                      threads: { type: ["string", "null"] },
+                      instagram: { type: ["string", "null"] },
                     },
-                    required: ["id", "slug", "name", "title", "avatarUrl"],
+                    required: [
+                      "id",
+                      "slug",
+                      "name",
+                      "title",
+                      "avatarUrl",
+                      "url",
+                      "x",
+                      "linkedin",
+                      "github",
+                      "youtube",
+                      "bluesky",
+                      "mastodon",
+                      "threads",
+                      "instagram",
+                    ],
                   },
                   description:
-                    "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+                    "Credited authors in display order. Authors deleted since they were assigned are omitted. On blog posts that publish to a Notra Sites site, authors whose id starts with site: come from the site's blog.json, unpublished Design changes included.",
                 },
                 featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
                 noindex: {
@@ -5564,7 +6371,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                   type: "array",
                   items: { type: "string" },
                   description:
-                    "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations.",
+                    "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations. When omitted, runs read every enabled Linear integration; send [] to read none.",
                 },
               },
               required: ["repositoryIds"],
@@ -5637,6 +6444,210 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["schedules", "repositoryMap", "organization"],
+  },
+  listSiteAuthors: {
+    type: "object",
+    properties: {
+      site: {
+        type: "object",
+        properties: { id: { type: "string" }, name: { type: "string" } },
+        required: ["id", "name"],
+      },
+      authors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            ref: {
+              type: "string",
+              description:
+                "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
+            },
+            name: { type: "string" },
+            title: { type: ["string", "null"] },
+            bio: { type: ["string", "null"] },
+            avatar: {
+              type: ["string", "null"],
+              description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
+            },
+            avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+            url: { type: ["string", "null"] },
+            x: { type: ["string", "null"] },
+            linkedin: { type: ["string", "null"] },
+            github: { type: ["string", "null"] },
+            youtube: { type: ["string", "null"] },
+            bluesky: { type: ["string", "null"] },
+            mastodon: { type: ["string", "null"] },
+            threads: { type: ["string", "null"] },
+            instagram: { type: ["string", "null"] },
+            live: {
+              type: "boolean",
+              description:
+                "The author is in the published blog.json. False while it only exists in unpublished changes.",
+            },
+            posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
+          },
+          required: [
+            "id",
+            "ref",
+            "name",
+            "title",
+            "bio",
+            "avatar",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+            "live",
+            "posts",
+          ],
+        },
+        description: "Authors in blog.json order, including unpublished changes.",
+      },
+      authorPage: {
+        type: "string",
+        enum: ["inline", "stacked"],
+        description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+      },
+      hasUnpublishedChanges: {
+        type: "boolean",
+        description:
+          "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
+      },
+    },
+    required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+  },
+  listSiteDeployments: {
+    type: "object",
+    properties: {
+      deployments: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            kind: { type: "string", enum: ["production", "preview"] },
+            previewKey: { type: ["string", "null"] },
+            trigger: { type: "string", enum: ["push", "pull_request", "manual", "redeploy", "config", "toolchain"] },
+            status: {
+              type: "string",
+              enum: [
+                "queued",
+                "building",
+                "uploading",
+                "ready",
+                "superseded",
+                "skipped",
+                "failed",
+                "canceled",
+                "expired",
+              ],
+              description:
+                "queued, building and uploading are in progress; ready, superseded, skipped, failed, canceled and expired are final.",
+            },
+            live: { type: "boolean" },
+            liveSince: { type: ["string", "null"] },
+            branch: { type: "string" },
+            commitSha: { type: "string" },
+            commitMessage: { type: ["string", "null"] },
+            commitAuthor: { type: ["string", "null"] },
+            pullRequestNumber: { type: ["integer", "null"] },
+            url: { type: "string" },
+            fileCount: { type: ["integer", "null"] },
+            totalBytes: { type: ["integer", "null"] },
+            buildDurationMs: { type: ["integer", "null"] },
+            errorMessage: { type: ["string", "null"] },
+            skipReason: { type: ["string", "null"] },
+            diagnostics: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  severity: { type: "string", enum: ["error", "warning"] },
+                  file: { type: ["string", "null"] },
+                  line: { type: "integer" },
+                  column: { type: "integer" },
+                  code: { type: "string" },
+                  message: { type: "string" },
+                },
+                required: ["severity", "file", "code", "message"],
+              },
+              description: "Compiler errors and warnings with file and line.",
+            },
+            createdAt: { type: "string" },
+            startedAt: { type: ["string", "null"] },
+            finishedAt: { type: ["string", "null"] },
+          },
+          required: [
+            "id",
+            "kind",
+            "previewKey",
+            "trigger",
+            "status",
+            "live",
+            "liveSince",
+            "branch",
+            "commitSha",
+            "commitMessage",
+            "commitAuthor",
+            "pullRequestNumber",
+            "url",
+            "fileCount",
+            "totalBytes",
+            "buildDurationMs",
+            "errorMessage",
+            "skipReason",
+            "diagnostics",
+            "createdAt",
+            "startedAt",
+            "finishedAt",
+          ],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["deployments", "organization"],
+  },
+  listSites: {
+    type: "object",
+    properties: {
+      sites: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            name: { type: "string" },
+            url: { type: "string", description: "Where the site serves its first area, such as its blog." },
+            status: { type: "string", description: "active, or suspended while the site is paused." },
+            live: { type: "boolean", description: "The site has a production deployment serving visitors." },
+            blogMount: {
+              type: ["string", "null"],
+              description:
+                "Path the blog is served under, or null when the site has no blog. Only sites with a blog have authors.",
+            },
+          },
+          required: ["id", "name", "url", "status", "live", "blogMount"],
+        },
+      },
+    },
+    required: ["sites"],
   },
   listSkills: {
     type: "object",
@@ -5905,6 +6916,212 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["briefId", "brief", "status", "runId", "postId", "organization"],
   },
+  publishPostToSite: {
+    type: "object",
+    properties: {
+      operation: { type: "string", enum: ["created", "updated"] },
+      branchName: { type: "string" },
+      path: { type: "string" },
+      pullRequestNumber: { type: "integer" },
+      pullRequestUrl: { type: "string" },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["operation", "branchName", "path", "pullRequestNumber", "pullRequestUrl", "organization"],
+  },
+  publishSite: {
+    type: "object",
+    properties: {
+      published: { type: "boolean", description: "False when there was nothing to publish." },
+      commitSha: { type: ["string", "null"], description: "The commit that put the changes live." },
+      deploymentQueued: {
+        type: "boolean",
+        description:
+          "A production deployment of the commit was queued. False when it could not be queued yet; the site then deploys on its next push.",
+      },
+    },
+    required: ["published", "commitSha", "deploymentQueued"],
+  },
+  redeploySiteDeployment: {
+    type: "object",
+    properties: {
+      deployment: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          kind: { type: "string", enum: ["production", "preview"] },
+          previewKey: { type: ["string", "null"] },
+          trigger: { type: "string", enum: ["push", "pull_request", "manual", "redeploy", "config", "toolchain"] },
+          status: {
+            type: "string",
+            enum: [
+              "queued",
+              "building",
+              "uploading",
+              "ready",
+              "superseded",
+              "skipped",
+              "failed",
+              "canceled",
+              "expired",
+            ],
+            description:
+              "queued, building and uploading are in progress; ready, superseded, skipped, failed, canceled and expired are final.",
+          },
+          live: { type: "boolean" },
+          liveSince: { type: ["string", "null"] },
+          branch: { type: "string" },
+          commitSha: { type: "string" },
+          commitMessage: { type: ["string", "null"] },
+          commitAuthor: { type: ["string", "null"] },
+          pullRequestNumber: { type: ["integer", "null"] },
+          url: { type: "string" },
+          fileCount: { type: ["integer", "null"] },
+          totalBytes: { type: ["integer", "null"] },
+          buildDurationMs: { type: ["integer", "null"] },
+          errorMessage: { type: ["string", "null"] },
+          skipReason: { type: ["string", "null"] },
+          diagnostics: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                severity: { type: "string", enum: ["error", "warning"] },
+                file: { type: ["string", "null"] },
+                line: { type: "integer" },
+                column: { type: "integer" },
+                code: { type: "string" },
+                message: { type: "string" },
+              },
+              required: ["severity", "file", "code", "message"],
+            },
+            description: "Compiler errors and warnings with file and line.",
+          },
+          createdAt: { type: "string" },
+          startedAt: { type: ["string", "null"] },
+          finishedAt: { type: ["string", "null"] },
+        },
+        required: [
+          "id",
+          "kind",
+          "previewKey",
+          "trigger",
+          "status",
+          "live",
+          "liveSince",
+          "branch",
+          "commitSha",
+          "commitMessage",
+          "commitAuthor",
+          "pullRequestNumber",
+          "url",
+          "fileCount",
+          "totalBytes",
+          "buildDurationMs",
+          "errorMessage",
+          "skipReason",
+          "diagnostics",
+          "createdAt",
+          "startedAt",
+          "finishedAt",
+        ],
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["deployment", "organization"],
+  },
+  restoreGeoPersona: {
+    type: "object",
+    properties: {
+      persona: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          name: { type: "string", description: "Buyer archetype label, such as Budgeter." },
+          role: { type: "string" },
+          company: { type: "string" },
+          summary: { type: "string" },
+          searchStyle: { type: "string" },
+          profile: {
+            type: "object",
+            properties: {
+              goals: { type: "array", items: { type: "string" } },
+              painPoints: { type: "array", items: { type: "string" } },
+              currentStack: { type: "array", items: { type: "string" } },
+              buyingTriggers: { type: "array", items: { type: "string" } },
+              objections: { type: "array", items: { type: "string" } },
+            },
+            required: ["goals", "painPoints", "currentStack", "buyingTriggers", "objections"],
+          },
+          conversationPrompts: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Opening prompts the persona plays against each engine. Cleared when its details change; regenerate them with `promptsOnly` before the next run.",
+          },
+          enabled: { type: "boolean", description: "Whether scheduled scans play this persona." },
+          archivedAt: { type: ["string", "null"] },
+          createdAt: { type: "string" },
+          updatedAt: { type: "string" },
+          memories: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                kind: { type: "string", enum: ["background", "experience", "preference", "constraint"] },
+                content: { type: "string" },
+              },
+              required: ["id", "kind", "content"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "name",
+          "role",
+          "company",
+          "summary",
+          "searchStyle",
+          "profile",
+          "conversationPrompts",
+          "enabled",
+          "archivedAt",
+          "createdAt",
+          "updatedAt",
+          "memories",
+        ],
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["persona", "organization"],
+  },
   retryWebhookDelivery: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
   rotateGeoIngestToken: {
     type: "object",
@@ -5945,46 +7162,37 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         type: "string",
         description: "Tracking token. Shown once per request; rotating invalidates every previously issued token.",
       },
-      webKey: {
-        type: "string",
-        description:
-          "Public key for the notra.js browser script, bound to one project. Safe to put in page HTML; it only records human page views on that project's tracked domains and survives token rotation. Only present when web analytics is enabled for the workspace and it has a project.",
-      },
-      webSnippet: {
-        type: "string",
-        description:
-          "Script tag that installs notra.js with the public key. Only present when web analytics is enabled for the workspace.",
-      },
-      webScript: {
-        type: "object",
-        properties: {
-          url: { type: "string", description: "Always serves the latest build." },
-          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
-          integrity: {
-            type: "string",
-            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
-          },
-        },
-        required: ["url", "pinnedUrl", "integrity"],
-        description:
-          "notra.js: the auto-updating URL and the current build pinned with Subresource Integrity. Only present when web analytics is enabled for the workspace.",
-      },
-      webPlusScript: {
-        type: "object",
-        properties: {
-          url: { type: "string", description: "Always serves the latest build." },
-          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
-          integrity: {
-            type: "string",
-            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
-          },
-        },
-        required: ["url", "pinnedUrl", "integrity"],
-        description:
-          "notra.plus.js (notra.js with JavaScript error reporting), auto-updating and pinned. Only present when web analytics is enabled for the workspace.",
-      },
     },
     required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization", "token"],
+  },
+  runGeoPersona: {
+    type: "object",
+    properties: {
+      checks: {
+        type: "integer",
+        description: "Answers recorded during this request by the API-based engines that responded.",
+      },
+      mentions: { type: "integer" },
+      engines: { type: "array", items: { type: "string" } },
+      queuedScanId: {
+        type: ["string", "null"],
+        default: null,
+        description:
+          "Scan that plays the persona in the tracked consumer apps in the background, or `null`. Poll `GET /v1/projects/{projectId}/geo/scans/{scanId}`.",
+      },
+      queuedEngines: { type: "array", items: { type: "string" }, default: [] },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["checks", "mentions", "engines", "organization"],
   },
   runGeoSequence: {
     type: "object",
@@ -6148,6 +7356,103 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["reportId", "alreadyRunning", "organization"],
+  },
+  startSiteDeployment: {
+    type: "object",
+    properties: {
+      deployment: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          kind: { type: "string", enum: ["production", "preview"] },
+          previewKey: { type: ["string", "null"] },
+          trigger: { type: "string", enum: ["push", "pull_request", "manual", "redeploy", "config", "toolchain"] },
+          status: {
+            type: "string",
+            enum: [
+              "queued",
+              "building",
+              "uploading",
+              "ready",
+              "superseded",
+              "skipped",
+              "failed",
+              "canceled",
+              "expired",
+            ],
+            description:
+              "queued, building and uploading are in progress; ready, superseded, skipped, failed, canceled and expired are final.",
+          },
+          live: { type: "boolean" },
+          liveSince: { type: ["string", "null"] },
+          branch: { type: "string" },
+          commitSha: { type: "string" },
+          commitMessage: { type: ["string", "null"] },
+          commitAuthor: { type: ["string", "null"] },
+          pullRequestNumber: { type: ["integer", "null"] },
+          url: { type: "string" },
+          fileCount: { type: ["integer", "null"] },
+          totalBytes: { type: ["integer", "null"] },
+          buildDurationMs: { type: ["integer", "null"] },
+          errorMessage: { type: ["string", "null"] },
+          skipReason: { type: ["string", "null"] },
+          diagnostics: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                severity: { type: "string", enum: ["error", "warning"] },
+                file: { type: ["string", "null"] },
+                line: { type: "integer" },
+                column: { type: "integer" },
+                code: { type: "string" },
+                message: { type: "string" },
+              },
+              required: ["severity", "file", "code", "message"],
+            },
+            description: "Compiler errors and warnings with file and line.",
+          },
+          createdAt: { type: "string" },
+          startedAt: { type: ["string", "null"] },
+          finishedAt: { type: ["string", "null"] },
+        },
+        required: [
+          "id",
+          "kind",
+          "previewKey",
+          "trigger",
+          "status",
+          "live",
+          "liveSince",
+          "branch",
+          "commitSha",
+          "commitMessage",
+          "commitAuthor",
+          "pullRequestNumber",
+          "url",
+          "fileCount",
+          "totalBytes",
+          "buildDurationMs",
+          "errorMessage",
+          "skipReason",
+          "diagnostics",
+          "createdAt",
+          "startedAt",
+          "finishedAt",
+        ],
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["deployment", "organization"],
   },
   submitFeedback: {
     type: "object",
@@ -6681,6 +7986,81 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["promptId", "ignored", "organization"],
   },
+  updateGeoPersona: {
+    type: "object",
+    properties: {
+      persona: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          name: { type: "string", description: "Buyer archetype label, such as Budgeter." },
+          role: { type: "string" },
+          company: { type: "string" },
+          summary: { type: "string" },
+          searchStyle: { type: "string" },
+          profile: {
+            type: "object",
+            properties: {
+              goals: { type: "array", items: { type: "string" } },
+              painPoints: { type: "array", items: { type: "string" } },
+              currentStack: { type: "array", items: { type: "string" } },
+              buyingTriggers: { type: "array", items: { type: "string" } },
+              objections: { type: "array", items: { type: "string" } },
+            },
+            required: ["goals", "painPoints", "currentStack", "buyingTriggers", "objections"],
+          },
+          conversationPrompts: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Opening prompts the persona plays against each engine. Cleared when its details change; regenerate them with `promptsOnly` before the next run.",
+          },
+          enabled: { type: "boolean", description: "Whether scheduled scans play this persona." },
+          archivedAt: { type: ["string", "null"] },
+          createdAt: { type: "string" },
+          updatedAt: { type: "string" },
+          memories: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                kind: { type: "string", enum: ["background", "experience", "preference", "constraint"] },
+                content: { type: "string" },
+              },
+              required: ["id", "kind", "content"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "name",
+          "role",
+          "company",
+          "summary",
+          "searchStyle",
+          "profile",
+          "conversationPrompts",
+          "enabled",
+          "archivedAt",
+          "createdAt",
+          "updatedAt",
+          "memories",
+        ],
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["persona", "organization"],
+  },
   updateGeoPrompt: {
     type: "object",
     properties: {
@@ -6879,10 +8259,35 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                     name: { type: "string" },
                     title: { type: ["string", "null"] },
                     avatarUrl: { type: ["string", "null"] },
+                    url: { type: ["string", "null"], description: "Author's website." },
+                    x: { type: ["string", "null"] },
+                    linkedin: { type: ["string", "null"] },
+                    github: { type: ["string", "null"] },
+                    youtube: { type: ["string", "null"] },
+                    bluesky: { type: ["string", "null"] },
+                    mastodon: { type: ["string", "null"] },
+                    threads: { type: ["string", "null"] },
+                    instagram: { type: ["string", "null"] },
                   },
-                  required: ["id", "slug", "name", "title", "avatarUrl"],
+                  required: [
+                    "id",
+                    "slug",
+                    "name",
+                    "title",
+                    "avatarUrl",
+                    "url",
+                    "x",
+                    "linkedin",
+                    "github",
+                    "youtube",
+                    "bluesky",
+                    "mastodon",
+                    "threads",
+                    "instagram",
+                  ],
                 },
-                description: "Credited authors in display order. Authors deleted since they were assigned are omitted.",
+                description:
+                  "Credited authors in display order. Authors deleted since they were assigned are omitted. On blog posts that publish to a Notra Sites site, authors whose id starts with site: come from the site's blog.json, unpublished Design changes included.",
               },
               featured: { type: "boolean", description: "Pinned to the top of the blog index on hosted sites." },
               noindex: {
@@ -7028,7 +8433,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 type: "array",
                 items: { type: "string" },
                 description:
-                  "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations.",
+                  "Linear integration IDs to generate from, as returned in the linear array of GET /v1/integrations. When omitted, runs read every enabled Linear integration; send [] to read none.",
               },
             },
             required: ["repositoryIds"],
@@ -7100,6 +8505,85 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["schedule", "organization"],
   },
+  updateSiteAuthorPage: {
+    type: "object",
+    properties: {
+      site: {
+        type: "object",
+        properties: { id: { type: "string" }, name: { type: "string" } },
+        required: ["id", "name"],
+      },
+      authors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            ref: {
+              type: "string",
+              description:
+                "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
+            },
+            name: { type: "string" },
+            title: { type: ["string", "null"] },
+            bio: { type: ["string", "null"] },
+            avatar: {
+              type: ["string", "null"],
+              description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
+            },
+            avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+            url: { type: ["string", "null"] },
+            x: { type: ["string", "null"] },
+            linkedin: { type: ["string", "null"] },
+            github: { type: ["string", "null"] },
+            youtube: { type: ["string", "null"] },
+            bluesky: { type: ["string", "null"] },
+            mastodon: { type: ["string", "null"] },
+            threads: { type: ["string", "null"] },
+            instagram: { type: ["string", "null"] },
+            live: {
+              type: "boolean",
+              description:
+                "The author is in the published blog.json. False while it only exists in unpublished changes.",
+            },
+            posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
+          },
+          required: [
+            "id",
+            "ref",
+            "name",
+            "title",
+            "bio",
+            "avatar",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+            "live",
+            "posts",
+          ],
+        },
+        description: "Authors in blog.json order, including unpublished changes.",
+      },
+      authorPage: {
+        type: "string",
+        enum: ["inline", "stacked"],
+        description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+      },
+      hasUnpublishedChanges: {
+        type: "boolean",
+        description:
+          "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
+      },
+    },
+    required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+  },
   upsertGeoCompetitor: {
     type: "object",
     properties: {
@@ -7131,418 +8615,83 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["competitors", "organization"],
   },
-  getGeoTrafficJourneyStats: {
+  upsertSiteAuthor: {
     type: "object",
     properties: {
-      configured: {
-        type: "boolean",
-        description:
-          "False when the analytics backend is not configured for this deployment; the payload is then empty rather than an error.",
-      },
-      sources: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            source: { type: "string" },
-            visitorType: { type: "string", enum: ["crawler", "ai_referral", "human", "unknown"] },
-            journeys: { type: "integer" },
-            previousJourneys: { type: "integer" },
-            pages: { type: "integer" },
-            singleFetch: { type: "integer" },
-            deepCrawls: { type: "integer" },
-            lastSeenAt: { type: ["string", "null"] },
-            daily: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: { day: { type: "string" }, journeys: { type: "integer" } },
-                required: ["day", "journeys"],
-              },
-            },
-          },
-          required: [
-            "source",
-            "visitorType",
-            "journeys",
-            "previousJourneys",
-            "pages",
-            "singleFetch",
-            "deepCrawls",
-            "lastSeenAt",
-            "daily",
-          ],
-        },
-      },
-      pages: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            path: { type: "string" },
-            journeys: { type: "integer" },
-            previousJourneys: { type: "integer" },
-            entries: { type: "integer", description: "Journeys whose first fetch was this page." },
-            lastSeenAt: { type: ["string", "null"] },
-            daily: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: { day: { type: "string" }, journeys: { type: "integer" } },
-                required: ["day", "journeys"],
-              },
-            },
-          },
-          required: ["path", "journeys", "previousJourneys", "entries", "lastSeenAt", "daily"],
-        },
-      },
-      totalPages: { type: "integer" },
-      previousTotalPages: { type: "integer" },
-      organization: {
+      site: {
         type: "object",
-        properties: {
-          id: { type: "string" },
-          slug: { type: "string" },
-          name: { type: "string" },
-          logo: { type: ["string", "null"] },
-        },
-        required: ["id", "slug", "name", "logo"],
+        properties: { id: { type: "string" }, name: { type: "string" } },
+        required: ["id", "name"],
       },
-    },
-    required: ["configured", "sources", "pages", "totalPages", "previousTotalPages", "organization"],
-  },
-  getGeoWebAnalytics: {
-    type: "object",
-    properties: {
-      configured: {
-        type: "boolean",
-        description:
-          "False when the analytics backend is not configured for this deployment; the payload is then empty rather than an error.",
-      },
-      imported: {
-        type: ["object", "null"],
-        properties: {
-          provider: { type: "string", enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum"] },
-          until: { type: "string", description: "Last imported day." },
-          nativeStart: { type: ["string", "null"], description: "First day Notra tracked natively, when known." },
-        },
-        required: ["provider", "until", "nativeStart"],
-        description:
-          "Latest completed history import. Days up to `until` come from it; native tracking starts the day after.",
-      },
-      hosts: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            host: { type: "string" },
-            siteId: { type: "string", description: "Notra Sites site id, empty for your own domains." },
-            views: { type: "integer" },
-          },
-          required: ["host", "siteId", "views"],
-        },
-      },
-      totals: {
-        type: "object",
-        properties: {
-          views: { type: "integer" },
-          previousViews: { type: "integer" },
-          visitors: { type: "integer" },
-          previousVisitors: { type: "integer" },
-          sessions: { type: "integer" },
-          previousSessions: { type: "integer" },
-          engagedSessions: { type: "integer" },
-          aiVisitors: { type: "integer", description: "Visitors who arrived from an AI assistant." },
-          previousAiVisitors: { type: "integer" },
-        },
-        required: [
-          "views",
-          "previousViews",
-          "visitors",
-          "previousVisitors",
-          "sessions",
-          "previousSessions",
-          "engagedSessions",
-          "aiVisitors",
-          "previousAiVisitors",
-        ],
-      },
-      points: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: { day: { type: "string" }, views: { type: "integer" }, visitors: { type: "integer" } },
-          required: ["day", "views", "visitors"],
-        },
-      },
-      organization: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          slug: { type: "string" },
-          name: { type: "string" },
-          logo: { type: ["string", "null"] },
-        },
-        required: ["id", "slug", "name", "logo"],
-      },
-    },
-    required: ["configured", "hosts", "totals", "points", "organization"],
-  },
-  getGeoWebAnalyticsBreakdowns: {
-    type: "object",
-    properties: {
-      configured: {
-        type: "boolean",
-        description:
-          "False when the analytics backend is not configured for this deployment; the payload is then empty rather than an error.",
-      },
-      imported: {
-        type: ["object", "null"],
-        properties: {
-          provider: { type: "string", enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum"] },
-          until: { type: "string", description: "Last imported day." },
-          nativeStart: { type: ["string", "null"], description: "First day Notra tracked natively, when known." },
-        },
-        required: ["provider", "until", "nativeStart"],
-        description:
-          "Latest completed history import. Days up to `until` come from it; native tracking starts the day after.",
-      },
-      pages: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            host: { type: "string" },
-            path: { type: "string" },
-            views: { type: "integer" },
-            previousViews: { type: "integer" },
-            visitors: { type: "integer" },
-            landings: { type: "integer" },
-            aiVisitors: { type: "integer" },
-          },
-          required: ["host", "path", "views", "previousViews", "visitors", "landings", "aiVisitors"],
-        },
-      },
-      sources: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            group: { type: "string", description: "Referrer group: ai, direct, internal, search, social or other." },
-            source: { type: "string" },
-            aiProduct: { type: "string" },
-            sessions: { type: "integer" },
-            previousSessions: { type: "integer" },
-            visitors: { type: "integer" },
-          },
-          required: ["group", "source", "aiProduct", "sessions", "previousSessions", "visitors"],
-        },
-      },
-      countries: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            value: { type: "string" },
-            visitors: { type: "integer" },
-            previousVisitors: { type: ["integer", "null"] },
-          },
-          required: ["value", "visitors"],
-        },
-        description: "ISO 3166-1 alpha-2 country codes.",
-      },
-      devices: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            value: { type: "string" },
-            visitors: { type: "integer" },
-            previousVisitors: { type: ["integer", "null"] },
-          },
-          required: ["value", "visitors"],
-        },
-      },
-      outcomes: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            source: {
-              type: "string",
-              description: "AI assistant the session came from; empty for every other session.",
-            },
-            sessions: { type: "integer" },
-            pagesPerSession: { type: "number" },
-            engagedRate: { type: "number" },
-          },
-          required: ["source", "sessions", "pagesPerSession", "engagedRate"],
-        },
-        description: "How sessions from AI assistants behave compared to others.",
-      },
-      outboundLinks: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            url: { type: "string", description: "Destination host and path, without the query." },
-            clicks: { type: "integer" },
-            previousClicks: { type: "integer" },
-            visitors: { type: "integer" },
-          },
-          required: ["url", "clicks", "previousClicks", "visitors"],
-        },
-        description: "Clicks on links to other sites.",
-      },
-      vitals: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            metric: { type: "string", enum: ["lcp", "inp", "cls", "fcp", "ttfb"] },
-            p75: {
-              type: "number",
-              description: "75th percentile in milliseconds, or the layout shift score x1000 for cls.",
-            },
-            samples: { type: "integer" },
-          },
-          required: ["metric", "p75", "samples"],
-        },
-        description: "Core Web Vitals from real visits.",
-      },
-      errors: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            message: { type: "string", description: "Scrubbed before storage: no query strings, emails or long ids." },
-            source: { type: "string" },
-            events: { type: "integer" },
-            views: { type: "integer" },
-          },
-          required: ["message", "source", "events", "views"],
-        },
-        description: "JavaScript errors reported by notra.plus.js.",
-      },
-      languages: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            value: { type: "string" },
-            visitors: { type: "integer" },
-            previousVisitors: { type: ["integer", "null"] },
-          },
-          required: ["value", "visitors"],
-        },
-      },
-      organization: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          slug: { type: "string" },
-          name: { type: "string" },
-          logo: { type: ["string", "null"] },
-        },
-        required: ["id", "slug", "name", "logo"],
-      },
-    },
-    required: [
-      "configured",
-      "pages",
-      "sources",
-      "countries",
-      "devices",
-      "outcomes",
-      "outboundLinks",
-      "vitals",
-      "errors",
-      "languages",
-      "organization",
-    ],
-  },
-  listGeoAnalyticsImports: {
-    type: "object",
-    properties: {
-      imports: {
+      authors: {
         type: "array",
         items: {
           type: "object",
           properties: {
             id: { type: "string" },
-            projectId: { type: "string" },
-            provider: {
+            ref: {
               type: "string",
-              enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum"],
+              description:
+                "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
             },
-            kind: { type: "string", enum: ["web", "geo"], description: "web: page views; geo: AI crawler requests." },
-            sourceLabel: { type: "string" },
-            host: { type: "string" },
-            status: {
-              type: "string",
-              enum: ["pending", "running", "waiting_rate_limit", "completed", "failed", "deleting", "deleted"],
-            },
-            startDay: { type: ["string", "null"] },
-            endDay: { type: ["string", "null"] },
-            cutoffDay: {
+            name: { type: "string" },
+            title: { type: ["string", "null"] },
+            bio: { type: ["string", "null"] },
+            avatar: {
               type: ["string", "null"],
-              description: "First day of native tracking; imports stop before it.",
+              description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
             },
-            chunksTotal: { type: "integer" },
-            chunksDone: { type: "integer" },
-            pageviewsImported: { type: "integer" },
-            rowsWritten: { type: "integer" },
-            capabilities: {
-              type: "object",
-              properties: {
-                visitors: { type: "boolean" },
-                visits: { type: "boolean" },
-                bounces: { type: "boolean" },
-                utm: { type: "boolean" },
-                entryPages: { type: "boolean" },
-                sampled: { type: "boolean" },
-              },
-              required: ["visitors", "visits", "bounces", "utm", "entryPages", "sampled"],
+            avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+            url: { type: ["string", "null"] },
+            x: { type: ["string", "null"] },
+            linkedin: { type: ["string", "null"] },
+            github: { type: ["string", "null"] },
+            youtube: { type: ["string", "null"] },
+            bluesky: { type: ["string", "null"] },
+            mastodon: { type: ["string", "null"] },
+            threads: { type: ["string", "null"] },
+            instagram: { type: ["string", "null"] },
+            live: {
+              type: "boolean",
+              description:
+                "The author is in the published blog.json. False while it only exists in unpublished changes.",
             },
-            lastError: { type: ["string", "null"] },
-            retryAt: { type: ["string", "null"] },
-            createdAt: { type: "string" },
-            completedAt: { type: ["string", "null"] },
+            posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
           },
           required: [
             "id",
-            "projectId",
-            "provider",
-            "kind",
-            "sourceLabel",
-            "host",
-            "status",
-            "startDay",
-            "endDay",
-            "cutoffDay",
-            "chunksTotal",
-            "chunksDone",
-            "pageviewsImported",
-            "rowsWritten",
-            "capabilities",
-            "lastError",
-            "retryAt",
-            "createdAt",
-            "completedAt",
+            "ref",
+            "name",
+            "title",
+            "bio",
+            "avatar",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+            "live",
+            "posts",
           ],
         },
+        description: "Authors in blog.json order, including unpublished changes.",
       },
-      organization: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          slug: { type: "string" },
-          name: { type: "string" },
-          logo: { type: ["string", "null"] },
-        },
-        required: ["id", "slug", "name", "logo"],
+      authorPage: {
+        type: "string",
+        enum: ["inline", "stacked"],
+        description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+      },
+      hasUnpublishedChanges: {
+        type: "boolean",
+        description:
+          "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
       },
     },
-    required: ["imports", "organization"],
+    required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
   },
 };

@@ -7,6 +7,7 @@ import {
   deletePostSchema,
   generatePostSchema,
   getPostGenerationStatusSchema,
+  createPostPullRequestSchema,
   postSummaryListOutputSchema,
 } from "../schemas/post.js";
 import type { McpServer } from "@modelcontextprotocol/server";
@@ -34,7 +35,8 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
   server.registerTool(
     "get_post",
     {
-      description: "Get a single post by its ID, including full content in HTML and markdown",
+      description:
+        "Get a single post by its ID, including full content in HTML and markdown. For blog posts and changelogs, metadata.authors lists the credited authors; ids starting with site: are authors from the post's Notra Site (see list_site_authors).",
       annotations: { title: "Get Post", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
       inputSchema: shareJsonSchema(getPostSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getPost")),
@@ -70,7 +72,7 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
     "update_post",
     {
       description:
-        "Update a post's title, slug, markdown, or publication status. Changes to title, slug, or markdown also sync a post linked to GitHub: an open pull request gets a new commit, and a repository set to publish directly gets a direct commit when its live branch allows one. Otherwise, including closed or merged pull requests, GitHub is left as is and no new pull request is opened. Publishing can expose content on a hosted site and request a visibility rescan. A sync failure can occur after the post is saved; check the post and linked PR before retrying.",
+        "Update a post's title, slug, markdown, publication status, or credited authors. Changes to title, slug, markdown, or authors also sync a post linked to GitHub: an open pull request gets a new commit, and a repository set to publish directly gets a direct commit when its live branch allows one. Otherwise, including closed or merged pull requests, GitHub is left as is and no new pull request is opened. Publishing can expose content on a hosted site and request a visibility rescan. A sync failure can occur after the post is saved; check the post and linked PR before retrying.",
       annotations: {
         title: "Update Post",
         readOnlyHint: false,
@@ -81,7 +83,10 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
       inputSchema: shareJsonSchema(updatePostSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("updatePost")),
     },
-    ({ postId, ...body }) => handleError(() => client.updatePost(postId, body)),
+    ({ postId, authorIds, ...body }) =>
+      handleError(() =>
+        client.updatePost(postId, authorIds === undefined ? body : { ...body, metadata: { authorIds } }),
+      ),
   );
 
   server.registerTool(
@@ -105,12 +110,30 @@ export function registerPostTools(server: McpServer, client: NotraClient) {
     "generate_post",
     {
       description:
-        "Queue an async post generation job. Notra will analyze your GitHub activity and generate content. Use get_post_generation_status to poll for completion.",
+        "Queue an async post generation job. Notra analyzes your GitHub activity and generates content. Pass pullRequest to write about one pull request, and brief to say what the post should cover in your own words. Use get_post_generation_status to poll for completion, then create_post_pull_request to put a blog post or changelog into a draft pull request.",
       annotations: { title: "Generate Post", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
       inputSchema: shareJsonSchema(generatePostSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createPostGeneration")),
     },
     (params) => handleError(() => client.generatePost(params)),
+  );
+
+  server.registerTool(
+    "create_post_pull_request",
+    {
+      description:
+        "Open a draft GitHub pull request for a saved blog post or changelog, using the repository's configured content path, site metadata and images, the same as the dashboard. Always a draft pull request, never merged, even for repositories that publish directly. Calling it again for the same post and repository updates its open pull request instead of opening another. Omit integrationId and github when only one repository is connected. Returns the pull request URL.",
+      annotations: {
+        title: "Create Post Pull Request",
+        readOnlyHint: false,
+        openWorldHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(createPostPullRequestSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("createPostPullRequest")),
+    },
+    ({ postId, ...body }) => handleError(() => client.createPostPullRequest(postId, body)),
   );
 
   server.registerTool(

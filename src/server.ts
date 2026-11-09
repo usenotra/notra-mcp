@@ -9,6 +9,7 @@ import { registerGeoAgentReadinessTools } from "./tools/geo-agent-readiness-tool
 import { registerGeoBriefTools } from "./tools/geo-brief-tools.js";
 import { registerGeoCompetitorTools } from "./tools/geo-competitor-tools.js";
 import { registerGeoDiagnosticTools } from "./tools/geo-diagnostic-tools.js";
+import { registerGeoPersonaTools } from "./tools/geo-persona-tools.js";
 import { registerGeoPromptTools } from "./tools/geo-prompt-tools.js";
 import { registerGeoScanTools } from "./tools/geo-scan-tools.js";
 import { registerGeoSequenceTools } from "./tools/geo-sequence-tools.js";
@@ -21,6 +22,7 @@ import { registerPostTools } from "./tools/post-tools.js";
 import { registerPostScheduleTools } from "./tools/post-schedule-tools.js";
 import { registerProjectTools } from "./tools/project-tools.js";
 import { registerScheduleTools } from "./tools/schedule-tools.js";
+import { registerSiteTools } from "./tools/site-tools.js";
 import { registerSkillTools } from "./tools/skill-tools.js";
 import { registerWebhookTools } from "./tools/webhook-tools.js";
 import { registerListWorkspacesTool, registerWhoAmITool } from "./tools/workspace-tools.js";
@@ -30,13 +32,14 @@ import type { Toolset } from "./types/toolset.js";
 import { parseToolsets } from "./utils/toolsets.js";
 import { instrumentMcpUsage } from "./utils/mcp-usage.js";
 
-export const SERVER_VERSION = "1.4.0";
+export const SERVER_VERSION = "1.5.0";
 
 type Registrar = (server: McpServer, client: NotraClient) => void;
 
 const CONTENT_REGISTRARS: readonly Registrar[] = [
   registerPostTools,
   registerPostScheduleTools,
+  registerSiteTools,
   registerBrandIdentityTools,
   registerIntegrationTools,
   registerScheduleTools,
@@ -51,6 +54,7 @@ const GEO_REGISTRARS: readonly Registrar[] = [
   registerGeoSettingsTools,
   registerGeoPromptTools,
   registerGeoSequenceTools,
+  registerGeoPersonaTools,
   registerGeoCompetitorTools,
   registerGeoDiagnosticTools,
   registerGeoScanTools,

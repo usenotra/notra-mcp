@@ -1,5 +1,6 @@
 import { GEO_LONG_RUNNING_TIMEOUT_MS } from "./constants/geo.js";
 import { ORGANIZATION_ID_HEADER } from "./constants/organization.js";
+import { SITE_PUBLISH_TIMEOUT_MS } from "./constants/site.js";
 import type {
   BrandColorDeleteResponse,
   BrandColorListResponse,
@@ -27,6 +28,8 @@ import type {
   ListSchedulesParams,
   PostDeleteResponse,
   PostGenerationStatusResponse,
+  CreatePostPullRequestRequest,
+  CreatePostPullRequestResponse,
   PostListResponse,
   PostResponse,
   RunScheduleResponse,
@@ -44,6 +47,16 @@ import type {
   UpdateSkillRequest,
 } from "./types/api.js";
 import type { AuthContext } from "./types/auth.js";
+import type {
+  ImportSiteAuthorsRequest,
+  ImportSiteAuthorsResponse,
+  PublishSiteDesignRequest,
+  PublishSiteDesignResponse,
+  SetSiteAuthorPageRequest,
+  SiteAuthorsResponse,
+  SiteListResponse,
+  UpsertSiteAuthorRequest,
+} from "./types/site.js";
 import type { CancelPostScheduleResponse, PostScheduleResponse, SchedulePostRequest } from "./types/post-schedule.js";
 import type {
   EventTriggerDeleteResponse,
@@ -91,6 +104,17 @@ import type {
   SuggestGeoCompetitorsResponse,
   UpsertGeoCompetitorRequest,
 } from "./types/geo-competitor.js";
+import type {
+  GenerateGeoPersonasRequest,
+  GeoPersonaActivityResponse,
+  GeoPersonaArchiveResponse,
+  GeoPersonaGenerationResponse,
+  GeoPersonaListResponse,
+  GeoPersonaResponse,
+  GeoPersonaResultsResponse,
+  RunGeoPersonaResponse,
+  UpdateGeoPersonaRequest,
+} from "./types/geo-persona.js";
 import type {
   DismissGeoPromptSuggestionResponse,
   GeoPromptDeleteResponse,
@@ -154,12 +178,25 @@ import type {
   UpdateProjectRequest,
 } from "./types/project.js";
 import type { RequestOptions, RequestTimeoutOptions } from "./types/request.js";
+import type {
+  CreateSitePostPreviewRequest,
+  GetSiteDeploymentResponse,
+  GetSiteResponse,
+  ListSiteDeploymentsResponse,
+  PublishSitePostResponse,
+  SitePostPreviewResponse,
+  StartSiteDeploymentResponse,
+} from "./types/site.js";
 import type { WorkspaceContextResponse } from "./types/workspace.js";
 import { describeApiError } from "./utils/api-error.js";
 import { withoutHiddenReadinessChecks } from "./utils/geo-agent-readiness.js";
 import { appendQueryParams } from "./utils/query-params.js";
 import { describeOrganizationError } from "./utils/organization.js";
 import { createRequestSignal } from "./utils/request-signal.js";
+
+function sitePath(siteId: string, suffix: string): string {
+  return `/v1/sites/${encodeURIComponent(siteId)}${suffix}`;
+}
 
 const NOTRA_API_BASE = process.env.NOTRA_API_BASE ?? "https://api.usenotra.com";
 
@@ -275,6 +312,54 @@ export class NotraClient {
     });
   }
 
+  async getSite(siteId: string): Promise<GetSiteResponse> {
+    return this.request<GetSiteResponse>("GET", sitePath(siteId, ""));
+  }
+
+  async listSiteDeployments(siteId: string, params?: { limit?: number }): Promise<ListSiteDeploymentsResponse> {
+    return this.request<ListSiteDeploymentsResponse>("GET", sitePath(siteId, "/deployments"), { params });
+  }
+
+  async getSiteDeployment(siteId: string, deploymentId: string): Promise<GetSiteDeploymentResponse> {
+    return this.request<GetSiteDeploymentResponse>(
+      "GET",
+      sitePath(siteId, `/deployments/${encodeURIComponent(deploymentId)}`),
+    );
+  }
+
+  async startSiteDeployment(siteId: string): Promise<StartSiteDeploymentResponse> {
+    return this.request<StartSiteDeploymentResponse>("POST", sitePath(siteId, "/deployments"));
+  }
+
+  async redeploySiteDeployment(siteId: string, deploymentId: string): Promise<StartSiteDeploymentResponse> {
+    return this.request<StartSiteDeploymentResponse>(
+      "POST",
+      sitePath(siteId, `/deployments/${encodeURIComponent(deploymentId)}/redeploy`),
+    );
+  }
+
+  async createSitePostPreview(siteId: string, body: CreateSitePostPreviewRequest): Promise<SitePostPreviewResponse> {
+    return this.request<SitePostPreviewResponse, CreateSitePostPreviewRequest>(
+      "POST",
+      sitePath(siteId, "/post-previews"),
+      { body },
+    );
+  }
+
+  async getSitePostPreview(siteId: string, postId: string): Promise<SitePostPreviewResponse> {
+    return this.request<SitePostPreviewResponse>(
+      "GET",
+      sitePath(siteId, `/post-previews/${encodeURIComponent(postId)}`),
+    );
+  }
+
+  async publishPostToSite(siteId: string, postId: string): Promise<PublishSitePostResponse> {
+    return this.request<PublishSitePostResponse, { postId: string }>("POST", sitePath(siteId, "/publications"), {
+      body: { postId },
+      timeoutMs: SITE_PUBLISH_TIMEOUT_MS,
+    });
+  }
+
   async updatePost(postId: string, body: UpdatePostRequest): Promise<PostResponse> {
     return this.request<PostResponse, UpdatePostRequest>("PATCH", `/v1/posts/${encodeURIComponent(postId)}`, { body });
   }
@@ -289,6 +374,17 @@ export class NotraClient {
 
   async generatePost(body: GeneratePostRequest): Promise<GeneratePostResponse> {
     return this.request<GeneratePostResponse, GeneratePostRequest>("POST", "/v1/posts/generate", { body });
+  }
+
+  async createPostPullRequest(
+    postId: string,
+    body: CreatePostPullRequestRequest,
+  ): Promise<CreatePostPullRequestResponse> {
+    return this.request<CreatePostPullRequestResponse, CreatePostPullRequestRequest>(
+      "POST",
+      `/v1/posts/${encodeURIComponent(postId)}/pull-request`,
+      { body },
+    );
   }
 
   async getPostGenerationStatus(jobId: string): Promise<PostGenerationStatusResponse> {
@@ -444,6 +540,58 @@ export class NotraClient {
     return this.request<ScheduleRunListResponse>("GET", `/v1/schedules/${encodeURIComponent(scheduleId)}/runs`, {
       params,
     });
+  }
+
+  async listSites(): Promise<SiteListResponse> {
+    return this.request<SiteListResponse>("GET", "/v1/sites");
+  }
+
+  async listSiteAuthors(siteId: string): Promise<SiteAuthorsResponse> {
+    return this.request<SiteAuthorsResponse>("GET", `/v1/sites/${encodeURIComponent(siteId)}/authors`);
+  }
+
+  async upsertSiteAuthor(
+    siteId: string,
+    authorId: string,
+    body: UpsertSiteAuthorRequest,
+  ): Promise<SiteAuthorsResponse> {
+    return this.request<SiteAuthorsResponse, UpsertSiteAuthorRequest>(
+      "PUT",
+      `/v1/sites/${encodeURIComponent(siteId)}/authors/${encodeURIComponent(authorId)}`,
+      { body },
+    );
+  }
+
+  async deleteSiteAuthor(siteId: string, authorId: string, force?: boolean): Promise<SiteAuthorsResponse> {
+    return this.request<SiteAuthorsResponse>(
+      "DELETE",
+      `/v1/sites/${encodeURIComponent(siteId)}/authors/${encodeURIComponent(authorId)}`,
+      { params: force ? { force: "true" } : undefined },
+    );
+  }
+
+  async importSiteAuthors(siteId: string, body: ImportSiteAuthorsRequest): Promise<ImportSiteAuthorsResponse> {
+    return this.request<ImportSiteAuthorsResponse, ImportSiteAuthorsRequest>(
+      "POST",
+      `/v1/sites/${encodeURIComponent(siteId)}/authors/import`,
+      { body },
+    );
+  }
+
+  async setSiteAuthorPage(siteId: string, body: SetSiteAuthorPageRequest): Promise<SiteAuthorsResponse> {
+    return this.request<SiteAuthorsResponse, SetSiteAuthorPageRequest>(
+      "PATCH",
+      `/v1/sites/${encodeURIComponent(siteId)}/author-page`,
+      { body },
+    );
+  }
+
+  async publishSiteDesign(siteId: string, body: PublishSiteDesignRequest): Promise<PublishSiteDesignResponse> {
+    return this.request<PublishSiteDesignResponse, PublishSiteDesignRequest>(
+      "POST",
+      `/v1/sites/${encodeURIComponent(siteId)}/publish`,
+      { body, timeoutMs: 120_000 },
+    );
   }
 
   async listSkills(): Promise<ListSkillsResponse> {
@@ -664,6 +812,77 @@ export class NotraClient {
       this.geoPath(projectId, `/sequences/${encodeURIComponent(sequenceId)}/run`),
       { timeoutMs: GEO_LONG_RUNNING_TIMEOUT_MS },
     );
+  }
+
+  async listGeoPersonas(projectId: string): Promise<GeoPersonaListResponse> {
+    return this.request<GeoPersonaListResponse>("GET", this.geoPath(projectId, "/personas"));
+  }
+
+  async updateGeoPersona(
+    projectId: string,
+    personaId: string,
+    body: UpdateGeoPersonaRequest,
+  ): Promise<GeoPersonaResponse> {
+    return this.request<GeoPersonaResponse, UpdateGeoPersonaRequest>(
+      "PATCH",
+      this.geoPath(projectId, `/personas/${encodeURIComponent(personaId)}`),
+      { body },
+    );
+  }
+
+  async archiveGeoPersona(projectId: string, personaId: string): Promise<GeoPersonaArchiveResponse> {
+    return this.request<GeoPersonaArchiveResponse>(
+      "DELETE",
+      this.geoPath(projectId, `/personas/${encodeURIComponent(personaId)}`),
+    );
+  }
+
+  async restoreGeoPersona(projectId: string, personaId: string): Promise<GeoPersonaResponse> {
+    return this.request<GeoPersonaResponse>(
+      "POST",
+      this.geoPath(projectId, `/personas/${encodeURIComponent(personaId)}/restore`),
+    );
+  }
+
+  async getGeoPersonaResults(
+    projectId: string,
+    personaId: string,
+    scanId?: string,
+  ): Promise<GeoPersonaResultsResponse> {
+    return this.request<GeoPersonaResultsResponse>(
+      "GET",
+      this.geoPath(projectId, `/personas/${encodeURIComponent(personaId)}/results`),
+      { params: { scanId } },
+    );
+  }
+
+  async getGeoPersonaActivity(projectId: string, params?: GeoWindowParams): Promise<GeoPersonaActivityResponse> {
+    return this.request<GeoPersonaActivityResponse>("GET", this.geoPath(projectId, "/personas/activity"), {
+      params,
+    });
+  }
+
+  async runGeoPersona(projectId: string, personaId: string): Promise<RunGeoPersonaResponse> {
+    return this.request<RunGeoPersonaResponse>(
+      "POST",
+      this.geoPath(projectId, `/personas/${encodeURIComponent(personaId)}/run`),
+      { timeoutMs: GEO_LONG_RUNNING_TIMEOUT_MS },
+    );
+  }
+
+  async generateGeoPersonas(
+    projectId: string,
+    body: GenerateGeoPersonasRequest,
+  ): Promise<GeoPersonaGenerationResponse> {
+    return this.request<GeoPersonaGenerationResponse, GenerateGeoPersonasRequest>(
+      "POST",
+      this.geoPath(projectId, "/personas/generate"),
+      { body },
+    );
+  }
+
+  async getGeoPersonaGeneration(projectId: string): Promise<GeoPersonaGenerationResponse> {
+    return this.request<GeoPersonaGenerationResponse>("GET", this.geoPath(projectId, "/personas/generation"));
   }
 
   async listGeoCompetitors(projectId: string): Promise<GeoCompetitorListResponse> {
