@@ -208,6 +208,12 @@ export interface GeoMcpToolDetailResponse {
   organization: Organization;
 }
 
+interface GeoWebScript {
+  url: string;
+  pinnedUrl: string;
+  integrity: string;
+}
+
 export interface GeoIngestSetupResponse {
   ingestUrl: string;
   snippet: string;
@@ -220,5 +226,11 @@ export interface GeoIngestSetupResponse {
     sveltekit: string;
     reactRouter: string;
   };
+  drainUrls: { vercel: string; cloudflare: string };
+  /** notra.js fields, missing when web analytics is not enabled for the workspace. */
+  webKey?: string;
+  webSnippet?: string;
+  webScript?: GeoWebScript;
+  webPlusScript?: GeoWebScript;
   organization: Organization;
 }

@@ -165,7 +165,7 @@ Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS 
 
 ## Toolsets
 
-All 138 tools are exposed by default, which costs roughly 23k tokens of agent context (about 12k for `geo` alone, 11k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 143 tools are exposed by default, which costs roughly 23k tokens of agent context (about 12k for `geo` alone, 11k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                                     |
 | --------- | --------------------------------------------------------------------------------------------------------- |
@@ -411,14 +411,26 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 
 ### AI traffic
 
-| Tool                        | Description                                                  |
-| --------------------------- | ------------------------------------------------------------ |
-| `get_geo_traffic_overview`  | Crawler and AI-referral totals, sources and daily timeseries |
-| `get_geo_traffic_log`       | Most recent individual AI crawler/referral requests          |
-| `list_geo_traffic_journeys` | Sessions grouped by journey                                  |
-| `get_geo_traffic_journey`   | Every event in one journey                                   |
-| `list_geo_traffic_pages`    | Most visited pages by AI traffic                             |
-| `get_geo_ingest_setup`      | Tracking install snippets and ingest endpoint                |
+| Tool                            | Description                                                  |
+| ------------------------------- | ------------------------------------------------------------ |
+| `get_geo_traffic_overview`      | Crawler and AI-referral totals, sources and daily timeseries |
+| `get_geo_traffic_log`           | Most recent individual AI crawler/referral requests          |
+| `list_geo_traffic_journeys`     | Sessions grouped by journey                                  |
+| `get_geo_traffic_journey`       | Every event in one journey                                   |
+| `list_geo_traffic_pages`        | Most visited pages by AI traffic                             |
+| `get_geo_traffic_journey_stats` | Journey counts per AI source and per page                    |
+| `get_geo_ingest_setup`          | Install snippets, log drain URLs and the notra.js web key    |
+
+### Website analytics
+
+Page views and outbound link clicks from the notra.js script, plus history imports. Rotate the web key and start imports in the dashboard.
+
+| Tool                               | Description                                                                                  |
+| ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| `get_geo_web_analytics`            | Views, visitors, sessions and AI visitors against the previous window, daily trend and hosts |
+| `get_geo_web_analytics_breakdowns` | Pages, sources, countries, devices, languages, outbound links, vitals and errors             |
+| `get_geo_web_analytics_utm`        | Sessions per UTM source, medium, campaign, term or content                                   |
+| `list_geo_analytics_imports`       | History imports and their progress                                                           |
 
 ### MCP server analytics
 

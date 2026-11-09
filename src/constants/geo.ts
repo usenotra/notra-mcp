@@ -3,6 +3,8 @@ export const GEO_CONTENT_SUBTYPE_VALUES = ["guide", "comparison", "listicle", "h
 export const GEO_BRIEF_SOURCE_KIND_VALUES = ["manual", "gap", "prompt", "search_console"] as const;
 export const GEO_TRAFFIC_VISITOR_TYPE_VALUES = ["crawler", "ai_referral"] as const;
 export const GEO_TRAFFIC_CATEGORY_VALUES = ["training-crawler", "search-index", "assistant-browse"] as const;
+export const GEO_TRAFFIC_SITES_VALUES = ["exclude"] as const;
+export const GEO_ANALYTICS_PATH_MAX_LENGTH = 2048;
 
 export const GEO_MAX_COMPETITORS = 2000;
 export const GEO_COMPETITOR_MAX_SYNONYMS = 8;
