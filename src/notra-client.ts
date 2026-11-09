@@ -157,6 +157,8 @@ import type {
   GeoTrafficFilterParams,
   GeoTrafficJourneyStatsResponse,
   GeoWebAnalyticsBreakdownsResponse,
+  GeoWebAnalyticsUtmParams,
+  GeoWebAnalyticsUtmResponse,
   GeoWebAnalyticsResponse,
 } from "./types/geo-web-analytics.js";
 import type {
@@ -1200,6 +1202,15 @@ export class NotraClient {
     params?: GeoTrafficFilterParams,
   ): Promise<GeoWebAnalyticsBreakdownsResponse> {
     return this.request<GeoWebAnalyticsBreakdownsResponse>("GET", this.geoPath(projectId, "/traffic/web/breakdowns"), {
+      params,
+    });
+  }
+
+  async getGeoWebAnalyticsUtm(
+    projectId: string,
+    params: GeoWebAnalyticsUtmParams,
+  ): Promise<GeoWebAnalyticsUtmResponse> {
+    return this.request<GeoWebAnalyticsUtmResponse>("GET", this.geoPath(projectId, "/traffic/web/utm"), {
       params,
     });
   }

@@ -69,6 +69,15 @@ export const getGeoWebAnalyticsSchema = z.object({
   ...geoTrafficFilterShape,
 });
 
+export const getGeoWebAnalyticsUtmSchema = z.object({
+  projectId: projectIdSchema,
+  dimension: z
+    .enum(["source", "medium", "campaign", "term", "content"])
+    .describe("UTM parameter to break sessions down by"),
+  ...geoWindowShape,
+  ...geoTrafficFilterShape,
+});
+
 export const getGeoTrafficJourneyStatsSchema = z.object({
   projectId: projectIdSchema,
   ...geoWindowShape,

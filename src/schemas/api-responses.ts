@@ -58,6 +58,7 @@ export type ApiOperationId =
   | "getGeoSentimentAnalysis"
   | "getGeoSettings"
   | "getGeoTrafficJourney"
+  | "getGeoTrafficJourneyStats"
   | "getGeoTrafficLog"
   | "getGeoTrafficOverview"
   | "getGeoVisibilityCompetitorDetail"
@@ -66,6 +67,9 @@ export type ApiOperationId =
   | "getGeoVisibilityOverview"
   | "getGeoVisibilityPromptResults"
   | "getGeoVisibilityTimeseries"
+  | "getGeoWebAnalytics"
+  | "getGeoWebAnalyticsBreakdowns"
+  | "getGeoWebAnalyticsUtm"
   | "getGitHubActivity"
   | "getPost"
   | "getPostAgentReach"
@@ -89,6 +93,7 @@ export type ApiOperationId =
   | "listChats"
   | "listEventTriggers"
   | "listFeedback"
+  | "listGeoAnalyticsImports"
   | "listGeoChanges"
   | "listGeoCompetitors"
   | "listGeoContentBriefs"
@@ -2137,6 +2142,54 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         },
         required: ["id", "slug", "name", "logo"],
       },
+      webKey: {
+        type: "string",
+        description:
+          "Public key for the notra.js browser script, bound to one project. Safe to put in page HTML; it only records human page views on that project's tracked domains and survives token rotation. Only present when web analytics is enabled for the workspace and it has a project.",
+      },
+      webSnippet: {
+        type: "string",
+        description:
+          "Script tag that installs notra.js with the public key. Only present when web analytics is enabled for the workspace.",
+      },
+      webScript: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "Always serves the latest build." },
+          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
+          integrity: {
+            type: "string",
+            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
+          },
+          collectUrl: {
+            type: "string",
+            description:
+              "Where page views go when the script loads from Notra's script host; set it as the tag's data-api.",
+          },
+        },
+        required: ["url", "pinnedUrl", "integrity"],
+        description:
+          "notra.js: the auto-updating URL and the current build pinned with Subresource Integrity. Only present when web analytics is enabled for the workspace.",
+      },
+      webPlusScript: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "Always serves the latest build." },
+          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
+          integrity: {
+            type: "string",
+            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
+          },
+          collectUrl: {
+            type: "string",
+            description:
+              "Where page views go when the script loads from Notra's script host; set it as the tag's data-api.",
+          },
+        },
+        required: ["url", "pinnedUrl", "integrity"],
+        description:
+          "notra.plus.js (notra.js with JavaScript error reporting), auto-updating and pinned. Only present when web analytics is enabled for the workspace.",
+      },
     },
     required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization"],
   },
@@ -3157,6 +3210,86 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["configured", "events", "organization"],
   },
+  getGeoTrafficJourneyStats: {
+    type: "object",
+    properties: {
+      configured: {
+        type: "boolean",
+        description:
+          "False when the analytics backend is not configured for this deployment; the payload is then empty rather than an error.",
+      },
+      sources: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            source: { type: "string" },
+            visitorType: { type: "string", enum: ["crawler", "ai_referral", "human", "unknown"] },
+            journeys: { type: "integer" },
+            previousJourneys: { type: "integer" },
+            pages: { type: "integer" },
+            singleFetch: { type: "integer" },
+            deepCrawls: { type: "integer" },
+            lastSeenAt: { type: ["string", "null"] },
+            daily: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: { day: { type: "string" }, journeys: { type: "integer" } },
+                required: ["day", "journeys"],
+              },
+            },
+          },
+          required: [
+            "source",
+            "visitorType",
+            "journeys",
+            "previousJourneys",
+            "pages",
+            "singleFetch",
+            "deepCrawls",
+            "lastSeenAt",
+            "daily",
+          ],
+        },
+      },
+      pages: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            path: { type: "string" },
+            journeys: { type: "integer" },
+            previousJourneys: { type: "integer" },
+            entries: { type: "integer", description: "Journeys whose first fetch was this page." },
+            lastSeenAt: { type: ["string", "null"] },
+            daily: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: { day: { type: "string" }, journeys: { type: "integer" } },
+                required: ["day", "journeys"],
+              },
+            },
+          },
+          required: ["path", "journeys", "previousJourneys", "entries", "lastSeenAt", "daily"],
+        },
+      },
+      totalPages: { type: "integer" },
+      previousTotalPages: { type: "integer" },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["configured", "sources", "pages", "totalPages", "previousTotalPages", "organization"],
+  },
   getGeoTrafficLog: {
     type: "object",
     properties: {
@@ -3569,6 +3702,290 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["configured", "points", "organization"],
+  },
+  getGeoWebAnalytics: {
+    type: "object",
+    properties: {
+      configured: {
+        type: "boolean",
+        description:
+          "False when the analytics backend is not configured for this deployment; the payload is then empty rather than an error.",
+      },
+      imported: {
+        type: ["object", "null"],
+        properties: {
+          provider: { type: "string", enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum"] },
+          until: { type: "string", description: "Last imported day." },
+          nativeStart: { type: ["string", "null"], description: "First day Notra tracked natively, when known." },
+        },
+        required: ["provider", "until", "nativeStart"],
+        description:
+          "Latest completed history import. Days up to `until` come from it; native tracking starts the day after.",
+      },
+      hosts: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            host: { type: "string" },
+            siteId: { type: "string", description: "Notra Sites site id, empty for your own domains." },
+            views: { type: "integer" },
+          },
+          required: ["host", "siteId", "views"],
+        },
+      },
+      totals: {
+        type: "object",
+        properties: {
+          views: { type: "integer" },
+          previousViews: { type: "integer" },
+          visitors: { type: "integer" },
+          previousVisitors: { type: "integer" },
+          sessions: { type: "integer" },
+          previousSessions: { type: "integer" },
+          engagedSessions: { type: "integer" },
+          aiVisitors: { type: "integer", description: "Visitors who arrived from an AI assistant." },
+          previousAiVisitors: { type: "integer" },
+        },
+        required: [
+          "views",
+          "previousViews",
+          "visitors",
+          "previousVisitors",
+          "sessions",
+          "previousSessions",
+          "engagedSessions",
+          "aiVisitors",
+          "previousAiVisitors",
+        ],
+      },
+      points: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { day: { type: "string" }, views: { type: "integer" }, visitors: { type: "integer" } },
+          required: ["day", "views", "visitors"],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["configured", "hosts", "totals", "points", "organization"],
+  },
+  getGeoWebAnalyticsBreakdowns: {
+    type: "object",
+    properties: {
+      configured: {
+        type: "boolean",
+        description:
+          "False when the analytics backend is not configured for this deployment; the payload is then empty rather than an error.",
+      },
+      imported: {
+        type: ["object", "null"],
+        properties: {
+          provider: { type: "string", enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum"] },
+          until: { type: "string", description: "Last imported day." },
+          nativeStart: { type: ["string", "null"], description: "First day Notra tracked natively, when known." },
+        },
+        required: ["provider", "until", "nativeStart"],
+        description:
+          "Latest completed history import. Days up to `until` come from it; native tracking starts the day after.",
+      },
+      pages: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            host: { type: "string" },
+            path: { type: "string" },
+            views: { type: "integer" },
+            previousViews: { type: "integer" },
+            visitors: { type: "integer" },
+            landings: { type: "integer" },
+            aiVisitors: { type: "integer" },
+          },
+          required: ["host", "path", "views", "previousViews", "visitors", "landings", "aiVisitors"],
+        },
+      },
+      sources: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            group: { type: "string", description: "Referrer group: ai, direct, internal, search, social or other." },
+            source: { type: "string" },
+            aiProduct: { type: "string" },
+            sessions: { type: "integer" },
+            previousSessions: { type: "integer" },
+            visitors: { type: "integer" },
+          },
+          required: ["group", "source", "aiProduct", "sessions", "previousSessions", "visitors"],
+        },
+      },
+      countries: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            value: { type: "string" },
+            visitors: { type: "integer" },
+            previousVisitors: { type: ["integer", "null"] },
+          },
+          required: ["value", "visitors"],
+        },
+        description: "ISO 3166-1 alpha-2 country codes.",
+      },
+      devices: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            value: { type: "string" },
+            visitors: { type: "integer" },
+            previousVisitors: { type: ["integer", "null"] },
+          },
+          required: ["value", "visitors"],
+        },
+      },
+      outcomes: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            source: {
+              type: "string",
+              description: "AI assistant the session came from; empty for every other session.",
+            },
+            sessions: { type: "integer" },
+            pagesPerSession: { type: "number" },
+            engagedRate: { type: "number" },
+          },
+          required: ["source", "sessions", "pagesPerSession", "engagedRate"],
+        },
+        description: "How sessions from AI assistants behave compared to others.",
+      },
+      outboundLinks: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            url: { type: "string", description: "Destination host and path, without the query." },
+            clicks: { type: "integer" },
+            previousClicks: { type: "integer" },
+            visitors: { type: "integer" },
+          },
+          required: ["url", "clicks", "previousClicks", "visitors"],
+        },
+        description: "Clicks on links to other sites.",
+      },
+      vitals: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            metric: { type: "string", enum: ["lcp", "inp", "cls", "fcp", "ttfb"] },
+            p75: {
+              type: "number",
+              description: "75th percentile in milliseconds, or the layout shift score x1000 for cls.",
+            },
+            samples: { type: "integer" },
+          },
+          required: ["metric", "p75", "samples"],
+        },
+        description: "Core Web Vitals from real visits.",
+      },
+      errors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            message: { type: "string", description: "Scrubbed before storage: no query strings, emails or long ids." },
+            source: { type: "string" },
+            events: { type: "integer" },
+            views: { type: "integer" },
+          },
+          required: ["message", "source", "events", "views"],
+        },
+        description: "JavaScript errors reported by notra.plus.js.",
+      },
+      languages: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            value: { type: "string" },
+            visitors: { type: "integer" },
+            previousVisitors: { type: ["integer", "null"] },
+          },
+          required: ["value", "visitors"],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: [
+      "configured",
+      "pages",
+      "sources",
+      "countries",
+      "devices",
+      "outcomes",
+      "outboundLinks",
+      "vitals",
+      "errors",
+      "languages",
+      "organization",
+    ],
+  },
+  getGeoWebAnalyticsUtm: {
+    type: "object",
+    properties: {
+      dimension: { type: "string", enum: ["source", "medium", "campaign", "term", "content"] },
+      rows: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            value: {
+              type: "string",
+              description:
+                "Source and medium are lowercased. Campaign, term and content values that look like an email address, a UUID or a token are reported as `:id`.",
+            },
+            sessions: { type: "integer" },
+            previousSessions: { type: "integer" },
+            visitors: { type: "integer" },
+          },
+          required: ["value", "sessions", "previousSessions", "visitors"],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["dimension", "rows", "organization"],
   },
   getGitHubActivity: {
     type: "object",
@@ -4696,6 +5113,54 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         type: "string",
         description: "Tracking token. Shown once per request; rotating invalidates every previously issued token.",
       },
+      webKey: {
+        type: "string",
+        description:
+          "Public key for the notra.js browser script, bound to one project. Safe to put in page HTML; it only records human page views on that project's tracked domains and survives token rotation. Only present when web analytics is enabled for the workspace and it has a project.",
+      },
+      webSnippet: {
+        type: "string",
+        description:
+          "Script tag that installs notra.js with the public key. Only present when web analytics is enabled for the workspace.",
+      },
+      webScript: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "Always serves the latest build." },
+          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
+          integrity: {
+            type: "string",
+            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
+          },
+          collectUrl: {
+            type: "string",
+            description:
+              "Where page views go when the script loads from Notra's script host; set it as the tag's data-api.",
+          },
+        },
+        required: ["url", "pinnedUrl", "integrity"],
+        description:
+          "notra.js: the auto-updating URL and the current build pinned with Subresource Integrity. Only present when web analytics is enabled for the workspace.",
+      },
+      webPlusScript: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "Always serves the latest build." },
+          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
+          integrity: {
+            type: "string",
+            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
+          },
+          collectUrl: {
+            type: "string",
+            description:
+              "Where page views go when the script loads from Notra's script host; set it as the tag's data-api.",
+          },
+        },
+        required: ["url", "pinnedUrl", "integrity"],
+        description:
+          "notra.plus.js (notra.js with JavaScript error reporting), auto-updating and pinned. Only present when web analytics is enabled for the workspace.",
+      },
     },
     required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization", "token"],
   },
@@ -4989,6 +5454,90 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["feedback", "pagination"],
+  },
+  listGeoAnalyticsImports: {
+    type: "object",
+    properties: {
+      imports: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            projectId: { type: "string" },
+            provider: {
+              type: "string",
+              enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum"],
+            },
+            kind: { type: "string", enum: ["web", "geo"], description: "web: page views; geo: AI crawler requests." },
+            sourceLabel: { type: "string" },
+            host: { type: "string" },
+            status: {
+              type: "string",
+              enum: ["pending", "running", "waiting_rate_limit", "completed", "failed", "deleting", "deleted"],
+            },
+            startDay: { type: ["string", "null"] },
+            endDay: { type: ["string", "null"] },
+            cutoffDay: {
+              type: ["string", "null"],
+              description: "First day of native tracking; imports stop before it.",
+            },
+            chunksTotal: { type: "integer" },
+            chunksDone: { type: "integer" },
+            pageviewsImported: { type: "integer" },
+            rowsWritten: { type: "integer" },
+            capabilities: {
+              type: "object",
+              properties: {
+                visitors: { type: "boolean" },
+                visits: { type: "boolean" },
+                bounces: { type: "boolean" },
+                utm: { type: "boolean" },
+                entryPages: { type: "boolean" },
+                sampled: { type: "boolean" },
+              },
+              required: ["visitors", "visits", "bounces", "utm", "entryPages", "sampled"],
+            },
+            lastError: { type: ["string", "null"] },
+            retryAt: { type: ["string", "null"] },
+            createdAt: { type: "string" },
+            completedAt: { type: ["string", "null"] },
+          },
+          required: [
+            "id",
+            "projectId",
+            "provider",
+            "kind",
+            "sourceLabel",
+            "host",
+            "status",
+            "startDay",
+            "endDay",
+            "cutoffDay",
+            "chunksTotal",
+            "chunksDone",
+            "pageviewsImported",
+            "rowsWritten",
+            "capabilities",
+            "lastError",
+            "retryAt",
+            "createdAt",
+            "completedAt",
+          ],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          slug: { type: "string" },
+          name: { type: "string" },
+          logo: { type: ["string", "null"] },
+        },
+        required: ["id", "slug", "name", "logo"],
+      },
+    },
+    required: ["imports", "organization"],
   },
   listGeoChanges: {
     type: "object",
@@ -7161,6 +7710,54 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       token: {
         type: "string",
         description: "Tracking token. Shown once per request; rotating invalidates every previously issued token.",
+      },
+      webKey: {
+        type: "string",
+        description:
+          "Public key for the notra.js browser script, bound to one project. Safe to put in page HTML; it only records human page views on that project's tracked domains and survives token rotation. Only present when web analytics is enabled for the workspace and it has a project.",
+      },
+      webSnippet: {
+        type: "string",
+        description:
+          "Script tag that installs notra.js with the public key. Only present when web analytics is enabled for the workspace.",
+      },
+      webScript: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "Always serves the latest build." },
+          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
+          integrity: {
+            type: "string",
+            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
+          },
+          collectUrl: {
+            type: "string",
+            description:
+              "Where page views go when the script loads from Notra's script host; set it as the tag's data-api.",
+          },
+        },
+        required: ["url", "pinnedUrl", "integrity"],
+        description:
+          "notra.js: the auto-updating URL and the current build pinned with Subresource Integrity. Only present when web analytics is enabled for the workspace.",
+      },
+      webPlusScript: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "Always serves the latest build." },
+          pinnedUrl: { type: "string", description: "Serves exactly this build forever; it never updates." },
+          integrity: {
+            type: "string",
+            description: 'Subresource Integrity value for pinnedUrl (sha384). Use it with crossorigin="anonymous".',
+          },
+          collectUrl: {
+            type: "string",
+            description:
+              "Where page views go when the script loads from Notra's script host; set it as the tag's data-api.",
+          },
+        },
+        required: ["url", "pinnedUrl", "integrity"],
+        description:
+          "notra.plus.js (notra.js with JavaScript error reporting), auto-updating and pinned. Only present when web analytics is enabled for the workspace.",
       },
     },
     required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization", "token"],

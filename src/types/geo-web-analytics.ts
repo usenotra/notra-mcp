@@ -40,6 +40,18 @@ export interface GeoWebAnalyticsResponse {
   organization: Organization;
 }
 
+export type GeoWebUtmDimension = "source" | "medium" | "campaign" | "term" | "content";
+
+export interface GeoWebAnalyticsUtmParams extends GeoTrafficFilterParams {
+  dimension: GeoWebUtmDimension;
+}
+
+export interface GeoWebAnalyticsUtmResponse {
+  dimension: GeoWebUtmDimension;
+  rows: Array<{ value: string; sessions: number; previousSessions: number; visitors: number }>;
+  organization: Organization;
+}
+
 export interface GeoWebAnalyticsBreakdownsResponse {
   configured: boolean;
   imported?: GeoImportCoverage | null;
