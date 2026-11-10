@@ -59,6 +59,18 @@ export interface SetSiteAuthorPageRequest {
   layout: SiteAuthorPageLayout;
 }
 
+export interface SiteSections {
+  blog?: string;
+  changelog?: string;
+}
+
+export interface UpdateSiteSectionsResponse {
+  site: { id: string; name: string };
+  sections: SiteSections;
+  liveSections: SiteSections;
+  hasUnpublishedChanges: boolean;
+}
+
 export interface PublishSiteDesignRequest {
   message?: string;
 }

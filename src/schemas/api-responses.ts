@@ -153,6 +153,7 @@ export type ApiOperationId =
   | "updateProject"
   | "updateSchedule"
   | "updateSiteAuthorPage"
+  | "updateSiteSections"
   | "upsertGeoCompetitor"
   | "upsertSiteAuthor";
 
@@ -4514,6 +4515,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           publicOrigin: { type: "string" },
           aliasOrigin: { type: "string", description: "Notra-hosted address that always serves the Site." },
           mounts: { type: "object", properties: { blog: { type: "string" }, changelog: { type: "string" } } },
+          mountsFromConfig: {
+            type: "boolean",
+            description:
+              "True when the live build's blog.json sets the sections, so the dashboard can't change them. Change them with PATCH /v1/sites/{siteId}/sections or in blog.json.",
+          },
           previewsEnabled: { type: "boolean" },
           previewVisibility: { type: "string", enum: ["public", "protected"] },
           smartDeployments: { type: "boolean" },
@@ -4541,6 +4547,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "publicOrigin",
           "aliasOrigin",
           "mounts",
+          "mountsFromConfig",
           "previewsEnabled",
           "previewVisibility",
           "smartDeployments",
@@ -9180,6 +9187,29 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+  },
+  updateSiteSections: {
+    type: "object",
+    properties: {
+      site: {
+        type: "object",
+        properties: { id: { type: "string" }, name: { type: "string" } },
+        required: ["id", "name"],
+      },
+      sections: {
+        type: "object",
+        properties: { blog: { type: "string" }, changelog: { type: "string" } },
+        description:
+          "The sections blog.json sets with unpublished changes applied. They take over from the dashboard setting once a production build of them goes live.",
+      },
+      liveSections: {
+        type: "object",
+        properties: { blog: { type: "string" }, changelog: { type: "string" } },
+        description: "The paths the live site serves now.",
+      },
+      hasUnpublishedChanges: { type: "boolean" },
+    },
+    required: ["site", "sections", "liveSections", "hasUnpublishedChanges"],
   },
   upsertGeoCompetitor: {
     type: "object",

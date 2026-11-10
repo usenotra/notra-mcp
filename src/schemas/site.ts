@@ -108,6 +108,16 @@ export const setSiteAuthorPageSchema = z.object({
     .describe("inline puts the avatar beside the name and title; stacked puts it above them"),
 });
 
+export const updateSiteSectionsSchema = z.object({
+  siteId: siteIdSchema,
+  blog: z.string().min(1).optional().describe("Path the blog is served at, like /blog. Omit to turn the blog off."),
+  changelog: z
+    .string()
+    .min(1)
+    .optional()
+    .describe("Path the changelog is served at, like /changelog. Omit to turn the changelog off."),
+});
+
 export const publishSiteDesignSchema = z.object({
   siteId: siteIdSchema,
   message: z

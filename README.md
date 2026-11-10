@@ -196,7 +196,7 @@ Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS 
 
 ## Toolsets
 
-All 143 tools are exposed by default, which costs roughly 23k tokens of agent context (about 12k for `geo` alone, 11k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 144 tools are exposed by default, which costs roughly 23k tokens of agent context (about 12k for `geo` alone, 11k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                                     |
 | --------- | --------------------------------------------------------------------------------------------------------- |
@@ -265,6 +265,7 @@ Notra Sites are hosted blogs and changelogs built from a GitHub repository. Sett
 | `delete_site_author`       | Remove a site author                                                                              |
 | `import_site_authors`      | Copy Notra authors into a site's blog.json                                                        |
 | `set_site_author_page`     | Set the author page layout (`inline` or `stacked`)                                                |
+| `update_site_sections`     | Choose which of the blog and changelog the Site serves, and their paths                           |
 | `publish_site_design`      | Publish the site's unpublished blog.json changes and deploy it                                    |
 
 `publish_post_to_site` always opens or updates a pull request, even when the repository publishes directly from the dashboard.

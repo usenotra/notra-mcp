@@ -5,6 +5,7 @@ import {
   deleteSiteAuthorSchema,
   importSiteAuthorsSchema,
   setSiteAuthorPageSchema,
+  updateSiteSectionsSchema,
   publishSiteDesignSchema,
 } from "../schemas/site.js";
 import type { ToolRegistry } from "../types/server.js";
@@ -138,9 +139,26 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
 
   server.tool(
     {
+      name: "update_site_sections",
+      description: `Choose which of the blog and changelog a Notra Site serves, and at which paths, in blog.json. A section left out is turned off. Once live, these replace the dashboard's Sections setting, and a section that moves or turns off stops answering at its old path, so suggest redirects. Returns the draft sections and the live ones. ${STAGED}`,
+      annotations: {
+        title: "Update Site Sections",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(updateSiteSectionsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("updateSiteSections")),
+    },
+    ({ siteId, ...sections }) => handleError(() => client.updateSiteSections(siteId, sections)),
+  );
+
+  server.tool(
+    {
       name: "publish_site_design",
       description:
-        "Publish a Notra Site's unpublished blog.json Design changes (authors, author page layout and the images they use): commits them to the site's production branch and deploys the live site, like Publish in the dashboard. Confirm with the user before calling. Fails with SITE_HAS_OTHER_CHANGES while other files have unpublished changes; those are published from the dashboard. published is false when there was nothing to publish.",
+        "Publish a Notra Site's unpublished blog.json Design changes (authors, author page layout, sections and the images they use): commits them to the site's production branch and deploys the live site, like Publish in the dashboard. Confirm with the user before calling. Fails with SITE_HAS_OTHER_CHANGES while other files have unpublished changes; those are published from the dashboard. published is false when there was nothing to publish.",
       annotations: {
         title: "Publish Site Design",
         readOnlyHint: false,

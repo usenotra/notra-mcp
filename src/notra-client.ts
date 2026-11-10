@@ -53,6 +53,8 @@ import type {
   PublishSiteDesignRequest,
   PublishSiteDesignResponse,
   SetSiteAuthorPageRequest,
+  SiteSections,
+  UpdateSiteSectionsResponse,
   SiteAuthorsResponse,
   SiteListResponse,
   UpsertSiteAuthorRequest,
@@ -593,6 +595,14 @@ export class NotraClient {
     return this.request<SiteAuthorsResponse, SetSiteAuthorPageRequest>(
       "PATCH",
       `/v1/sites/${encodeURIComponent(siteId)}/author-page`,
+      { body },
+    );
+  }
+
+  async updateSiteSections(siteId: string, body: SiteSections): Promise<UpdateSiteSectionsResponse> {
+    return this.request<UpdateSiteSectionsResponse, SiteSections>(
+      "PATCH",
+      `/v1/sites/${encodeURIComponent(siteId)}/sections`,
       { body },
     );
   }
