@@ -692,7 +692,10 @@ export class NotraClient {
   }
 
   async createProject(body: CreateProjectRequest): Promise<ProjectResponse> {
-    return this.request<ProjectResponse, CreateProjectRequest>("POST", "/v1/projects", { body });
+    return this.request<ProjectResponse, CreateProjectRequest>("POST", "/v1/projects", {
+      body,
+      timeoutMs: GEO_LONG_RUNNING_TIMEOUT_MS,
+    });
   }
 
   async getProject(projectId: string): Promise<ProjectResponse> {

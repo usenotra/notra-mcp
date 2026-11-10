@@ -25,6 +25,7 @@ export interface ProjectDeleteResponse {
 export interface CreateProjectRequest {
   name: string;
   brandSettingsId?: string;
+  startScan?: boolean;
 }
 
 export interface UpdateProjectRequest {
