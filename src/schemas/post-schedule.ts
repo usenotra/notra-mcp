@@ -11,12 +11,21 @@ export const schedulePostRequestSchema = z.object({
     .describe(
       "ISO 8601 publishing time with a UTC offset. At most one year ahead; up to five minutes in the past publishes immediately.",
     ),
-  timeZone: z.string().min(1).max(100).optional().describe("IANA time zone for display and emails (default UTC)"),
+  timeZone: z
+    .string()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe(
+      "Time zone name such as Europe/Berlin, used to show the scheduled time in Notra and in notification emails. It does not shift scheduledAt. Omit to use UTC.",
+    ),
   destinations: z
     .array(
       z.discriminatedUnion("destination", [
         z.object({
-          destination: z.literal("github"),
+          destination: z
+            .literal("github")
+            .describe("Publish a blog post or changelog to a connected GitHub repository through a pull request"),
           repositoryId: geoResourceIdSchema.describe(
             "GitHub integration ID from list_integrations; blog posts and changelogs only",
           ),
@@ -26,7 +35,9 @@ export const schedulePostRequestSchema = z.object({
             .describe("Merge the pull request at publishing time (default true); false only opens or updates it"),
         }),
         z.object({
-          destination: z.literal("social"),
+          destination: z
+            .literal("social")
+            .describe("Post to a connected X or LinkedIn account that matches the post's platform"),
           accountId: geoResourceIdSchema.describe("Connected X or LinkedIn account ID matching the post's platform"),
         }),
       ]),

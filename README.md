@@ -2,6 +2,40 @@
 
 An MCP (Model Context Protocol) server for the [Notra API](https://www.usenotra.com/docs). It manages posts, brand identities, integrations, schedules, GEO visibility scans, competitors, content briefs, and AI traffic analytics.
 
+## Install from a directory
+
+The quickest way to connect is a one-click listing, which signs you in with OAuth:
+
+| Client   | Listing                                                                                      | Guide                                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| ChatGPT  | [Notra plugin](https://chatgpt.com/plugins/plugin_asdk_app_6ad054bf08248191a320ed1334e3ffde) | [Notra is now available as a ChatGPT plugin](https://www.usenotra.com/blog/notra-is-now-available-as-a-chatgpt-plugin) |
+| Claude   | [Notra connector](https://claude.ai/directory/notra) (verified)                              | [Notra is now a verified Claude connector](https://www.usenotra.com/blog/notra-is-now-a-verified-claude-connector)     |
+| Composio | [Notra toolkit](https://composio.dev/toolkits/notra)                                         | [Notra is now available on Composio](https://www.usenotra.com/blog/notra-is-now-available-on-composio)                 |
+
+Opening `https://mcp.usenotra.com/mcp` in a browser shows setup steps for Claude Code, Cursor, VS Code and ChatGPT. Machine-readable discovery is published as an [MCP Server Card](https://mcp.usenotra.com/mcp/server-card) and an [AI catalog](https://mcp.usenotra.com/.well-known/ai-catalog.json).
+
+## Interactive charts
+
+GEO and traffic tools render as interactive MCP Apps views in clients that support them (ChatGPT, Claude and other MCP Apps hosts), and return the same data as JSON everywhere else. The charts follow the Notra dashboard's palette and the host's light or dark theme:
+
+| Tool                            | View                                                                   |
+| ------------------------------- | ---------------------------------------------------------------------- |
+| `get_geo_visibility_timeseries` | Mentions per day, overall and per engine                               |
+| `get_geo_visibility_overview`   | Mention rate per engine                                                |
+| `get_geo_competitor_share`      | Share of voice donut, plus brand trends with `includeTrends`           |
+| `get_geo_competitor_detail`     | Daily mentions and recent prompts for one brand                        |
+| `get_geo_sentiment`             | Sentiment score, daily positive/neutral/negative mix, per-engine split |
+| `get_geo_language_share`        | Mention rate per prompt language                                       |
+| `get_geo_traffic_overview`      | AI crawler, citation, referral and conversion funnel with daily trend  |
+| `get_geo_web_analytics`         | Visitors, views, sessions and AI visitors                              |
+| `get_geo_traffic_journey_stats` | AI journeys per day and top pages                                      |
+| `get_geo_mcp_analytics`         | MCP requests per day, latency and top tools                            |
+| `get_geo_persona_activity`      | Mention rate per persona over time                                     |
+| `get_geo_agent_readiness`       | Readiness score gauge, history and open issues                         |
+| `get_post_agent_reach`          | AI traffic to one published post                                       |
+
+Views live in [`views/`](views) and are built with [mcp-use](https://github.com/mcp-use/mcp-use) into `build/views.json`, so they ship with both the npm package and the hosted server.
+
 ## Setup
 
 You can generate an API key from your [Notra workspace dashboard](https://app.usenotra.com) under Developer > API Keys.
@@ -100,10 +134,10 @@ Without it, tools fail with a message asking you to pick a workspace. `list_work
 
 ## Remote MCP (OAuth)
 
-The hosted streamable HTTP server at `https://mcp.usenotra.com/mcp` uses OAuth as the primary authentication method. It supports the current `2026-07-28` MCP protocol as well as legacy 2025 clients. MCP clients should discover protected resource metadata at:
+The hosted streamable HTTP server at `https://mcp.usenotra.com/mcp` uses OAuth as the primary authentication method. It is built on [mcp-use](https://github.com/mcp-use/mcp-use) and supports the current `2026-07-28` MCP protocol as well as legacy 2025 clients, which are served statelessly without sessions. MCP clients should discover protected resource metadata at:
 
 ```text
-https://mcp.usenotra.com/.well-known/oauth-protected-resource
+https://mcp.usenotra.com/.well-known/oauth-protected-resource/mcp
 ```
 
 That metadata points to the Notra authorization server (WorkOS AuthKit) at `https://oauth.usenotra.com`, which supports dynamic client registration (RFC 7591). The MCP server also mirrors the authorization server metadata at `https://mcp.usenotra.com/.well-known/oauth-authorization-server`.
@@ -129,13 +163,12 @@ On a scoped URL:
 - API keys act in that workspace. The URL wins over an `X-Notra-Organization-Id` header. An organization key only works on its own workspace's URL; any other workspace is rejected with HTTP 403 by the Notra API.
 - OAuth works the same as on `/mcp`, but the workspace you authorize must be the one in the URL. Otherwise requests are rejected with HTTP 403 instead of silently acting on another workspace. The OAuth challenge announces the same resource as `/mcp`, so clients get a normal Notra token; the workspace in the URL is enforced through the workspace you authorize.
 - `list_workspaces` is hidden, since the connection can't switch workspaces. `whoami` still shows the current one.
-- Legacy 2025 sessions belong to the URL they were opened on; using the session id on another URL returns HTTP 401.
 
 ### API key alternative
 
 Remote connections also accept a Notra API key as a static `Authorization: Bearer …` header. Generate one from your [Notra workspace dashboard](https://app.usenotra.com) under Developer > API Keys. OAuth-capable clients should prefer the OAuth flow instead of manual key configuration.
 
-With an [account API key](#account-api-keys) that can reach several workspaces, use a [workspace-scoped URL](#workspace-scoped-url) or add an `X-Notra-Organization-Id: <workspace-id-or-slug>` header (`X-Organization-Id` also works). The server forwards it to the Notra API on every call. A legacy 2025 session stays bound to the workspace it was initialized with; a request on that session that names a different workspace is rejected with HTTP 401, so open a new session to switch. OAuth connections ignore the header because each token is bound to the workspace chosen at consent.
+With an [account API key](#account-api-keys) that can reach several workspaces, use a [workspace-scoped URL](#workspace-scoped-url) or add an `X-Notra-Organization-Id: <workspace-id-or-slug>` header (`X-Organization-Id` also works). The server forwards it to the Notra API on every call. OAuth connections ignore the header because each token is bound to the workspace chosen at consent.
 
 For self-hosted HTTP deployments, OAuth validation can be configured with:
 
@@ -149,11 +182,9 @@ The issuer is `https://{WORKOS_AUTHKIT_DOMAIN}` and must match the `iss` claim i
 
 When `NODE_ENV=development`, the default AuthKit domain is `essential-berry-67-development-2.authkit.app`; production defaults to `oauth.usenotra.com`. `auth.usenotra.com` is the WorkOS Authentication API domain and serves none of the OAuth endpoints, so it does not work here.
 
-Legacy 2025 sessions expire after 30 minutes of inactivity. Each OAuth user or API key can hold `NOTRA_MCP_MAX_SESSIONS_PER_PRINCIPAL` sessions (default `50`); beyond that, its own least recently used session closes. When the server holds `NOTRA_MCP_MAX_SESSIONS` sessions (default `1000`), new sessions are rejected with HTTP 503 and `Retry-After` instead of closing other users' sessions.
-
 ## Hosted usage statistics
 
-The HTTP server reports MCP usage to Notra's MCP server analytics through [`@usenotra/geo/mcp`](https://github.com/usenotra/geo-sdk). Every JSON-RPC request the server answers is recorded with its method, tool name, status (`ok`, `tool_error` or `rpc_error`), latency, response size, session ID, and the client and server names and versions. `tools/list` answers also record the advertised tools. `ping` is skipped. Local stdio servers do not emit usage events.
+The HTTP server reports MCP usage to Notra's MCP server analytics through [`@usenotra/geo/mcp`](https://github.com/usenotra/geo-sdk). Every `tools/list` and `tools/call` request is recorded with its method, tool name, status (`ok`, `tool_error` or `rpc_error`), latency, response size, and the server name and version. `tools/list` answers also record the advertised tools. Local stdio servers do not emit usage events.
 
 Set the Notra GEO token on the hosted deployment to enable tracking:
 

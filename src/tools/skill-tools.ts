@@ -5,51 +5,73 @@ import {
   updateSkillSchema,
   deleteSkillSchema,
 } from "../schemas/skill.js";
-import type { McpServer } from "@modelcontextprotocol/server";
+import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
-export function registerSkillTools(server: McpServer, client: NotraClient) {
-  server.registerTool(
-    "list_skills",
+export function registerSkillTools(server: ToolRegistry, client: NotraClient) {
+  server.tool(
     {
-      description: "List reusable writing skills for your organization",
-      annotations: { title: "List Skills", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      name: "list_skills",
+      description:
+        "List your organization's reusable writing skills with each skill's ID, name, description, whether it is a built-in system skill, and last update time. Use get_skill for a skill's full instructions.",
+      annotations: {
+        title: "List Skills",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(listSkillsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listSkills")),
     },
     () => handleError(() => client.listSkills()),
   );
 
-  server.registerTool(
-    "get_skill",
+  server.tool(
     {
-      description: "Get a single reusable writing skill by name",
-      annotations: { title: "Get Skill", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      name: "get_skill",
+      description:
+        "Get one reusable writing skill by name, including its description, full instruction content, whether it is a built-in system skill, and timestamps.",
+      annotations: {
+        title: "Get Skill",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(getSkillSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getSkill")),
     },
     ({ name }) => handleError(() => client.getSkill(name)),
   );
 
-  server.registerTool(
-    "create_skill",
+  server.tool(
     {
-      description: "Create a reusable writing skill",
-      annotations: { title: "Create Skill", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
+      name: "create_skill",
+      description:
+        "Save a new reusable writing skill in your organization: a named set of writing instructions plus a short description of when to use it. Returns the created skill.",
+      annotations: {
+        title: "Create Skill",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+      },
       inputSchema: shareJsonSchema(skillPayloadSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createSkill")),
     },
     (params) => handleError(() => client.createSkill(params)),
   );
 
-  server.registerTool(
-    "update_skill",
+  server.tool(
     {
-      description: "Update a reusable writing skill by name",
+      name: "update_skill",
+      description:
+        "Change a writing skill's name, description, or instructions, looked up by currentName. Only the fields you pass change; description and content are replaced in full and previous versions are not kept. Built-in system skills cannot be renamed. Returns the updated skill.",
       annotations: {
         title: "Update Skill",
         readOnlyHint: false,
@@ -63,10 +85,11 @@ export function registerSkillTools(server: McpServer, client: NotraClient) {
     ({ currentName, ...body }) => handleError(() => client.updateSkill(currentName, body)),
   );
 
-  server.registerTool(
-    "delete_skill",
+  server.tool(
     {
-      description: "Delete a reusable writing skill by name",
+      name: "delete_skill",
+      description:
+        "Permanently delete a writing skill by name; it cannot be restored. Built-in system skills cannot be deleted. Returns success.",
       annotations: {
         title: "Delete Skill",
         readOnlyHint: false,

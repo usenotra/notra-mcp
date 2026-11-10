@@ -1,4 +1,3 @@
-import type { IncomingHttpHeaders } from "node:http";
 import {
   ORGANIZATION_ID_ENV,
   ORGANIZATION_ID_HEADER,
@@ -9,16 +8,15 @@ import {
 } from "../constants/organization.js";
 import type { AuthContext } from "../types/auth.js";
 
-function normalizeOrganizationId(value: string | string[] | undefined): string | undefined {
-  const first = Array.isArray(value) ? value[0] : value;
-  const trimmed = first?.trim();
+function normalizeOrganizationId(value: string | null | undefined): string | undefined {
+  const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
 }
 
 /** The workspace an MCP client selected via `X-Notra-Organization-Id` (or its `X-Organization-Id` alias). */
-export function readOrganizationIdHeader(headers: IncomingHttpHeaders): string | undefined {
+export function readOrganizationIdHeader(headers: Headers): string | undefined {
   for (const name of ORGANIZATION_ID_REQUEST_HEADERS) {
-    const organizationId = normalizeOrganizationId(headers[name]);
+    const organizationId = normalizeOrganizationId(headers.get(name));
     if (organizationId) {
       return organizationId;
     }
@@ -42,7 +40,7 @@ export function readOrganizationScope(params: Record<string, unknown> | undefine
  * The workspace an API-key request acts on. A scoped URL wins over the
  * header, because URL-only clients cannot change headers to match it.
  */
-export function selectRequestOrganization(scope: string | undefined, headers: IncomingHttpHeaders): string | undefined {
+export function selectRequestOrganization(scope: string | undefined, headers: Headers): string | undefined {
   return scope ?? readOrganizationIdHeader(headers);
 }
 

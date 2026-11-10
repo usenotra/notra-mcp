@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/server";
+import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import {
   buildFeedbackToolDescription,
@@ -17,15 +17,15 @@ import { apiOutputSchema } from "../utils/output-schema.js";
 
 /**
  * Registers the `submit_feedback` tool from `@usenotra/geo`. Mirrors the package's own
- * `registerFeedbackTool`, but goes through `McpServer.registerTool` directly so the input
+ * `registerFeedbackTool`, but goes through `MCPServer.tool` directly so the input
  * schema is typed as a zod shape instead of the package's loose `Record<string, unknown>`.
  */
-export function registerFeedbackTools(server: McpServer, options: FeedbackToolOptions) {
+export function registerFeedbackTools(server: ToolRegistry, options: FeedbackToolOptions) {
   const handle = createFeedbackToolHandler(options);
 
-  server.registerTool(
-    options.toolName ?? "submit_feedback",
+  server.tool(
     {
+      name: options.toolName ?? "submit_feedback",
       description: options.description ?? buildFeedbackToolDescription(options.productName),
       annotations: {
         title: "Submit feedback",
@@ -42,34 +42,48 @@ export function registerFeedbackTools(server: McpServer, options: FeedbackToolOp
   );
 }
 
-export function registerFeedbackInboxTools(server: McpServer, client: NotraClient) {
-  server.registerTool(
-    "list_feedback",
+export function registerFeedbackInboxTools(server: ToolRegistry, client: NotraClient) {
+  server.tool(
     {
+      name: "list_feedback",
       description:
-        "List feedback your organization received through its feedback URL, MCP servers or SDKs, filtered by triage status, kind or project",
-      annotations: { title: "List Feedback", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+        "List feedback your organization received through its feedback URL, MCP servers or SDKs, filtered by triage status, kind or project. Returns each entry's ID, source, kind, sentiment, triage status, title, message and timestamps, plus pagination.",
+      annotations: {
+        title: "List Feedback",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(listFeedbackSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listFeedback")),
     },
     (params) => handleError(() => client.listFeedback(params)),
   );
 
-  server.registerTool(
-    "get_feedback",
+  server.tool(
     {
-      description: "Get a single feedback entry with its full message, agent metadata and context URL",
-      annotations: { title: "Get Feedback", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      name: "get_feedback",
+      description:
+        "Get one feedback entry by ID with its full message, title, kind, sentiment, triage status, source, agent client and model, tool version, context URL, metadata and timestamps.",
+      annotations: {
+        title: "Get Feedback",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(getFeedbackSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getFeedback")),
     },
     ({ feedbackId }) => handleError(() => client.getFeedback(feedbackId)),
   );
 
-  server.registerTool(
-    "update_feedback",
+  server.tool(
     {
-      description: "Set the triage status of a feedback entry: new, triaged, resolved or archived",
+      name: "update_feedback",
+      description:
+        "Set a feedback entry's triage status to new, triaged, resolved or archived. Only the status changes, the feedback itself is untouched, and the status can be set back at any time. Get feedbackId from list_feedback. Returns the updated entry.",
       annotations: {
         title: "Update Feedback",
         readOnlyHint: false,

@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/server";
+import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
@@ -14,42 +14,57 @@ import {
 } from "../schemas/geo-diagnostics.js";
 import { loadGeoSnapshot } from "../utils/geo-snapshot.js";
 import { handleError } from "../utils/mcp.js";
+import { chartView } from "../utils/views.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
-export function registerGeoDiagnosticTools(server: McpServer, client: NotraClient) {
-  server.registerTool(
-    "get_geo_snapshot",
+export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraClient) {
+  server.tool(
     {
+      name: "get_geo_snapshot",
       description:
         "Get a compact GEO diagnosis across visibility, sentiment, scan changes, competitors, content gaps, shelf sources, readiness and AI traffic. Each recommended next action names the tool and arguments to call, or tool null when it needs the Notra dashboard; confirm with the user before actions with usesCredits.",
-      annotations: { title: "Get GEO Snapshot", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      annotations: {
+        title: "Get GEO Snapshot",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(getGeoSnapshotSchema),
       outputSchema: shareJsonSchema(geoSnapshotOutputSchema),
     },
     ({ projectId, ...window }) => handleError(() => loadGeoSnapshot(client, projectId, window)),
   );
 
-  server.registerTool(
-    "get_geo_changes",
+  server.tool(
     {
-      description: "Compare the two latest GEO scans and list gained or lost mentions, positions and citations",
-      annotations: { title: "Get GEO Changes", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      name: "get_geo_changes",
+      description:
+        "Compare the two latest GEO scans and list gained or lost mentions, positions and citations. Returns both scans' IDs and finish times, summary counts per change type, and one event per prompt and engine with previous and current mention state and position, plus the competitors and domains involved.",
+      annotations: {
+        title: "Get GEO Changes",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(getGeoChangesSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listGeoChanges")),
     },
     ({ projectId }) => handleError(() => client.getGeoChanges(projectId)),
   );
 
-  server.registerTool(
-    "get_geo_prompt_history",
+  server.tool(
     {
+      name: "get_geo_prompt_history",
       description:
-        "Get compact historical checks for one prompt. Use a returned check id with get_geo_prompt_result_detail for the full answer.",
+        "Get compact historical checks for one prompt. Returns one row per check with its ID, scan ID, engine, whether the brand was mentioned or an owned source cited, position, sentiment, competitors, language and capture time. Use a returned check id with get_geo_prompt_result_detail for the full answer.",
       annotations: {
         title: "Get GEO Prompt History",
         readOnlyHint: true,
         openWorldHint: false,
         destructiveHint: false,
+        idempotentHint: true,
       },
       inputSchema: shareJsonSchema(getGeoPromptHistorySchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getGeoPromptHistory")),
@@ -57,26 +72,41 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     ({ projectId, promptId, scanId }) => handleError(() => client.getGeoPromptHistory(projectId, promptId, scanId)),
   );
 
-  server.registerTool(
-    "get_geo_sentiment",
+  server.tool(
     {
-      description: "Get aggregate GEO sentiment, engine breakdowns, timeseries and previous-period comparison",
-      annotations: { title: "Get GEO Sentiment", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      name: "get_geo_sentiment",
+      description:
+        "Get aggregate GEO sentiment for the window. Returns positive, neutral and negative mention counts, shares and score, the same figures per engine and per day, and a comparison with the previous period of the same length.",
+      annotations: {
+        title: "Get GEO Sentiment",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(getGeoSentimentSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getGeoSentiment")),
+      ...chartView(
+        "geo-sentiment",
+        "Brand sentiment score, daily mix and per-engine split",
+        "Loading sentiment",
+        "Sentiment ready",
+      ),
     },
     ({ projectId, ...window }) => handleError(() => client.getGeoSentiment(projectId, window)),
   );
 
-  server.registerTool(
-    "get_geo_sentiment_analysis",
+  server.tool(
     {
-      description: "Get the stored thematic GEO sentiment analysis without starting a billed analysis run",
+      name: "get_geo_sentiment_analysis",
+      description:
+        "Get the stored thematic GEO sentiment analysis without starting a billed analysis run. Returns its status and, when one exists, the themes found in AI answers with their polarity, claims and supporting evidence.",
       annotations: {
         title: "Get GEO Sentiment Analysis",
         readOnlyHint: true,
         openWorldHint: false,
         destructiveHint: false,
+        idempotentHint: true,
       },
       inputSchema: shareJsonSchema(getGeoSentimentAnalysisSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getGeoSentimentAnalysis")),
@@ -84,15 +114,17 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     ({ projectId, ...window }) => handleError(() => client.getGeoSentimentAnalysis(projectId, window)),
   );
 
-  server.registerTool(
-    "list_geo_sentiment_evidence",
+  server.tool(
     {
-      description: "List a bounded page of full answers used as sentiment evidence",
+      name: "list_geo_sentiment_evidence",
+      description:
+        "Page through the full AI answers that sentiment scores are based on, for one project and window. Each item has the prompt, engine, language, scan, capture time, full answer and excerpt. Pass nextCursor back as cursor for the next page.",
       annotations: {
         title: "List GEO Sentiment Evidence",
         readOnlyHint: true,
         openWorldHint: false,
         destructiveHint: false,
+        idempotentHint: true,
       },
       inputSchema: shareJsonSchema(listGeoSentimentEvidenceSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listGeoSentimentEvidence")),
@@ -100,15 +132,17 @@ export function registerGeoDiagnosticTools(server: McpServer, client: NotraClien
     ({ projectId, ...params }) => handleError(() => client.listGeoSentimentEvidence(projectId, params)),
   );
 
-  server.registerTool(
-    "list_geo_shelf_sources",
+  server.tool(
     {
-      description: "List cited and manually tracked GEO shelf sources, including placements and opportunity state",
+      name: "list_geo_shelf_sources",
+      description:
+        "List cited and manually tracked GEO shelf sources: pages AI answers cite. Returns each source's URL, domain, title, kind, ownership, citation counts and engines, competitor placements on the page, and opportunity state. Pass nextOffset as offset for the next page.",
       annotations: {
         title: "List GEO Shelf Sources",
         readOnlyHint: true,
         openWorldHint: false,
         destructiveHint: false,
+        idempotentHint: true,
       },
       inputSchema: shareJsonSchema(listGeoShelfSourcesSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listGeoShelfSources")),

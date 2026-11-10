@@ -13,7 +13,9 @@ export const geoPromptImportSchema = z
     rows: z
       .array(
         z.object({
-          prompt: geoPromptTextSchema.describe("The prompt to track (8-300 characters)"),
+          prompt: geoPromptTextSchema.describe(
+            "Question to track, phrased the way a real buyer would ask an AI assistant",
+          ),
           enabled: z.boolean().optional().describe("Whether the prompt starts enabled (default true)"),
         }),
       )
@@ -39,8 +41,21 @@ export const geoCompetitorImportSchema = z
       .array(
         z.object({
           name: geoShortTextSchema.describe("Competitor brand name"),
-          domain: z.string().trim().max(128).nullable().optional().describe("Competitor website domain"),
-          kind: z.enum(GEO_COMPETITOR_KIND_VALUES).optional().describe("direct or indirect"),
+          domain: z
+            .string()
+            .trim()
+            .max(128)
+            .nullable()
+            .optional()
+            .describe(
+              "Competitor website domain, such as example.com. Omit to keep an existing competitor's domain; a new competitor is saved without one.",
+            ),
+          kind: z
+            .enum(GEO_COMPETITOR_KIND_VALUES)
+            .optional()
+            .describe(
+              "direct for a competitor selling the same product, indirect for an alternative solution. Omit to keep an existing competitor's kind; new competitors default to direct.",
+            ),
           synonyms: z
             .array(geoShortTextSchema)
             .max(GEO_COMPETITOR_MAX_SYNONYMS)

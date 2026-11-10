@@ -4,7 +4,7 @@ import {
   getGeoScanSchema,
   rescanGeoPromptSchema,
 } from "../schemas/geo-scan.js";
-import type { McpServer } from "@modelcontextprotocol/server";
+import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
@@ -12,49 +12,73 @@ import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
-export function registerGeoScanTools(server: McpServer, client: NotraClient) {
-  server.registerTool(
-    "create_geo_scan",
+export function registerGeoScanTools(server: ToolRegistry, client: NotraClient) {
+  server.tool(
     {
+      name: "create_geo_scan",
       description:
         "Trigger a GEO visibility scan. The scan runs asynchronously and checks every enabled prompt against every configured answer engine; poll get_geo_scan with the returned scanId for status, progress, mentions, and safe failure details. This uses AI credits.",
-      annotations: { title: "Create GEO Scan", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
+      annotations: {
+        title: "Create GEO Scan",
+        readOnlyHint: false,
+        openWorldHint: true,
+        destructiveHint: false,
+        idempotentHint: false,
+      },
       inputSchema: shareJsonSchema(createGeoScanSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createGeoScan")),
     },
     ({ projectId }) => handleError(() => client.createGeoScan(projectId)),
   );
 
-  server.registerTool(
-    "rescan_geo_prompt",
+  server.tool(
     {
+      name: "rescan_geo_prompt",
       description:
         "Scan a single enabled tracked prompt against the project's answer engines, for example to check whether newly published content changed the answers. Cheaper than create_geo_scan, which checks every prompt. Runs asynchronously; poll get_geo_scan with the returned scanId. Fails while another scan is running and shares create_geo_scan's rate limit. This uses AI credits.",
-      annotations: { title: "Rescan GEO Prompt", readOnlyHint: false, openWorldHint: true, destructiveHint: false },
+      annotations: {
+        title: "Rescan GEO Prompt",
+        readOnlyHint: false,
+        openWorldHint: true,
+        destructiveHint: false,
+        idempotentHint: false,
+      },
       inputSchema: shareJsonSchema(rescanGeoPromptSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createGeoPromptScan")),
     },
     ({ projectId, promptId }) => handleError(() => client.rescanGeoPrompt(projectId, promptId)),
   );
 
-  server.registerTool(
-    "list_geo_scans",
+  server.tool(
     {
+      name: "list_geo_scans",
       description:
         "List a project's GEO scans, newest first, with pagination, check totals by engine, and safe failure details",
-      annotations: { title: "List GEO Scans", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      annotations: {
+        title: "List GEO Scans",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(listGeoScansSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listGeoScans")),
     },
     ({ projectId, ...params }) => handleError(() => client.listGeoScans(projectId, params)),
   );
 
-  server.registerTool(
-    "get_geo_scan",
+  server.tool(
     {
+      name: "get_geo_scan",
       description:
         "Get a GEO scan's status, planned and completed checks, mentions and explicit failures by engine, plus safe failure details when the scan failed",
-      annotations: { title: "Get GEO Scan", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      annotations: {
+        title: "Get GEO Scan",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(getGeoScanSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getGeoScan")),
     },

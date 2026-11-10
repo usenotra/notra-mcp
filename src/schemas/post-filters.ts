@@ -23,14 +23,20 @@ function parseCommaSeparatedFilter(value: unknown): unknown {
 export const statusFilterSchema = z
   .preprocess(parseCommaSeparatedFilter, z.array(z.enum(POST_STATUS_VALUES)).min(1))
   .optional()
-  .describe("Filter by status using a comma-separated list");
+  .describe(
+    "Only return posts in these statuses. Pass one value, an array, or a comma-separated string such as draft,published. Omit to include all statuses.",
+  );
 
 export const contentTypeFilterSchema = z
   .preprocess(parseCommaSeparatedFilter, z.array(z.enum(CONTENT_TYPE_VALUES)).min(1))
   .optional()
-  .describe("Filter by content type using a comma-separated list");
+  .describe(
+    "Only return posts of these content types. Pass one value, an array, or a comma-separated string such as blog_post,changelog. Omit to include all types.",
+  );
 
 export const brandIdentityIdFilterSchema = z
   .preprocess(parseCommaSeparatedFilter, z.array(z.string().min(1)).min(1))
   .optional()
-  .describe("Filter by brand identity ID using a comma-separated list");
+  .describe(
+    "Only return posts written for these brand identities, by ID from list_brand_identities. Pass one ID, an array, or a comma-separated string. Omit to include all.",
+  );

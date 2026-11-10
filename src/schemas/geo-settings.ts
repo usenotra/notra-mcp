@@ -24,7 +24,7 @@ export const listGeoEnginesSchema = z.object({
 
 export const updateGeoSettingsSchema = z.object({
   projectId: projectIdSchema,
-  companyName: geoShortTextSchema.optional().describe("Company or brand name to track in AI answers"),
+  companyName: geoShortTextSchema.optional().describe("Brand name Notra looks for in AI answers to count a mention"),
   aliases: z
     .array(geoShortTextSchema)
     .max(GEO_MAX_ALIASES)
@@ -47,7 +47,9 @@ export const updateGeoSettingsSchema = z.object({
     .min(1)
     .max(GEO_MAX_LANGUAGES)
     .optional()
-    .describe("Languages to run prompts in. The language the prompts are written in always stays tracked."),
+    .describe(
+      "Languages to run prompts in, written as English language names such as English, German or Spanish. Replaces the whole list. The language the prompts are written in always stays tracked.",
+    ),
   engines: z
     .array(geoShortTextSchema)
     .min(1)
@@ -70,7 +72,9 @@ export const updateGeoSettingsSchema = z.object({
     .array(geoResourceIdSchema)
     .max(GEO_MAX_AUTO_PROMPT_IDS)
     .optional()
-    .describe("IDs of auto-generated prompts removed from tracking. Replaces the whole list."),
+    .describe(
+      "IDs of auto-generated prompts (from list_geo_prompts) that scans no longer track. Replaces the whole list; drop an ID to track that prompt again.",
+    ),
   enabled: z.boolean().optional().describe("Whether recurring scans are enabled"),
   scanIntervalHours: z
     .number()
@@ -80,6 +84,6 @@ export const updateGeoSettingsSchema = z.object({
     .multipleOf(GEO_SCAN_HOURS_PER_DAY)
     .optional()
     .describe(
-      `Hours between recurring scans, whole days from ${GEO_SCAN_MIN_INTERVAL_HOURS} to ${GEO_SCAN_MAX_INTERVAL_HOURS}. Common values: ${GEO_SCAN_INTERVAL_HOURS.join(", ")}`,
+      `How often recurring scans run, in hours; use whole days. Common values: ${GEO_SCAN_INTERVAL_HOURS.join(", ")} (daily to monthly)`,
     ),
 });

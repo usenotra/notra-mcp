@@ -18,25 +18,49 @@ export const listGeoContentBriefsSchema = z.object({
 
 export const planGeoContentBriefSchema = z.object({
   projectId: projectIdSchema,
-  topic: z.string().trim().min(3).max(200).describe("Topic to research and brief (3-200 characters)"),
+  topic: z
+    .string()
+    .trim()
+    .min(3)
+    .max(200)
+    .describe(
+      "What the article should target, such as a buyer question or subject. Replaced by the source prompt when sourceKind is gap, prompt or search_console.",
+    ),
   autoApprove: z.boolean().optional().describe("Approve the brief immediately and start the writer (default false)"),
-  contentSubtype: z.enum(GEO_CONTENT_SUBTYPE_VALUES).optional().describe("Article format to plan for"),
+  contentSubtype: z
+    .enum(GEO_CONTENT_SUBTYPE_VALUES)
+    .optional()
+    .describe("Article format to plan, such as a comparison or how-to. Omit to let the planner choose."),
   brandVoiceIds: z
     .array(geoResourceIdSchema)
     .max(8)
     .optional()
-    .describe("Brand voice IDs to write with; only the first is used"),
+    .describe(
+      "Brand identity IDs from list_brand_identities whose voice the article uses. Only the first is used; it overrides the project's linked brand identity.",
+    ),
   competitorIds: z
     .array(geoResourceIdSchema)
     .max(GEO_MAX_COMPETITORS)
     .optional()
-    .describe("Competitor IDs to position against"),
-  sitemapId: geoResourceIdSchema.optional().describe("Sitemap ID to source internal links from"),
+    .describe("IDs of tracked competitors from list_geo_competitors that the article should position against"),
+  sitemapId: geoResourceIdSchema
+    .optional()
+    .describe(
+      "ID of one of the brand identity's sitemaps, set up in the Notra dashboard, to pick internal links from. Omit to use all of its sitemaps.",
+    ),
   sourceKind: z
     .enum(GEO_BRIEF_SOURCE_KIND_VALUES)
     .optional()
-    .describe("What the brief was created from (e.g. a gap row from list_geo_content_gaps)"),
-  sourceId: z.string().min(1).optional().describe("ID of the source row when sourceKind is gap/prompt/search_console"),
+    .describe(
+      "Where the topic comes from: manual uses topic as given; gap, prompt and search_console use the row named by sourceId. Omit for manual.",
+    ),
+  sourceId: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "Source row for sourceKind: a tracked prompt ID (a promptGaps row or list_geo_prompts) for gap or prompt, or a prompt suggestion ID (a searchGaps row or list_geo_prompt_suggestions) for search_console. An open brief for the same source is reused.",
+    ),
 });
 
 export const getGeoContentBriefSchema = z.object({
@@ -79,11 +103,23 @@ export const updateGeoContentBriefSchema = z
       .describe("The full outline in order (3-8 sections). Replaces every existing section"),
     questionsToAnswer: z.array(briefLineSchema).max(8).optional().describe("FAQ questions. Replaces the whole list"),
     internalLinks: z
-      .array(z.object({ url: briefLineSchema, anchor: briefLineSchema, why: briefLineSchema }))
+      .array(
+        z.object({
+          url: briefLineSchema.describe("URL of the page on your site to link to"),
+          anchor: briefLineSchema.describe("Link text to use in the article"),
+          why: briefLineSchema.describe("One line on why the reader benefits from this link"),
+        }),
+      )
       .max(6)
       .optional()
       .describe("Internal links to include. Replaces the whole list"),
-    acceptanceChecklist: z.array(briefLineSchema).max(8).optional().describe("Replaces the whole list"),
+    acceptanceChecklist: z
+      .array(briefLineSchema)
+      .max(8)
+      .optional()
+      .describe(
+        "Checks the finished article must pass before it counts as done, one per entry. Replaces the whole list.",
+      ),
   })
   .refine(
     ({ projectId: _projectId, briefId: _briefId, expectedUpdatedAt: _expected, ...fields }) =>
@@ -93,5 +129,7 @@ export const updateGeoContentBriefSchema = z
 
 export const approveGeoContentBriefSchema = z.object({
   projectId: projectIdSchema,
-  briefId: geoResourceIdSchema.describe("The brief ID to approve"),
+  briefId: geoResourceIdSchema.describe(
+    "ID of a draft or failed brief, from plan_geo_content_brief or list_geo_content_briefs",
+  ),
 });

@@ -1,4 +1,4 @@
-import type { StandardSchemaWithJSON } from "@modelcontextprotocol/server";
+import type { StandardSchemaWithJSON } from "mcp-use";
 import type { JsonSchemaConverter, JsonSchemaOptions } from "../types/json-schema.js";
 import { deepFreeze } from "./deep-freeze.js";
 

@@ -8,15 +8,19 @@ export const getProjectSchema = z.object({
 });
 
 export const createProjectSchema = z.object({
-  name: geoShortTextSchema.describe("Project name (1-128 characters)"),
+  name: geoShortTextSchema.describe("Display name for the project, usually the brand or website it tracks"),
   brandSettingsId: geoResourceIdSchema.optional().describe("Brand identity ID to link (see list_brand_identities)"),
 });
 
 export const updateProjectSchema = z
   .object({
     projectId: projectIdSchema,
-    name: geoShortTextSchema.optional().describe("New project name (1-128 characters)"),
-    brandSettingsId: geoResourceIdSchema.optional().describe("Brand identity ID to link"),
+    name: geoShortTextSchema.optional().describe("New display name for the project. Omit to keep the current name."),
+    brandSettingsId: geoResourceIdSchema
+      .optional()
+      .describe(
+        "Brand identity to link to the project, replacing the current link. Get IDs from list_brand_identities. Omit to keep the current link.",
+      ),
   })
   .refine(({ name, brandSettingsId }) => name !== undefined || brandSettingsId !== undefined, {
     message: "Provide at least one field to update",

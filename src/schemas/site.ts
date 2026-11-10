@@ -5,13 +5,13 @@ import {
   SITE_AUTHOR_PAGE_LAYOUT_VALUES,
 } from "../constants/site.js";
 
-const siteIdSchema = z.string().min(1).describe("Site ID from list_sites");
+const siteIdSchema = z.string().min(1).describe("ID of the Notra Site, as returned by list_sites");
 
 const siteAuthorIdSchema = z
   .string()
   .regex(SITE_AUTHOR_ID_PATTERN)
   .describe(
-    "The author's id in blog.json: 1 to 40 lowercase letters, digits and dashes, starting and ending with a letter or digit, e.g. jane-doe. Posts name the author with it and its author page is {blogMount}/author/{id}.",
+    "The author's id in the site's blog.json, such as jane-doe; list_site_authors shows existing ids. Posts name the author with it and its author page is {blogMount}/author/{id}.",
   );
 
 const httpsLinkSchema = (label: string) =>
@@ -19,7 +19,7 @@ const httpsLinkSchema = (label: string) =>
     .url({ protocol: /^https$/ })
     .nullable()
     .optional()
-    .describe(`${label} as a full https:// URL`);
+    .describe(`${label} linked from the author page. Leave it out to show no link.`);
 
 export const listSitesSchema = z.object({});
 
@@ -30,16 +30,30 @@ export const listSiteAuthorsSchema = z.object({
 export const upsertSiteAuthorSchema = z.object({
   siteId: siteIdSchema,
   authorId: siteAuthorIdSchema,
-  name: z.string().trim().min(1).max(80).describe("Display name (up to 80 characters)"),
-  title: z.string().trim().max(80).nullable().optional().describe("Role or job title (up to 80 characters)"),
-  bio: z.string().trim().max(300).nullable().optional().describe("Short bio (up to 300 characters)"),
+  name: z.string().trim().min(1).max(80).describe("Author name shown on posts and on the author page"),
+  title: z
+    .string()
+    .trim()
+    .max(80)
+    .nullable()
+    .optional()
+    .describe("Role or job title shown with the name, such as Head of Engineering. Leave it out to show none."),
+  bio: z
+    .string()
+    .trim()
+    .max(300)
+    .nullable()
+    .optional()
+    .describe("Short biography shown on the author page. Leave it out to show none."),
   avatar: z
     .string()
     .trim()
     .regex(SITE_AUTHOR_AVATAR_PATTERN)
     .nullable()
     .optional()
-    .describe("Avatar image: a path in the site's public folder such as /images/jane.png, or an https:// URL"),
+    .describe(
+      "Author photo: a path to an image in the site's public folder, such as /images/jane.png, or an image URL. Leave it out for no avatar.",
+    ),
   url: httpsLinkSchema("Website"),
   x: httpsLinkSchema("X profile"),
   linkedin: httpsLinkSchema("LinkedIn profile"),
@@ -51,7 +65,9 @@ export const upsertSiteAuthorSchema = z.object({
   instagram: httpsLinkSchema("Instagram profile"),
   previousId: siteAuthorIdSchema
     .optional()
-    .describe("Current id when renaming an author to authorId. Posts that name the old id lose the link."),
+    .describe(
+      "The author's existing id, only when renaming it to authorId. Posts that still name the old id lose their link to the author. Omit when not renaming.",
+    ),
   force: z
     .boolean()
     .optional()
@@ -100,10 +116,13 @@ export const publishSiteDesignSchema = z.object({
     .min(1)
     .max(200)
     .optional()
-    .describe("Commit message. Written from the changes if omitted."),
+    .describe("Commit message for the published design changes. Omit to have Notra write one from the changes."),
 });
 
-const deploymentIdSchema = z.string().min(1).describe("Deployment ID (see list_site_deployments)");
+const deploymentIdSchema = z
+  .string()
+  .min(1)
+  .describe("ID of the deployment to inspect, as returned by list_site_deployments");
 const postIdSchema = z.string().min(1).describe("ID of a saved blog post or changelog (see list_posts)");
 
 export const siteSchema = z.object({ siteId: siteIdSchema });
@@ -116,7 +135,9 @@ export const listSiteDeploymentsSchema = z.object({
     .min(1)
     .max(100)
     .optional()
-    .describe("Newest deployments to return (1-100, default 20). Live deployments are always included."),
+    .describe(
+      "How many of the newest deployments to return. Defaults to 20. Live deployments are always included on top of these.",
+    ),
 });
 
 export const siteDeploymentSchema = z.object({ siteId: siteIdSchema, deploymentId: deploymentIdSchema });

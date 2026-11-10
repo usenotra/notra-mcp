@@ -10,9 +10,17 @@ import { geoWindowShape } from "./geo-fields.js";
 import { brandIdentityIdFilterSchema, contentTypeFilterSchema, statusFilterSchema } from "./post-filters.js";
 
 export const listPostsSchema = z.object({
-  sort: z.enum(["asc", "desc"]).optional().describe("Sort by creation date"),
-  limit: z.number().int().min(1).max(100).optional().describe("Items per page (1-100, default 10)"),
-  page: z.number().int().min(1).optional().describe("Page number (default 1)"),
+  sort: z
+    .enum(["asc", "desc"])
+    .optional()
+    .describe("Order of posts by creation date: desc lists the newest first, asc the oldest first."),
+  limit: z.number().int().min(1).max(100).optional().describe("How many posts to return per page. Defaults to 10."),
+  page: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe("Which page of results to return, starting at 1. Use pagination in the response to find further pages."),
   status: statusFilterSchema,
   contentType: contentTypeFilterSchema,
   brandIdentityId: brandIdentityIdFilterSchema,
@@ -37,7 +45,7 @@ export const postSummaryListOutputSchema = z.object({
 });
 
 export const getPostSchema = z.object({
-  postId: z.string().min(1).describe("The post ID to retrieve"),
+  postId: z.string().min(1).describe("ID of the post to fetch, as returned by list_posts or create_post."),
 });
 
 export const getPostAgentReachSchema = z.object({
@@ -46,22 +54,42 @@ export const getPostAgentReachSchema = z.object({
 });
 
 export const createPostSchema = z.object({
-  title: z.string().trim().min(1).describe("Post title"),
-  contentType: z.enum(CREATABLE_CONTENT_TYPE_VALUES).describe("Type of post"),
+  title: z
+    .string()
+    .trim()
+    .min(1)
+    .describe("Headline of the post, shown as its title in Notra and on any site it publishes to."),
+  contentType: z
+    .enum(CREATABLE_CONTENT_TYPE_VALUES)
+    .describe(
+      "Kind of post to create. Blog posts and changelogs can carry a slug and publish to sites; LinkedIn and X posts are short social posts.",
+    ),
   slug: z
     .string()
     .trim()
     .min(1)
     .nullable()
     .optional()
-    .describe("URL slug, blog posts and changelogs only. Normalized to lowercase letters, numbers and hyphens."),
+    .describe(
+      "Path segment the post uses in its URL, for blog posts and changelogs only. Notra normalizes it to lowercase letters, numbers and hyphens. Omit to let Notra derive one.",
+    ),
   markdown: z.string().optional().describe("Post body in Markdown. Omit for an empty draft."),
-  status: z.enum(POST_STATUS_VALUES).optional().describe("Publication status (default: draft)"),
+  status: z
+    .enum(POST_STATUS_VALUES)
+    .optional()
+    .describe(
+      "Whether the post starts as a draft or is published right away. Omit to create a draft. Publishing can expose it on a hosted site.",
+    ),
 });
 
 export const updatePostSchema = z.object({
-  postId: z.string().min(1).describe("The post ID to update"),
-  title: z.string().min(1).max(120).optional().describe("New title (1-120 characters)"),
+  postId: z.string().min(1).describe("ID of the post to change, as returned by list_posts or create_post."),
+  title: z
+    .string()
+    .min(1)
+    .max(120)
+    .optional()
+    .describe("Replacement headline for the post. Omit to keep the current title."),
   slug: z
     .string()
     .min(1)
@@ -69,31 +97,62 @@ export const updatePostSchema = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
     .optional()
     .nullable()
-    .describe("New URL slug (lowercase kebab-case)"),
-  markdown: z.string().min(1).max(100000).optional().describe("New markdown content"),
-  status: z.enum(["draft", "published"]).optional().describe("Set status to draft or published"),
+    .describe(
+      "Replacement path segment for the post URL, such as launch-week-recap. null clears it; omit to keep the current slug.",
+    ),
+  markdown: z
+    .string()
+    .min(1)
+    .max(100000)
+    .optional()
+    .describe(
+      "Full replacement body in Markdown. It overwrites the whole body, so send the complete text. Omit to keep the current content.",
+    ),
+  status: z
+    .enum(["draft", "published"])
+    .optional()
+    .describe(
+      "Move the post to draft or publish it. Publishing can expose it on a hosted site. Omit to keep the current status.",
+    ),
   authorIds: z
     .array(z.string().min(1).max(64))
     .max(5)
     .optional()
     .describe(
-      "Replace the credited authors of a blog post or changelog, in display order (up to 5); [] clears them. On a blog post that publishes to a Notra Site, credit the site's authors with their ref from list_site_authors, e.g. site:jane-doe. Keep a Notra author by passing the id get_post shows for it.",
+      "Replace the credited authors of a blog post or changelog, in display order; [] clears them and omitting it keeps them. On a blog post that publishes to a Notra Site, credit the site's authors with their ref from list_site_authors, e.g. site:jane-doe. Keep a Notra author by passing the id get_post shows for it.",
     ),
 });
 
 export const deletePostSchema = z.object({
-  postId: z.string().min(1).describe("The post ID to delete"),
+  postId: z.string().min(1).describe("ID of the post to delete permanently, as returned by list_posts."),
 });
 
 export const generatePostSchema = z
   .object({
-    contentType: z.enum(GENERATABLE_CONTENT_TYPE_VALUES).describe("Type of content to generate"),
+    contentType: z
+      .enum(GENERATABLE_CONTENT_TYPE_VALUES)
+      .describe("Kind of post Notra should write from the selected activity, such as a changelog or a LinkedIn post."),
     lookbackWindow: z
       .enum(["current_day", "yesterday", "last_7_days", "last_14_days", "last_30_days"])
       .optional()
-      .describe("Time window for gathering data (default: last_7_days)"),
-    brandVoiceId: z.string().min(1).optional().describe("Brand voice ID to use for generation"),
-    brandIdentityId: z.string().min(1).optional().nullable().describe("Brand identity ID to use"),
+      .describe(
+        "How far back Notra looks for GitHub and Linear activity to write about. Defaults to the last 7 days. Ignored when pullRequest is set.",
+      ),
+    brandVoiceId: z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        "Brand identity ID whose voice and tone to write in, from list_brand_identities. Omit to use the default brand identity.",
+      ),
+    brandIdentityId: z
+      .string()
+      .min(1)
+      .optional()
+      .nullable()
+      .describe(
+        "Brand identity ID from list_brand_identities whose company details and tone shape the post. Omit or pass null to use the default brand identity.",
+      ),
     repositoryIds: z
       .array(z.string().min(1))
       .optional()
@@ -101,7 +160,9 @@ export const generatePostSchema = z
     linearIntegrationIds: z
       .array(z.string().min(1))
       .optional()
-      .describe("Linear integration IDs to include. Deprecated; prefer integrations.linear."),
+      .describe(
+        "Linear integration IDs, from the linear array of list_integrations, whose issues to include. Deprecated; prefer integrations.linear.",
+      ),
     integrations: z
       .object({
         github: z
@@ -137,27 +198,56 @@ export const generatePostSchema = z
       .describe("Types of data to include in generation"),
     selectedItems: z
       .object({
-        commitShas: z.array(z.string().min(1)).optional().describe("Specific commit SHAs to include"),
+        commitShas: z
+          .array(z.string().min(1))
+          .optional()
+          .describe(
+            "Commit hashes to write about, as listed by list_github_activity with type commits. Limits generation to these commits.",
+          ),
         pullRequestNumbers: z
           .array(
             z.object({
-              repositoryId: z.string().min(1),
-              number: z.number().int().min(1),
+              repositoryId: z
+                .string()
+                .min(1)
+                .describe(
+                  "GitHub integration ID, from list_integrations, of the repository that holds the pull request",
+                ),
+              number: z.number().int().min(1).describe("Pull request number in that repository, as shown on GitHub"),
             }),
           )
           .optional()
           .describe("Specific pull requests to include"),
         releaseTagNames: z
           .array(
-            z.union([z.string().min(1), z.object({ repositoryId: z.string().min(1), tagName: z.string().min(1) })]),
+            z.union([
+              z.string().min(1),
+              z.object({
+                repositoryId: z
+                  .string()
+                  .min(1)
+                  .describe(
+                    "GitHub integration ID, from list_integrations, of the repository that published the release",
+                  ),
+                tagName: z
+                  .string()
+                  .min(1)
+                  .describe("Git tag of the release, such as v1.4.0, as listed by list_github_activity"),
+              }),
+            ]),
           )
           .optional()
           .describe("Specific release tags to include"),
         linearIssueIds: z
           .array(
             z.object({
-              integrationId: z.string().min(1),
-              issueId: z.string().min(1),
+              integrationId: z
+                .string()
+                .min(1)
+                .describe(
+                  "Linear integration ID, from the linear array of list_integrations, that the issue comes from",
+                ),
+              issueId: z.string().min(1).describe("ID of the Linear issue to write about"),
             }),
           )
           .optional()
@@ -204,16 +294,23 @@ export const generatePostSchema = z
 
 export const createPostPullRequestSchema = z
   .object({
-    postId: z.string().min(1).describe("ID of a saved blog post or changelog"),
+    postId: z
+      .string()
+      .min(1)
+      .describe(
+        "ID of the blog post or changelog to open a pull request for, from list_posts or get_post_generation_status.",
+      ),
     integrationId: z
       .string()
       .min(1)
       .optional()
-      .describe("GitHub integration ID from list_integrations to open the pull request in"),
+      .describe(
+        "GitHub integration ID, from the github array of list_integrations, of the repository to open the pull request in. Omit when only one repository is connected.",
+      ),
     github: z
       .object({
-        owner: z.string().min(1).describe("GitHub repository owner"),
-        repo: z.string().min(1).describe("GitHub repository name"),
+        owner: z.string().min(1).describe("User or organization that owns the connected repository, such as vercel"),
+        repo: z.string().min(1).describe("Name of the connected repository without the owner, such as next.js"),
       })
       .optional()
       .describe("Connected repository by owner and name, instead of integrationId"),

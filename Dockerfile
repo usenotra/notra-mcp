@@ -6,6 +6,8 @@ FROM base AS builder
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY tsconfig.json ./
+COPY scripts ./scripts
+COPY views ./views
 COPY src ./src
 RUN pnpm run build
 

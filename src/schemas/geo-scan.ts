@@ -7,13 +7,22 @@ export const createGeoScanSchema = z.object({
 
 export const listGeoScansSchema = z.object({
   projectId: projectIdSchema,
-  limit: z.number().int().min(1).max(100).optional().describe("Items per page (1-100, default 20)"),
-  page: z.number().int().min(1).optional().describe("Page number (default 1)"),
+  limit: z.number().int().min(1).max(100).optional().describe("Number of scans per page. Omit for 20."),
+  page: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe(
+      "Page to return, starting at 1; use pagination.nextPage from the previous response. Omit for the first page.",
+    ),
 });
 
 export const getGeoScanSchema = z.object({
   projectId: projectIdSchema,
-  scanId: geoResourceIdSchema.describe("The scan ID to retrieve"),
+  scanId: geoResourceIdSchema.describe(
+    "ID of the scan, as returned by create_geo_scan, rescan_geo_prompt or list_geo_scans",
+  ),
 });
 
 export const rescanGeoPromptSchema = z.object({

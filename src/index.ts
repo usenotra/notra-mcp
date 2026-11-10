@@ -3,9 +3,11 @@
 import "zod/compile";
 
 import "dotenv/config";
-import { serveStdio } from "@modelcontextprotocol/server/stdio";
+import { ORGANIZATION_ID_HEADER } from "./constants/organization.js";
 import { createServer } from "./server.js";
 import { readOrganizationIdEnv } from "./utils/organization.js";
+import { serveStdio } from "./utils/stdio.js";
+import { parseToolsets } from "./utils/toolsets.js";
 
 const apiKey = process.env.NOTRA_API_KEY;
 if (!apiKey) {
@@ -13,13 +15,14 @@ if (!apiKey) {
   process.exit(1);
 }
 
+parseToolsets(process.env.NOTRA_MCP_TOOLSETS);
+
 // Account API keys work in every workspace their user belongs to; this pins the one to act on.
 const organizationId = readOrganizationIdEnv();
 
-serveStdio(() => createServer({ kind: "apiKey", token: apiKey, organizationId }), {
-  onerror: (error) => {
-    console.error("MCP stdio error:", error);
-  },
+serveStdio(createServer(), {
+  Authorization: `Bearer ${apiKey}`,
+  ...(organizationId ? { [ORGANIZATION_ID_HEADER]: organizationId } : {}),
 });
 
 console.error("Notra MCP server running on stdio");

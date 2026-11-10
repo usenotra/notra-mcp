@@ -5,7 +5,7 @@ import {
   updateProjectSchema,
   deleteProjectSchema,
 } from "../schemas/project.js";
-import type { McpServer } from "@modelcontextprotocol/server";
+import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
@@ -13,44 +13,64 @@ import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
-export function registerProjectTools(server: McpServer, client: NotraClient) {
-  server.registerTool(
-    "list_projects",
+export function registerProjectTools(server: ToolRegistry, client: NotraClient) {
+  server.tool(
     {
+      name: "list_projects",
       description: "List the organization's GEO projects. Most GEO tools take a projectId; call this first to find it.",
-      annotations: { title: "List Projects", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      annotations: {
+        title: "List Projects",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(listProjectsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listProjects")),
     },
     () => handleError(() => client.listProjects()),
   );
 
-  server.registerTool(
-    "get_project",
+  server.tool(
     {
-      description: "Get a single GEO project by its ID",
-      annotations: { title: "Get Project", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      name: "get_project",
+      description:
+        "Get one GEO project by its ID. Returns the project's ID, name, linked brand identity ID (brandSettingsId) and creation time. Use list_projects to find project IDs.",
+      annotations: {
+        title: "Get Project",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(getProjectSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getProject")),
     },
     ({ projectId }) => handleError(() => client.getProject(projectId)),
   );
 
-  server.registerTool(
-    "create_project",
+  server.tool(
     {
+      name: "create_project",
       description: "Create a new GEO project, optionally linked to a brand identity",
-      annotations: { title: "Create Project", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
+      annotations: {
+        title: "Create Project",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+      },
       inputSchema: shareJsonSchema(createProjectSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createProject")),
     },
     (params) => handleError(() => client.createProject(params)),
   );
 
-  server.registerTool(
-    "update_project",
+  server.tool(
     {
-      description: "Rename a GEO project or relink its brand identity",
+      name: "update_project",
+      description:
+        "Rename a GEO project or link it to a different brand identity. Send at least one of name or brandSettingsId; omitted fields keep their value. Changes apply immediately and can be reverted by calling this again with the previous values. A new brandSettingsId replaces the current link. Returns the updated project.",
       annotations: {
         title: "Update Project",
         readOnlyHint: false,
@@ -64,9 +84,9 @@ export function registerProjectTools(server: McpServer, client: NotraClient) {
     ({ projectId, ...body }) => handleError(() => client.updateProject(projectId, body)),
   );
 
-  server.registerTool(
-    "delete_project",
+  server.tool(
     {
+      name: "delete_project",
       description:
         "Delete a GEO project and its settings, prompts, sequences, competitors, scans, checks, and reports. This cannot be undone. The organization's last project cannot be deleted.",
       annotations: {
