@@ -5,7 +5,7 @@ RUN corepack enable
 FROM base AS builder
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
-COPY tsconfig.json ./
+COPY tsconfig.json vite.config.ts ./
 COPY scripts ./scripts
 COPY views ./views
 COPY src ./src

@@ -1,7 +1,8 @@
 import { Gauge, TimeChart } from "../shared/charts";
 import { formatDay, titleCase } from "../shared/format";
-import { Card, Kpis, NotraView } from "../shared/layout";
+import { Card, Kpis, NotraView, Pill } from "../shared/layout";
 import { pick, PRIMARY } from "../shared/palette";
+import { DataTable } from "../shared/table";
 
 type Tier = { earned: number; available: number; passing: number; total: number };
 
@@ -93,26 +94,30 @@ export default function GeoAgentReadiness() {
               </Card>
             ) : null}
             {report.issues.length ? (
-              <Card title="Open issues">
-                <table className="nv-table">
-                  <tbody>
-                    {report.issues.slice(0, 8).map((issue) => (
-                      <tr key={issue.id}>
-                        <td>
-                          {issue.name}
-                          {issue.recommendation ? <div className="nv-subtitle">{issue.recommendation}</div> : null}
-                        </td>
-                        <td className="num">
-                          <span className="nv-pill">{titleCase(issue.tier)}</span>{" "}
-                          <span className="nv-pill">{issue.result}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </Card>
+              <DataTable
+                title="Open issues"
+                readout={report.scannedAt ? `Scanned ${formatDay(report.scannedAt)}` : undefined}
+                columns={[
+                  { label: "Check", wrap: true },
+                  { label: "Status", numeric: true },
+                ]}
+                rows={report.issues.slice(0, 8).map((issue) => ({
+                  key: issue.id,
+                  cells: [
+                    <div>
+                      <div className="font-medium">{issue.name}</div>
+                      {issue.recommendation ? (
+                        <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">{issue.recommendation}</p>
+                      ) : null}
+                    </div>,
+                    <div className="flex flex-col items-end gap-1">
+                      <Pill>{titleCase(issue.tier)}</Pill>
+                      <Pill>{titleCase(issue.result)}</Pill>
+                    </div>,
+                  ],
+                }))}
+              />
             ) : null}
-            {report.scannedAt ? <p className="nv-subtitle">Scanned {formatDay(report.scannedAt)}</p> : null}
           </>
         );
       }}

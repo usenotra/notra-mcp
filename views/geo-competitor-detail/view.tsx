@@ -3,6 +3,7 @@ import { formatCount, formatDay, formatPercent, sumBy } from "../shared/format";
 import { engineFamily, isAnswerEngine } from "../shared/engines";
 import { Card, Kpis, NotraView } from "../shared/layout";
 import { pick, SECONDARY } from "../shared/palette";
+import { DataTable } from "../shared/table";
 
 type Output = {
   configured: boolean;
@@ -54,28 +55,24 @@ export default function GeoCompetitorDetail() {
               />
             </Card>
             {recent.length ? (
-              <Card title="Recent prompts that mention it">
-                <table className="nv-table">
-                  <thead>
-                    <tr>
-                      <th>Prompt</th>
-                      <th>Engine</th>
-                      <th className="num">Position</th>
-                      <th className="num">Day</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recent.map((prompt) => (
-                      <tr key={`${prompt.promptId}-${prompt.engine}-${prompt.capturedAt}`}>
-                        <td>{prompt.prompt}</td>
-                        <td>{engineFamily(prompt.engine)}</td>
-                        <td className="num">{prompt.position ?? "–"}</td>
-                        <td className="num">{formatDay(prompt.capturedAt)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </Card>
+              <DataTable
+                title="Recent prompts that mention it"
+                columns={[
+                  { label: "Prompt", wrap: true },
+                  { label: "Engine" },
+                  { label: "Position", numeric: true },
+                  { label: "Day", numeric: true },
+                ]}
+                rows={recent.map((prompt) => ({
+                  key: `${prompt.promptId}-${prompt.engine}-${prompt.capturedAt}`,
+                  cells: [
+                    prompt.prompt,
+                    engineFamily(prompt.engine),
+                    prompt.position ?? "–",
+                    formatDay(prompt.capturedAt),
+                  ],
+                }))}
+              />
             ) : null}
           </>
         );

@@ -1,5 +1,5 @@
 import { formatCount } from "../shared/format";
-import { Kpis, NotraView } from "../shared/layout";
+import { Kpis, NotraView, State } from "../shared/layout";
 import { TrafficCharts, type TrafficPoint, type TrafficSource } from "../shared/traffic";
 
 type Output = {
@@ -22,7 +22,7 @@ export default function PostAgentReach() {
     >
       {(output, theme) => {
         const reach = output.agentReach!;
-        if (!reach.configured) return <p className="nv-state">AI traffic tracking is off for this site.</p>;
+        if (!reach.configured) return <State message="AI traffic tracking is off for this site." />;
         return (
           <>
             <Kpis

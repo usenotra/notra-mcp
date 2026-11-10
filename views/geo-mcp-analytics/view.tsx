@@ -2,6 +2,7 @@ import { TimeChart } from "../shared/charts";
 import { formatCount, formatMs, formatPercent } from "../shared/format";
 import { Card, Kpis, NotraView } from "../shared/layout";
 import { MUTED, pick, PRIMARY, REFERRAL, SECONDARY } from "../shared/palette";
+import { DataTable } from "../shared/table";
 
 type Output = {
   configured: boolean;
@@ -96,28 +97,24 @@ export default function GeoMcpAnalytics() {
               />
             </Card>
             {tools.length ? (
-              <Card title="Top tools">
-                <table className="nv-table">
-                  <thead>
-                    <tr>
-                      <th>Tool</th>
-                      <th className="num">Calls</th>
-                      <th className="num">Errors</th>
-                      <th className="num">p95</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tools.map((tool) => (
-                      <tr key={tool.name}>
-                        <td>{tool.name}</td>
-                        <td className="num">{formatCount(tool.calls)}</td>
-                        <td className="num">{formatPercent(tool.calls ? tool.errors / tool.calls : null)}</td>
-                        <td className="num">{formatMs(tool.p95Ms)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </Card>
+              <DataTable
+                title="Top tools"
+                columns={[
+                  { label: "Tool" },
+                  { label: "Calls", numeric: true },
+                  { label: "Errors", numeric: true },
+                  { label: "p95", numeric: true },
+                ]}
+                rows={tools.map((tool) => ({
+                  key: tool.name,
+                  cells: [
+                    tool.name,
+                    formatCount(tool.calls),
+                    formatPercent(tool.calls ? tool.errors / tool.calls : null),
+                    formatMs(tool.p95Ms),
+                  ],
+                }))}
+              />
             ) : null}
           </>
         );

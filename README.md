@@ -16,7 +16,7 @@ Opening `https://mcp.usenotra.com/mcp` in a browser shows setup steps for Claude
 
 ## Interactive charts
 
-GEO and traffic tools render as interactive MCP Apps views in clients that support them (ChatGPT, Claude and other MCP Apps hosts), and return the same data as JSON everywhere else. The charts follow the Notra dashboard's palette and the host's light or dark theme:
+GEO and traffic tools render as interactive MCP Apps views in clients that support them (ChatGPT, Claude and other MCP Apps hosts), and return the same data as JSON everywhere else. The charts follow the Notra dashboard's look and the host's light or dark theme. Coding agents are left out of the engine charts:
 
 | Tool                            | View                                                                   |
 | ------------------------------- | ---------------------------------------------------------------------- |
@@ -34,7 +34,7 @@ GEO and traffic tools render as interactive MCP Apps views in clients that suppo
 | `get_geo_agent_readiness`       | Readiness score gauge, history and open issues                         |
 | `get_post_agent_reach`          | AI traffic to one published post                                       |
 
-Views live in [`views/`](views) and are built with [mcp-use](https://github.com/mcp-use/mcp-use) into `build/views.json`, so they ship with both the npm package and the hosted server.
+Views live in [`views/`](views) and are built with [mcp-use](https://github.com/mcp-use/mcp-use) into `build/views.json`, so they ship with both the npm package and the hosted server. Cards and tables come from the [Notra UI registry](https://ui.usenotra.com); `pnpm sync:ui` refreshes them in `views/components`.
 
 ## Setup
 

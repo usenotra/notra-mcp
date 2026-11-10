@@ -18,7 +18,8 @@
     "check:api-coverage": "pnpm run build && node scripts/check-api-coverage.mjs",
     "generate:output-schemas": "node scripts/generate-output-schemas.mjs",
     "check:output-schemas": "node scripts/generate-output-schemas.mjs --check",
-    "build:server": "tsc"
+    "build:server": "tsc",
+    "sync:ui": "node scripts/sync-ui.mjs"
   },
   "files": [
     "build"
@@ -51,13 +52,19 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@base-ui/react": "^1.9.0",
+    "@hugeicons/core-free-icons": "^4.4.0",
+    "@hugeicons/react": "^1.1.10",
     "@mcp-use/client": "^2.4.5",
+    "@tailwindcss/vite": "4.3.3",
     "@types/node": "^25.5.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "cn": "^0.5.2",
     "prettier": "^3.9.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "tailwindcss": "4.3.3",
     "typescript": "^6.0.2",
     "vite": "8.1.6"
   },
