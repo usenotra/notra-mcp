@@ -1,6 +1,7 @@
 import { TimeChart } from "../shared/charts";
 import { pivot, topGroups } from "../shared/data";
-import { formatCount, formatPercent, sumBy, engineLabel } from "../shared/format";
+import { formatCount, formatPercent, sumBy } from "../shared/format";
+import { engineFamily } from "../shared/engines";
 import { Card, Kpis, NotraView } from "../shared/layout";
 import { pick, PRIMARY, seriesColor } from "../shared/palette";
 
@@ -13,7 +14,9 @@ export default function GeoVisibilityTrend() {
   return (
     <NotraView<Output>
       title="AI visibility trend"
-      subtitle={(output) => `${new Set(output.points.map((point) => point.engine)).size} engines tracked`}
+      subtitle={(output) =>
+        `${new Set(output.points.map((point) => engineFamily(point.engine))).size} answer engines tracked`
+      }
       isEmpty={(output) => !output.configured || output.points.length === 0}
       emptyMessage="No visibility checks yet. Run a GEO scan to start tracking."
     >
@@ -27,7 +30,7 @@ export default function GeoVisibilityTrend() {
         const engines = pivot(
           output.points,
           (point) => point.day,
-          (point) => point.engine,
+          (point) => engineFamily(point.engine),
           (point) => point.mentions,
         );
         const checks = sumBy(output.points, (point) => point.checks);
@@ -53,7 +56,7 @@ export default function GeoVisibilityTrend() {
                   { key: "all", label: "All engines", color: pick(PRIMARY, theme), values },
                   ...topGroups(engines.groups, 6).map(([engine, engineValues], index) => ({
                     key: engine,
-                    label: engineLabel(engine),
+                    label: engine,
                     color: seriesColor(index + 1, theme),
                     values: engineValues,
                   })),

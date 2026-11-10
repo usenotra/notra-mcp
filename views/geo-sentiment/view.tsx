@@ -1,5 +1,6 @@
 import { SplitBar, TimeChart } from "../shared/charts";
-import { formatCount, formatPercent, engineLabel } from "../shared/format";
+import { formatCount, formatPercent } from "../shared/format";
+import { engineFamily } from "../shared/engines";
 import { Card, Kpis, NotraView } from "../shared/layout";
 import { SENTIMENT } from "../shared/palette";
 
@@ -22,6 +23,47 @@ type Output = {
   comparison?: { summary: Counts } | null;
 };
 
+function groupEngines(rows: Output["engines"]) {
+  const products = new Map<
+    string,
+    {
+      engine: string;
+      mentions: number;
+      positive: number;
+      neutral: number;
+      negative: number;
+      scored: number;
+      weighted: number;
+    }
+  >();
+  for (const row of rows) {
+    const product = engineFamily(row.engine);
+    const total = products.get(product) ?? {
+      engine: product,
+      mentions: 0,
+      positive: 0,
+      neutral: 0,
+      negative: 0,
+      scored: 0,
+      weighted: 0,
+    };
+    total.mentions += row.mentions;
+    total.positive += row.positive;
+    total.neutral += row.neutral;
+    total.negative += row.negative;
+    if (row.score !== null) {
+      const classified = row.positive + row.neutral + row.negative || row.mentions;
+      total.scored += classified;
+      total.weighted += row.score * classified;
+    }
+    products.set(product, total);
+  }
+  return [...products.values()].map((total) => ({
+    ...total,
+    score: total.scored ? total.weighted / total.scored : null,
+  }));
+}
+
 export default function GeoSentiment() {
   return (
     <NotraView<Output>
@@ -33,7 +75,7 @@ export default function GeoSentiment() {
       {(output, theme) => {
         const points = [...output.points].sort((a, b) => a.day.localeCompare(b.day));
         const previous = output.comparison?.summary;
-        const parts = (counts: Counts) => [
+        const parts = (counts: Pick<Counts, "positive" | "neutral" | "negative">) => [
           { label: "Positive", value: counts.positive, color: SENTIMENT.positive[theme] },
           { label: "Neutral", value: counts.neutral, color: SENTIMENT.neutral[theme] },
           { label: "Negative", value: counts.negative, color: SENTIMENT.negative[theme] },
@@ -68,12 +110,12 @@ export default function GeoSentiment() {
             </Card>
             <Card title="By engine">
               <div className="nv-list">
-                {output.engines
+                {groupEngines(output.engines)
                   .filter((engine) => engine.score !== null)
                   .sort((a, b) => b.mentions - a.mentions)
                   .map((engine) => (
                     <div className="nv-row" key={engine.engine}>
-                      <span className="nv-row-label">{engineLabel(engine.engine)}</span>
+                      <span className="nv-row-label">{engine.engine}</span>
                       <SplitBar parts={parts(engine)} />
                       <span className="nv-row-value">{engine.score === null ? "–" : Math.round(engine.score)}</span>
                     </div>

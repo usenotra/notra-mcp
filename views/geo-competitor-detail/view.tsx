@@ -1,5 +1,6 @@
 import { TimeChart } from "../shared/charts";
-import { formatCount, formatDay, formatPercent, sumBy, engineLabel } from "../shared/format";
+import { formatCount, formatDay, formatPercent, sumBy } from "../shared/format";
+import { engineFamily } from "../shared/engines";
 import { Card, Kpis, NotraView } from "../shared/layout";
 import { pick, SECONDARY } from "../shared/palette";
 
@@ -67,7 +68,7 @@ export default function GeoCompetitorDetail() {
                     {recent.map((prompt) => (
                       <tr key={`${prompt.promptId}-${prompt.engine}-${prompt.capturedAt}`}>
                         <td>{prompt.prompt}</td>
-                        <td>{engineLabel(prompt.engine)}</td>
+                        <td>{engineFamily(prompt.engine)}</td>
                         <td className="num">{prompt.position ?? "–"}</td>
                         <td className="num">{formatDay(prompt.capturedAt)}</td>
                       </tr>
