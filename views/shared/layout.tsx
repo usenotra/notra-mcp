@@ -12,8 +12,18 @@ type ViewProps<T> = {
   children: (output: T, theme: Theme) => ReactNode;
 };
 
-export function NotraView<T>({ title, subtitle, isEmpty, emptyMessage, children }: ViewProps<T>) {
+export function NotraView<T>(props: ViewProps<T>) {
   const theme = useViewTheme();
+  return (
+    <div className="notra-view" data-theme={theme}>
+      <ErrorBoundary>
+        <ViewBody {...props} theme={theme} />
+      </ErrorBoundary>
+    </div>
+  );
+}
+
+function ViewBody<T>({ title, subtitle, isEmpty, emptyMessage, children, theme }: ViewProps<T> & { theme: Theme }) {
   const context = useToolContext();
 
   let body: ReactNode;
@@ -34,18 +44,16 @@ export function NotraView<T>({ title, subtitle, isEmpty, emptyMessage, children 
   }
 
   return (
-    <ErrorBoundary>
-      <div className="notra-view" data-theme={theme}>
-        <header className="nv-header">
-          <div>
-            <h1 className="nv-title">{title}</h1>
-            {detail ? <p className="nv-subtitle">{detail}</p> : null}
-          </div>
-          <span className="nv-brand">Notra</span>
-        </header>
-        {body}
-      </div>
-    </ErrorBoundary>
+    <>
+      <header className="nv-header">
+        <div>
+          <h1 className="nv-title">{title}</h1>
+          {detail ? <p className="nv-subtitle">{detail}</p> : null}
+        </div>
+        <span className="nv-brand">Notra</span>
+      </header>
+      {body}
+    </>
   );
 }
 

@@ -35,7 +35,7 @@ export default function GeoVisibilityTrend() {
         const half = Math.floor(total.days.length / 2);
         const values = total.groups.get("all") ?? [];
         const firstHalf = values.slice(0, half).reduce((sum, value) => sum + value, 0);
-        const secondHalf = values.slice(half).reduce((sum, value) => sum + value, 0);
+        const secondHalf = values.slice(values.length - half).reduce((sum, value) => sum + value, 0);
         return (
           <>
             <Kpis

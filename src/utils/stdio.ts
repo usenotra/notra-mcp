@@ -33,13 +33,18 @@ export function serveStdio(server: NotraMcpServer, headers: Record<string, strin
   };
 
   const forward = async (line: string) => {
-    let message: JsonRpcMessage;
+    let parsed: unknown;
     try {
-      message = JSON.parse(line) as JsonRpcMessage;
+      parsed = JSON.parse(line);
     } catch {
       write({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Parse error: invalid JSON" } });
       return;
     }
+    if (typeof parsed !== "object" || parsed === null) {
+      write({ jsonrpc: "2.0", id: null, error: { code: -32600, message: "Invalid request" } });
+      return;
+    }
+    const message = parsed as JsonRpcMessage;
 
     if (message.method === "notifications/cancelled" && message.params?.requestId !== undefined) {
       inFlight.get(message.params.requestId)?.abort();
@@ -84,7 +89,10 @@ export function serveStdio(server: NotraMcpServer, headers: Record<string, strin
 
   createInterface({ input: process.stdin, crlfDelay: Infinity })
     .on("line", (line) => {
-      if (line.trim()) void forward(line);
+      if (!line.trim()) return;
+      forward(line).catch((error: unknown) => {
+        console.error("MCP stdio error:", error);
+      });
     })
     .on("close", () => process.exit(0));
 }

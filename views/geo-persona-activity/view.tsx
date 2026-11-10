@@ -26,7 +26,7 @@ export default function GeoPersonaActivity() {
             const checks = rows.reduce((sum, row) => sum + row.checks, 0);
             return checks ? rows.reduce((sum, row) => sum + row.mentions, 0) / checks : 0;
           });
-          return { key: persona, label: `Persona ${index + 1}`, color: seriesColor(index, theme), values };
+          return { key: persona, label: persona, color: seriesColor(index, theme), values };
         });
         return (
           <Card title="Mention rate per day">
