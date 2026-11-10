@@ -1,6 +1,6 @@
 import { BarList } from "../shared/charts";
 import { formatCount, formatPercent, sumBy } from "../shared/format";
-import { engineFamily } from "../shared/engines";
+import { engineFamily, isAnswerEngine } from "../shared/engines";
 import { Card, Kpis, NotraView } from "../shared/layout";
 import { seriesColor } from "../shared/palette";
 
@@ -41,13 +41,14 @@ export default function GeoVisibilityOverview() {
   return (
     <NotraView<Output>
       title="AI visibility by engine"
-      isEmpty={(output) => !output.configured || output.engines.length === 0}
+      isEmpty={(output) => !output.configured || !output.engines.some((engine) => isAnswerEngine(engine.engine))}
       emptyMessage="No visibility checks yet. Run a GEO scan to start tracking."
     >
       {(output, theme) => {
-        const checks = sumBy(output.engines, (engine) => engine.checks);
-        const mentions = sumBy(output.engines, (engine) => engine.mentions);
-        const products = groupEngines(output.engines);
+        const tracked = output.engines.filter((engine) => isAnswerEngine(engine.engine));
+        const checks = sumBy(tracked, (engine) => engine.checks);
+        const mentions = sumBy(tracked, (engine) => engine.mentions);
+        const products = groupEngines(tracked);
         const sorted = [...products].sort((a, b) => b.mentionRate - a.mentionRate || b.checks - a.checks);
         const engines = sorted.filter((engine) => engine.mentions > 0).slice(0, ENGINE_LIMIT);
         const hidden = sorted.length - engines.length;
@@ -58,7 +59,7 @@ export default function GeoVisibilityOverview() {
                 { label: "Mention rate", value: formatPercent(checks ? mentions / checks : null) },
                 { label: "Mentions", value: formatCount(mentions) },
                 { label: "Checks", value: formatCount(checks) },
-                { label: "Citations", value: formatCount(sumBy(output.engines, (engine) => engine.citations)) },
+                { label: "Citations", value: formatCount(sumBy(tracked, (engine) => engine.citations)) },
               ]}
             />
             <Card

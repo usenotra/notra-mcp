@@ -240,6 +240,13 @@ function engineFamilyKey(engine: string): string | null {
   return ENGINE_FAMILY_RULES.find((rule) => rule.patterns.some((pattern) => value.includes(pattern)))?.key ?? null;
 }
 
+const CODING_AGENT_FAMILIES = new Set(["fx", "claude-code", "codex", "opencode", "cursor", "cline", "devin"]);
+
+export function isAnswerEngine(engine: string): boolean {
+  const key = engineFamilyKey(engine);
+  return !key || !CODING_AGENT_FAMILIES.has(key);
+}
+
 export function engineFamily(engine: string): string {
   const key = engineFamilyKey(engine);
   if (key) return Object.hasOwn(ENGINE_FAMILY_LABELS, key) ? ENGINE_FAMILY_LABELS[key]! : titleCase(key);

@@ -1,6 +1,6 @@
 import { TimeChart } from "../shared/charts";
 import { formatCount, formatDay, formatPercent, sumBy } from "../shared/format";
-import { engineFamily } from "../shared/engines";
+import { engineFamily, isAnswerEngine } from "../shared/engines";
 import { Card, Kpis, NotraView } from "../shared/layout";
 import { pick, SECONDARY } from "../shared/palette";
 
@@ -29,7 +29,7 @@ export default function GeoCompetitorDetail() {
         const points = [...output.points].sort((a, b) => a.day.localeCompare(b.day));
         const mentions = sumBy(points, (point) => point.mentions);
         const checks = sumBy(points, (point) => point.checks);
-        const recent = output.prompts.filter((prompt) => prompt.mentioned).slice(0, 6);
+        const recent = output.prompts.filter((prompt) => prompt.mentioned && isAnswerEngine(prompt.engine)).slice(0, 6);
         return (
           <>
             <Kpis

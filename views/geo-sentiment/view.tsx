@@ -1,6 +1,6 @@
 import { SplitBar, TimeChart } from "../shared/charts";
 import { formatCount, formatPercent } from "../shared/format";
-import { engineFamily } from "../shared/engines";
+import { engineFamily, isAnswerEngine } from "../shared/engines";
 import { Card, Kpis, NotraView } from "../shared/layout";
 import { SENTIMENT } from "../shared/palette";
 
@@ -110,7 +110,7 @@ export default function GeoSentiment() {
             </Card>
             <Card title="By engine">
               <div className="nv-list">
-                {groupEngines(output.engines)
+                {groupEngines(output.engines.filter((engine) => isAnswerEngine(engine.engine)))
                   .filter((engine) => engine.score !== null)
                   .sort((a, b) => b.mentions - a.mentions)
                   .map((engine) => (
