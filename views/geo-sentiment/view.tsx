@@ -68,13 +68,16 @@ export default function GeoSentiment() {
             </Card>
             <Card title="By engine">
               <div className="nv-list">
-                {output.engines.map((engine) => (
-                  <div className="nv-row" key={engine.engine}>
-                    <span className="nv-row-label">{engineLabel(engine.engine)}</span>
-                    <SplitBar parts={parts(engine)} />
-                    <span className="nv-row-value">{engine.score === null ? "–" : Math.round(engine.score)}</span>
-                  </div>
-                ))}
+                {output.engines
+                  .filter((engine) => engine.score !== null)
+                  .sort((a, b) => b.mentions - a.mentions)
+                  .map((engine) => (
+                    <div className="nv-row" key={engine.engine}>
+                      <span className="nv-row-label">{engineLabel(engine.engine)}</span>
+                      <SplitBar parts={parts(engine)} />
+                      <span className="nv-row-value">{engine.score === null ? "–" : Math.round(engine.score)}</span>
+                    </div>
+                  ))}
               </div>
             </Card>
           </>

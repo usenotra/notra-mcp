@@ -8,6 +8,7 @@ import {
   runGeoPersonaSchema,
   generateGeoPersonasSchema,
   getGeoPersonaGenerationSchema,
+  geoPersonaActivityOutputSchema,
 } from "../schemas/geo-persona.js";
 import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
@@ -122,7 +123,7 @@ export function registerGeoPersonaTools(server: ToolRegistry, client: NotraClien
         idempotentHint: true,
       },
       inputSchema: shareJsonSchema(getGeoPersonaActivitySchema),
-      outputSchema: shareJsonSchema(apiOutputSchema("getGeoPersonaActivity")),
+      outputSchema: shareJsonSchema(geoPersonaActivityOutputSchema),
       ...chartView(
         "geo-persona-activity",
         "Mention rate per persona over time",
@@ -130,7 +131,14 @@ export function registerGeoPersonaTools(server: ToolRegistry, client: NotraClien
         "Persona activity ready",
       ),
     },
-    ({ projectId, ...params }) => handleError(() => client.getGeoPersonaActivity(projectId, params)),
+    ({ projectId, ...params }) =>
+      handleError(async () => {
+        const [activity, list] = await Promise.all([
+          client.getGeoPersonaActivity(projectId, params),
+          client.listGeoPersonas(projectId).catch(() => null),
+        ]);
+        return { ...activity, personas: list?.personas.map(({ id, name }) => ({ id, name })) ?? [] };
+      }),
   );
 
   server.tool(

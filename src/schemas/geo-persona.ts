@@ -6,6 +6,7 @@ import {
   GEO_PERSONA_SUMMARY_MAX_LENGTH,
 } from "../constants/geo.js";
 import { geoResourceIdSchema, geoWindowShape, projectIdSchema } from "./geo-fields.js";
+import { apiOutputSchema } from "../utils/output-schema.js";
 
 const personaIdSchema = geoResourceIdSchema.describe("ID of the GEO persona to act on. Get it from list_geo_personas.");
 
@@ -127,4 +128,10 @@ export const generateGeoPersonasSchema = z
 
 export const getGeoPersonaGenerationSchema = z.object({
   projectId: projectIdSchema,
+});
+
+export const geoPersonaActivityOutputSchema = (apiOutputSchema("getGeoPersonaActivity") as z.ZodObject).extend({
+  personas: z
+    .array(z.object({ id: z.string(), name: z.string() }))
+    .describe("Names of the project's personas, to label the personaId of each point"),
 });

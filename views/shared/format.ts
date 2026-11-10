@@ -54,6 +54,15 @@ const ENGINE_WORDS: Record<string, string> = {
   deepseek: "DeepSeek",
   mistral: "Mistral",
   copilot: "Copilot",
+  chatgpt: "ChatGPT",
+  ai: "AI",
+  glm: "GLM",
+};
+
+const ENGINE_HARNESSES: Record<string, string> = {
+  "claude-code": "Claude Code",
+  codex: "Codex",
+  opencode: "OpenCode",
 };
 
 export function engineLabel(engine: string): string {
@@ -71,5 +80,7 @@ export function engineLabel(engine: string): string {
     })
     .join(" ")
     .replace(/^GPT (\d)/, "GPT-$1");
-  return grounded ? `${label} (search)` : label;
+  const harness = ENGINE_HARNESSES[engine.slice(0, engine.indexOf("/"))];
+  const suffixes = [grounded ? "search" : null, harness ?? null].filter(Boolean);
+  return suffixes.length ? `${label} (${suffixes.join(", ")})` : label;
 }

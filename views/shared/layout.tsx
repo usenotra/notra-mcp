@@ -68,6 +68,7 @@ export function Delta({
 }) {
   const ratio = change(current, previous);
   if (ratio === null) return null;
+  if (Math.abs(ratio) < 0.005) return null;
   const better = lowerIsBetter ? -ratio : ratio;
   const direction = better > 0.005 ? "up" : better < -0.005 ? "down" : "flat";
   const sign = ratio > 0 ? "+" : "";
@@ -105,11 +106,12 @@ export function Kpis({ items }: { items: KpiItem[] }) {
   );
 }
 
-export function Card({ title, children }: { title?: string; children: ReactNode }) {
+export function Card({ title, footer, children }: { title?: string; footer?: string; children: ReactNode }) {
   return (
     <section className="nv-card">
       {title ? <h2 className="nv-card-title">{title}</h2> : null}
       {children}
+      {footer ? <p className="nv-subtitle nv-card-footer">{footer}</p> : null}
     </section>
   );
 }

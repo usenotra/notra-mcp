@@ -16,6 +16,8 @@ type Output = {
   }[];
 };
 
+const ENGINE_LIMIT = 15;
+
 export default function GeoVisibilityOverview() {
   return (
     <NotraView<Output>
@@ -26,7 +28,9 @@ export default function GeoVisibilityOverview() {
       {(output, theme) => {
         const checks = sumBy(output.engines, (engine) => engine.checks);
         const mentions = sumBy(output.engines, (engine) => engine.mentions);
-        const engines = [...output.engines].sort((a, b) => b.mentionRate - a.mentionRate);
+        const sorted = [...output.engines].sort((a, b) => b.mentionRate - a.mentionRate || b.checks - a.checks);
+        const engines = sorted.filter((engine) => engine.mentions > 0).slice(0, ENGINE_LIMIT);
+        const hidden = sorted.length - engines.length;
         return (
           <>
             <Kpis
@@ -37,7 +41,12 @@ export default function GeoVisibilityOverview() {
                 { label: "Citations", value: formatCount(sumBy(output.engines, (engine) => engine.citations)) },
               ]}
             />
-            <Card title="Mention rate per engine">
+            <Card
+              title="Mention rate per engine"
+              footer={
+                hidden ? `${hidden} more ${hidden === 1 ? "engine" : "engines"} with fewer or no mentions` : undefined
+              }
+            >
               <BarList
                 rows={engines.map((engine, index) => ({
                   label: engineLabel(engine.engine),

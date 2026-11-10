@@ -7,6 +7,7 @@ type Output = {
   from: string;
   to: string;
   points: { personaId: string; snapshotVersion: string; day: string; checks: number; mentions: number }[];
+  personas?: { id: string; name: string }[];
 };
 
 export default function GeoPersonaActivity() {
@@ -20,13 +21,19 @@ export default function GeoPersonaActivity() {
       {(output, theme) => {
         const days = sortedDays(output.points.map((point) => point.day));
         const personas = [...new Set(output.points.map((point) => point.personaId))];
+        const names = new Map((output.personas ?? []).map((persona) => [persona.id, persona.name]));
         const series = personas.map((persona, index) => {
           const values = days.map((day) => {
             const rows = output.points.filter((point) => point.personaId === persona && point.day === day);
             const checks = rows.reduce((sum, row) => sum + row.checks, 0);
             return checks ? rows.reduce((sum, row) => sum + row.mentions, 0) / checks : 0;
           });
-          return { key: persona, label: persona, color: seriesColor(index, theme), values };
+          return {
+            key: persona,
+            label: names.get(persona) ?? `Persona ${persona.slice(0, 8)}`,
+            color: seriesColor(index, theme),
+            values,
+          };
         });
         return (
           <Card title="Mention rate per day">

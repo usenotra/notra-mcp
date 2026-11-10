@@ -37,9 +37,14 @@ export default function GeoAgentReadiness() {
         const report = output.report!;
         const score = report.score ?? 0;
         const breakdown = report.scoreBreakdown;
-        const history = [...output.history]
-          .filter((item) => item.score !== null)
-          .sort((a, b) => a.scannedAt.localeCompare(b.scannedAt));
+        const history = [
+          ...new Map(
+            [...output.history]
+              .filter((item) => item.score !== null)
+              .sort((a, b) => a.scannedAt.localeCompare(b.scannedAt))
+              .map((item) => [item.scannedAt.slice(0, 10), item]),
+          ).values(),
+        ];
         return (
           <>
             <Card>

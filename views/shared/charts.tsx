@@ -29,7 +29,7 @@ function useWidth(fallback = 640) {
 function niceMax(value: number): number {
   if (value <= 0) return 1;
   const magnitude = 10 ** Math.floor(Math.log10(value));
-  const step = [1, 2, 2.5, 5, 10].find((candidate) => candidate * magnitude >= value) ?? 10;
+  const step = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find((candidate) => candidate * magnitude >= value) ?? 10;
   return step * magnitude;
 }
 
@@ -316,6 +316,16 @@ export function SplitBar({ parts }: { parts: { label: string; value: number; col
   );
 }
 
+function wrapLabel(label: string, width = 16): string[] {
+  const lines: string[] = [];
+  for (const word of label.split(" ")) {
+    const last = lines[lines.length - 1];
+    if (last && `${last} ${word}`.length <= width) lines[lines.length - 1] = `${last} ${word}`;
+    else lines.push(word);
+  }
+  return lines.slice(0, 2);
+}
+
 export function Gauge({ value, label, color }: { value: number; label: string; color: string }) {
   const radius = 64;
   const circumference = 2 * Math.PI * radius;
@@ -337,8 +347,12 @@ export function Gauge({ value, label, color }: { value: number; label: string; c
       <text x={80} y={84} textAnchor="middle" fontSize={32} fontWeight={600} fill="currentColor">
         {Math.round(clamped)}
       </text>
-      <text x={80} y={104} textAnchor="middle" fontSize={11} className="nv-axis">
-        {label}
+      <text x={80} y={106} textAnchor="middle" fontSize={11} className="nv-axis">
+        {wrapLabel(label).map((line, index) => (
+          <tspan key={line} x={80} dy={index ? 13 : 0}>
+            {line}
+          </tspan>
+        ))}
       </text>
     </svg>
   );
