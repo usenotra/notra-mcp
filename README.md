@@ -345,7 +345,7 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | ---------------- | ---------------------------------------------------- |
 | `list_projects`  | List the organization's GEO projects                 |
 | `get_project`    | Get a single project by ID                           |
-| `create_project` | Create a project, optionally linked to a brand       |
+| `create_project` | Create a project seeded from its brand's website     |
 | `update_project` | Rename a project or relink its brand identity        |
 | `delete_project` | Delete a project and all of its GEO data (cascading) |
 

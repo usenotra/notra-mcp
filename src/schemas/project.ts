@@ -9,7 +9,15 @@ export const getProjectSchema = z.object({
 
 export const createProjectSchema = z.object({
   name: geoShortTextSchema.describe("Display name for the project, usually the brand or website it tracks"),
-  brandSettingsId: geoResourceIdSchema.optional().describe("Brand identity ID to link (see list_brand_identities)"),
+  brandSettingsId: geoResourceIdSchema
+    .optional()
+    .describe("Brand identity ID to link (see list_brand_identities). Defaults to the default brand identity."),
+  startScan: z
+    .boolean()
+    .optional()
+    .describe(
+      "Turn on recurring scans and start the first one now. Uses AI credits, so ask the user first. Defaults to false, which leaves tracking off until update_geo_settings sets enabled to true.",
+    ),
 });
 
 export const updateProjectSchema = z

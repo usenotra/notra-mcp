@@ -52,7 +52,8 @@ export function registerProjectTools(server: ToolRegistry, client: NotraClient) 
   server.tool(
     {
       name: "create_project",
-      description: "Create a new GEO project, optionally linked to a brand identity",
+      description:
+        "Create a GEO project from a brand identity's website. Notra analyzes the site and adds tracked prompts, competitors, conversations and answer engines, which can take up to a minute. If it times out, check list_projects before retrying so you don't create a duplicate. Review them with list_geo_prompts and list_geo_competitors. Scans stay off unless startScan is true.",
       annotations: {
         title: "Create Project",
         readOnlyHint: false,
