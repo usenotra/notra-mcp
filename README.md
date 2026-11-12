@@ -40,7 +40,7 @@ Views live in [`views/`](views) and are built with [mcp-use](https://github.com/
 
 You can generate an API key from your [Notra workspace dashboard](https://app.usenotra.com) under Developer > API Keys.
 
-Node.js 22.22.2 or newer is required. Node 24 is recommended.
+Node.js 20 or newer is required. Node 24 is recommended.
 
 ### Claude Desktop
 
@@ -490,7 +490,7 @@ Tool inputs are for task-specific business content. Do not send health records, 
 
 ## Development
 
-Use Node 24 (or Node 22.22.2+) and the pnpm version pinned in `package.json`:
+Use Node 24 and the pnpm version pinned in `package.json`:
 
 ```sh
 corepack enable

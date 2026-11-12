@@ -41,7 +41,7 @@
   },
   "homepage": "https://github.com/usenotra/notra-mcp#readme",
   "engines": {
-    "node": ">=22.22.2"
+    "node": ">=20"
   },
   "dependencies": {
     "@usenotra/geo": "^0.8.1",
