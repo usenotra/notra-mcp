@@ -3,6 +3,7 @@ import {
   SITE_AUTHOR_AVATAR_PATTERN,
   SITE_AUTHOR_ID_PATTERN,
   SITE_AUTHOR_PAGE_LAYOUT_VALUES,
+  SITE_PATH_PATTERN,
 } from "../constants/site.js";
 
 const siteIdSchema = z.string().min(1).describe("ID of the Notra Site, as returned by list_sites");
@@ -19,7 +20,7 @@ const httpsLinkSchema = (label: string) =>
     .url({ protocol: /^https$/ })
     .nullable()
     .optional()
-    .describe(`${label} linked from the author page. Leave it out to show no link.`);
+    .describe(`${label} linked from the author page, as a full https:// URL. Leave it out to show no link.`);
 
 export const listSitesSchema = z.object({});
 
@@ -52,7 +53,7 @@ export const upsertSiteAuthorSchema = z.object({
     .nullable()
     .optional()
     .describe(
-      "Author photo: a path to an image in the site's public folder, such as /images/jane.png, or an image URL. Leave it out for no avatar.",
+      "Author photo: a path to an image in the site's public folder, such as /images/jane.png, or an https:// image URL. Leave it out for no avatar.",
     ),
   url: httpsLinkSchema("Website"),
   x: httpsLinkSchema("X profile"),
@@ -110,12 +111,16 @@ export const setSiteAuthorPageSchema = z.object({
 
 export const updateSiteSectionsSchema = z.object({
   siteId: siteIdSchema,
-  blog: z.string().min(1).optional().describe("Path the blog is served at, like /blog. Omit to turn the blog off."),
+  blog: z
+    .string()
+    .regex(SITE_PATH_PATTERN, "Must start with a single /, like /blog")
+    .optional()
+    .describe("Path the blog is served at, starting with /, like /blog. Omit to turn the blog off."),
   changelog: z
     .string()
-    .min(1)
+    .regex(SITE_PATH_PATTERN, "Must start with a single /, like /changelog")
     .optional()
-    .describe("Path the changelog is served at, like /changelog. Omit to turn the changelog off."),
+    .describe("Path the changelog is served at, starting with /, like /changelog. Omit to turn the changelog off."),
 });
 
 export const publishSiteDesignSchema = z.object({

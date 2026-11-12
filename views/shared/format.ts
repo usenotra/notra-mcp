@@ -9,7 +9,7 @@ export function formatCount(value: number | null | undefined): string {
 export function formatPercent(value: number | null | undefined, fraction = true): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "–";
   const percent = fraction ? value * 100 : value;
-  return `${percent >= 10 || percent === 0 ? Math.round(percent) : percent.toFixed(1)}%`;
+  return `${Math.abs(percent) >= 10 || percent === 0 ? Math.round(percent) : percent.toFixed(1)}%`;
 }
 
 export function formatMs(value: number | null | undefined): string {

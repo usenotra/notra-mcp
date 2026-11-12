@@ -30,7 +30,11 @@ export default function GeoAgentReadiness() {
   return (
     <NotraView<Output>
       title="Agent readiness"
-      subtitle={(output) => output.targetUrl}
+      subtitle={(output) =>
+        [output.targetUrl, output.report?.scannedAt ? `Scanned ${formatDay(output.report.scannedAt)}` : undefined]
+          .filter(Boolean)
+          .join(" · ")
+      }
       isEmpty={(output) => !output.report || output.report.score === null}
       emptyMessage="No completed readiness scan yet. Start one with start_geo_agent_readiness_scan."
     >
@@ -38,14 +42,9 @@ export default function GeoAgentReadiness() {
         const report = output.report!;
         const score = report.score ?? 0;
         const breakdown = report.scoreBreakdown;
-        const history = [
-          ...new Map(
-            [...output.history]
-              .filter((item) => item.score !== null)
-              .sort((a, b) => a.scannedAt.localeCompare(b.scannedAt))
-              .map((item) => [item.scannedAt.slice(0, 10), item]),
-          ).values(),
-        ];
+        const history = [...output.history]
+          .filter((item) => item.score !== null)
+          .sort((a, b) => a.scannedAt.localeCompare(b.scannedAt));
         return (
           <>
             <Card>
@@ -96,7 +95,6 @@ export default function GeoAgentReadiness() {
             {report.issues.length ? (
               <DataTable
                 title="Open issues"
-                readout={report.scannedAt ? `Scanned ${formatDay(report.scannedAt)}` : undefined}
                 columns={[
                   { label: "Check", wrap: true },
                   { label: "Status", numeric: true },

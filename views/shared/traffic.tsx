@@ -16,14 +16,14 @@ export type TrafficSource = {
 
 export type TrafficPoint = { day: string; visitorType: VisitorType; source: string; visits: number };
 
-const TYPE_LABELS: Record<VisitorType, string> = {
+export const TYPE_LABELS: Record<VisitorType, string> = {
   crawler: "AI crawlers",
   ai_referral: "AI referrals",
   human: "People",
   unknown: "Unknown",
 };
 
-function typeColor(type: VisitorType, theme: Theme): string {
+export function typeColor(type: VisitorType, theme: Theme): string {
   if (type === "crawler") return pick(PRIMARY, theme);
   if (type === "ai_referral") return pick(REFERRAL, theme);
   if (type === "human") return pick(SECONDARY, theme);

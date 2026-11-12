@@ -52,7 +52,7 @@ export function registerEventTriggerTools(server: ToolRegistry, client: NotraCli
     {
       name: "create_event_trigger",
       description:
-        "Create an event trigger that generates content whenever a GitHub release or push happens in the targeted repositories. Generated content uses AI credits each time the trigger fires. When autoPublish is true, generated content is automatically published to outputConfig.publishDestination. An enabled trigger keeps firing until it is disabled with update_event_trigger or deleted. Returns the created trigger.",
+        "Create an event trigger that generates content whenever a GitHub release or push happens in the targeted repositories. Generated content uses AI credits each time the trigger fires. When autoPublish is true, generated content is marked as published in Notra. An enabled trigger keeps firing until it is disabled with update_event_trigger or deleted. Returns the created trigger.",
       annotations: {
         title: "Create Event Trigger",
         readOnlyHint: false,
@@ -70,7 +70,7 @@ export function registerEventTriggerTools(server: ToolRegistry, client: NotraCli
     {
       name: "update_event_trigger",
       description:
-        "Replace an event trigger's whole configuration. Fields you leave out are reset, not kept, so read it with get_event_trigger first and send every field back. When autoPublish is true, future generated content is automatically published to outputConfig.publishDestination.",
+        "Replace an event trigger's whole configuration. Fields you leave out are reset, not kept, so read it with get_event_trigger first and send every field back. When autoPublish is true, future generated content is marked as published in Notra.",
       annotations: {
         title: "Update Event Trigger",
         readOnlyHint: false,

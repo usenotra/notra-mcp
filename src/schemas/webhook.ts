@@ -22,7 +22,7 @@ export const listWebhookDeliveriesSchema = z.object({
     .enum(WEBHOOK_DELIVERY_STATUS_FILTER_VALUES)
     .optional()
     .describe(
-      "Only return deliveries in this state, such as failed to find ones worth retrying. Omit or pass all for every state.",
+      "Only return deliveries in this state. Pass failed to find deliveries worth retrying. Omit or pass all for every state.",
     ),
 });
 

@@ -50,7 +50,7 @@ const outputTypeSchema = z
   .enum(GENERATABLE_CONTENT_TYPE_VALUES)
   .describe("Kind of post each run writes, such as a changelog or a LinkedIn post");
 const publishDestinationDescription =
-  "Where generated content is sent when autoPublish is true: a Webflow or Framer CMS, or a custom destination. Not used while autoPublish is false.";
+  "Deprecated and ignored. Auto-published content is only marked as published in Notra; publish to GitHub or a Notra site from the post instead.";
 const publishDestinationSchema = z.enum(["webflow", "framer", "custom"]).describe(publishDestinationDescription);
 const lookbackWindowSchema = z
   .enum(["current_day", "yesterday", "last_7_days", "last_14_days", "last_30_days"])

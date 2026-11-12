@@ -2,7 +2,8 @@ import { BarList, TimeChart } from "../shared/charts";
 import { pivot } from "../shared/data";
 import { formatCount, formatPercent, sumBy, titleCase } from "../shared/format";
 import { Card, Kpis, NotraView } from "../shared/layout";
-import { MUTED, pick, PRIMARY, REFERRAL, seriesColor } from "../shared/palette";
+import { TYPE_LABELS, typeColor, type VisitorType } from "../shared/traffic";
+import { seriesColor } from "../shared/palette";
 
 type Daily = { day: string; journeys: number }[];
 
@@ -42,12 +43,6 @@ export default function GeoJourneys() {
           (row) => row.visitorType,
           (row) => row.journeys,
         );
-        const color = (type: string) =>
-          type === "crawler"
-            ? pick(PRIMARY, theme)
-            : type === "ai_referral"
-              ? pick(REFERRAL, theme)
-              : pick(MUTED, theme);
         return (
           <>
             <Kpis
@@ -68,8 +63,8 @@ export default function GeoJourneys() {
                 stacked
                 series={[...trend.groups.entries()].map(([type, values]) => ({
                   key: type,
-                  label: type === "ai_referral" ? "AI referrals" : titleCase(type === "crawler" ? "AI crawlers" : type),
-                  color: color(type),
+                  label: TYPE_LABELS[type as VisitorType] ?? titleCase(type),
+                  color: typeColor(type as VisitorType, theme),
                   values,
                 }))}
               />

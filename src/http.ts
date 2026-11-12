@@ -100,9 +100,11 @@ server.all(`${MCP_BASE_PATH}/:organization`, async (c) => {
 
   const url = new URL(c.req.url);
   url.pathname = MCP_BASE_PATH;
+  const headers = new Headers(c.req.raw.headers);
+  if (token && !auth) headers.delete("authorization");
   const request = new Request(url, {
     method: c.req.method,
-    headers: c.req.raw.headers,
+    headers,
     body: c.req.raw.body,
     signal: c.req.raw.signal,
     duplex: "half",

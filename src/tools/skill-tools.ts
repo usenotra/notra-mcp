@@ -89,7 +89,7 @@ export function registerSkillTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "delete_skill",
       description:
-        "Permanently delete a writing skill by name; it cannot be restored. Built-in system skills cannot be deleted. Returns success.",
+        "Permanently delete a writing skill by name; it cannot be restored, so confirm with the user first. Built-in system skills cannot be deleted. Returns success.",
       annotations: {
         title: "Delete Skill",
         readOnlyHint: false,

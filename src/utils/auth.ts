@@ -191,6 +191,7 @@ export async function authenticateBearerToken(token: string, config: OAuthConfig
   try {
     const { payload } = await jwtVerify(token, getRemoteJwks(config.jwksUrl), {
       issuer: config.issuer,
+      requiredClaims: ["exp"],
     });
 
     if (!isAllowedAudience(payload.aud, config)) {

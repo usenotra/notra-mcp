@@ -66,13 +66,13 @@ export default function GeoShareOfVoice() {
                   days={trend.days}
                   variant="line"
                   series={brands
-                    .filter((brand) => trend.groups.has(brand.brand))
                     .map((brand, index) => ({
                       key: brand.brand,
                       label: brand.brand,
                       color: color(index),
                       values: trend.groups.get(brand.brand) ?? [],
-                    }))}
+                    }))
+                    .filter((series) => trend.groups.has(series.key))}
                 />
               </Card>
             ) : null}

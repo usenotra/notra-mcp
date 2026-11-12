@@ -34,7 +34,7 @@ export function registerPostScheduleTools(server: ToolRegistry, client: NotraCli
         readOnlyHint: false,
         openWorldHint: true,
         destructiveHint: true,
-        idempotentHint: true,
+        idempotentHint: false,
       },
       inputSchema: shareJsonSchema(schedulePostSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("schedulePost")),
@@ -46,7 +46,7 @@ export function registerPostScheduleTools(server: ToolRegistry, client: NotraCli
     {
       name: "cancel_post_schedule",
       description:
-        "Cancel a post's pending publishing destinations and clear failed ones. Returns canceled, the destinations that were canceled or cleared, and inProgress, which is true when a destination was already publishing; those cannot be interrupted and finish on their own.",
+        "Cancel a post's pending publishing destinations and clear failed ones. Returns canceled, the number of destinations that were canceled or cleared, and inProgress, which is true when a destination was already publishing; those cannot be interrupted and finish on their own.",
       annotations: {
         title: "Cancel Post Schedule",
         readOnlyHint: false,

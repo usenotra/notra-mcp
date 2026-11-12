@@ -57,7 +57,7 @@ export function registerBrandIdentityTools(server: ToolRegistry, client: NotraCl
     {
       name: "update_brand_identity",
       description:
-        "Change a brand identity's name, website, company details, tone, audience, instructions or language. Only the fields you pass change, null clears an optional field, and overwritten values are not kept. The new settings shape content generated afterwards. isDefault makes it the default brand identity for tools and schedules that name none. Returns the updated brand identity.",
+        "Change a brand identity's name, website, company details, tone, audience, instructions or language. Only the fields you pass change. null clears company details, tone, audience, instructions or language; name and website cannot be cleared. Overwritten values are not kept. The new settings shape content generated afterwards. isDefault makes it the default brand identity for tools and schedules that name none. Returns the updated brand identity.",
       annotations: {
         title: "Update Brand Identity",
         readOnlyHint: false,

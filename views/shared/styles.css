@@ -145,6 +145,26 @@
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
+
+  --ease-emphasized: cubic-bezier(0.23, 1, 0.32, 1);
+  --animate-shimmer: shimmer var(--shimmer-duration, 1.7s) linear infinite;
+}
+
+@utility duration-normal {
+  transition-duration: 200ms;
+}
+
+@utility cn-font-heading {
+  font-family: var(--font-sans);
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0% 0;
+  }
 }
 
 @layer base {

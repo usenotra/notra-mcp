@@ -134,7 +134,7 @@ export function registerGeoBriefTools(server: ToolRegistry, client: NotraClient)
         readOnlyHint: false,
         openWorldHint: true,
         destructiveHint: true,
-        idempotentHint: true,
+        idempotentHint: false,
       },
       inputSchema: shareJsonSchema(approveGeoContentBriefSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("approveGeoContentBrief")),

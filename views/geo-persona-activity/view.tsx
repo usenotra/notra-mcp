@@ -26,7 +26,7 @@ export default function GeoPersonaActivity() {
           const values = days.map((day) => {
             const rows = output.points.filter((point) => point.personaId === persona && point.day === day);
             const checks = rows.reduce((sum, row) => sum + row.checks, 0);
-            return checks ? rows.reduce((sum, row) => sum + row.mentions, 0) / checks : 0;
+            return checks ? rows.reduce((sum, row) => sum + row.mentions, 0) / checks : null;
           });
           return {
             key: persona,

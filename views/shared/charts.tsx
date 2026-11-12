@@ -5,7 +5,7 @@ export type Series = {
   key: string;
   label: string;
   color: string;
-  values: number[];
+  values: (number | null)[];
   dashed?: boolean;
 };
 
@@ -173,7 +173,12 @@ export function TimeChart({
               </g>
             );
           }
-          const line = upper.map((value, index) => `${index === 0 ? "M" : "L"}${x(index)},${y(value)}`).join("");
+          const points = upper
+            .map((value, index) => [index, value] as const)
+            .filter(([index]) => variant !== "line" || item.values[index] != null);
+          const line = points
+            .map(([index, value], position) => `${position === 0 ? "M" : "L"}${x(index)},${y(value)}`)
+            .join("");
           const area =
             line +
             lower
@@ -193,15 +198,20 @@ export function TimeChart({
                 strokeDasharray={item.dashed ? "4 4" : undefined}
                 strokeLinejoin="round"
               />
+              {points.length === 1 ? (
+                <circle cx={x(points[0][0])} cy={y(points[0][1])} r={2.5} fill={item.color} />
+              ) : null}
             </g>
           );
         })}
         {hover !== null && variant !== "bar" ? (
           <g>
             <line className="nv-gridline" x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={PAD.top + innerHeight} />
-            {stacks.map(({ item, upper }) => (
-              <circle key={item.key} cx={x(hover)} cy={y(upper[hover])} r={3} fill={item.color} />
-            ))}
+            {stacks
+              .filter(({ item }) => variant !== "line" || item.values[hover] != null)
+              .map(({ item, upper }) => (
+                <circle key={item.key} cx={x(hover)} cy={y(upper[hover])} r={3} fill={item.color} />
+              ))}
           </g>
         ) : null}
       </svg>
@@ -220,7 +230,9 @@ export function TimeChart({
                 <span className="nv-swatch" style={{ background: item.color }} />
                 {item.label}
               </span>
-              <strong>{format(item.values[hover] ?? 0)}</strong>
+              <strong>
+                {item.values[hover] == null && variant === "line" ? "–" : format(item.values[hover] ?? 0)}
+              </strong>
             </div>
           ))}
         </div>
@@ -332,7 +344,7 @@ export function Gauge({ value, label, color }: { value: number; label: string; c
   const clamped = Math.max(0, Math.min(100, value));
   return (
     <svg viewBox="0 0 160 160" role="img" aria-label={`${label} ${Math.round(clamped)} of 100`}>
-      <circle cx={80} cy={80} r={radius} fill="none" stroke="var(--grid)" strokeWidth={12} />
+      <circle cx={80} cy={80} r={radius} fill="none" stroke="var(--border)" strokeWidth={12} />
       <circle
         cx={80}
         cy={80}

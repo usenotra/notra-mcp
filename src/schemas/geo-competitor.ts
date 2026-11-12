@@ -27,9 +27,7 @@ export const upsertGeoCompetitorSchema = z.object({
     .max(128)
     .nullable()
     .optional()
-    .describe(
-      "Color for this competitor in Notra dashboard charts, as a hex code such as #2563eb. Omit to keep the current color.",
-    ),
+    .describe("Color for this competitor in Notra dashboard charts, such as #2563eb. Omit to keep the current color."),
 });
 
 export const suggestGeoCompetitorsSchema = z.object({

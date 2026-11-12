@@ -45,7 +45,7 @@ export const eventTriggerBodyShape = {
         .enum(EVENT_TRIGGER_PUBLISH_DESTINATION_VALUES)
         .optional()
         .describe(
-          "Where generated content is sent when autoPublish is true: a Webflow or Framer CMS, or a custom destination. Not used while autoPublish is false.",
+          "Deprecated and ignored. Auto-published content is only marked as published in Notra; publish to GitHub or a Notra site from the post instead.",
         ),
       brandVoiceId: z.string().min(1).optional().describe("Brand identity ID from list_brand_identities"),
     })

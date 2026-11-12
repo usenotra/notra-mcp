@@ -5,7 +5,9 @@ const skillNameSchema = z
   .min(1)
   .max(64)
   .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/)
-  .describe("Name that identifies the skill, such as release-notes-style; list_skills shows existing names");
+  .describe(
+    "Name that identifies the skill: lowercase letters, digits and hyphens, not starting or ending with a hyphen, at most 64 characters, such as release-notes-style. list_skills shows existing names",
+  );
 
 export const skillPayloadSchema = z.object({
   name: skillNameSchema,

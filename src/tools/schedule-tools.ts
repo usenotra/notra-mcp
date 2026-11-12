@@ -36,7 +36,7 @@ export function registerScheduleTools(server: ToolRegistry, client: NotraClient)
     {
       name: "create_schedule",
       description:
-        "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger. It reads from GitHub repositories (targets.repositoryIds), Linear integrations (targets.linearIntegrationIds), or both; get IDs from list_integrations. Generation uses AI credits. When autoPublish is true, generated content is automatically published to outputConfig.publishDestination. An enabled schedule keeps running until it is paused with update_schedule or deleted. Returns the created schedule.",
+        "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger. It reads from GitHub repositories (targets.repositoryIds), Linear integrations (targets.linearIntegrationIds), or both; get IDs from list_integrations. Generation uses AI credits. When autoPublish is true, generated content is marked as published in Notra. An enabled schedule keeps running until it is paused with update_schedule or deleted. Returns the created schedule.",
       annotations: {
         title: "Create Schedule",
         readOnlyHint: false,
@@ -54,7 +54,7 @@ export function registerScheduleTools(server: ToolRegistry, client: NotraClient)
     {
       name: "update_schedule",
       description:
-        "Update an existing content generation schedule. Only the fields you pass change; for example { scheduleId, enabled: false } pauses it. targets and outputConfig merge field by field, sourceConfig replaces the cron as a whole, and null clears an outputConfig field. Previous values are not kept. When autoPublish is true, future generated content is automatically published to outputConfig.publishDestination. Returns the updated schedule.",
+        "Update an existing content generation schedule. Only the fields you pass change, and fields you leave out stay as they are; for example { scheduleId, enabled: false } pauses it. targets and outputConfig merge field by field, sourceConfig replaces the cron as a whole, and null clears an outputConfig field. When autoPublish is true, future generated content is marked as published in Notra. Returns the updated schedule.",
       annotations: {
         title: "Update Schedule",
         readOnlyHint: false,
@@ -90,7 +90,7 @@ export function registerScheduleTools(server: ToolRegistry, client: NotraClient)
     {
       name: "run_schedule",
       description:
-        "Run an enabled content generation schedule once right now, outside its cron timing. Generation uses AI credits. When the schedule has autoPublish on, the result is automatically published to its outputConfig.publishDestination, like a scheduled run. Returns a runId; follow it with list_schedule_runs until its status leaves running. If the call fails, check list_schedule_runs before retrying, because the run may have started anyway.",
+        "Run an enabled content generation schedule once right now, outside its cron timing. Generation uses AI credits. When the schedule has autoPublish on, the result is marked as published in Notra, like a scheduled run. Returns a runId; follow it with list_schedule_runs until its status leaves running. If the call fails, check list_schedule_runs before retrying, because the run may have started anyway.",
       annotations: {
         title: "Run Schedule",
         readOnlyHint: false,
