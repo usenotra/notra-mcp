@@ -6,7 +6,7 @@ import {
   upsertGeoCompetitorOutputSchema,
   deleteGeoCompetitorOutputSchema,
 } from "../schemas/geo-competitor.js";
-import type { McpServer } from "@modelcontextprotocol/server";
+import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
@@ -17,23 +17,30 @@ import { toImportSource } from "../utils/import-source.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
-export function registerGeoCompetitorTools(server: McpServer, client: NotraClient) {
-  server.registerTool(
-    "list_geo_competitors",
+export function registerGeoCompetitorTools(server: ToolRegistry, client: NotraClient) {
+  server.tool(
     {
-      description: "List the competitors tracked for a project's GEO share-of-voice reporting",
-      annotations: { title: "List GEO Competitors", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      name: "list_geo_competitors",
+      description:
+        "List the competitors tracked for a project's GEO share-of-voice reporting. Returns each competitor's ID, name, domain, synonyms that count as mentions, kind (direct or indirect) and chart color.",
+      annotations: {
+        title: "List GEO Competitors",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(listGeoCompetitorsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listGeoCompetitors")),
     },
     ({ projectId }) => handleError(() => client.listGeoCompetitors(projectId)),
   );
 
-  server.registerTool(
-    "upsert_geo_competitor",
+  server.tool(
     {
+      name: "upsert_geo_competitor",
       description:
-        "Create or update a tracked GEO competitor. Matches on name, case-insensitively; send previousName to rename an existing competitor. Returns the saved competitor and the new total; call list_geo_competitors for the full list.",
+        "Create or update a tracked GEO competitor. Matches on name, case-insensitively; send previousName to rename an existing competitor. domain is always overwritten; omitted synonyms, kind and color keep their stored value. Reversible by upserting the previous values. Changes future share-of-voice reporting. Returns the saved competitor and the new total; call list_geo_competitors for the full list.",
       annotations: {
         title: "Upsert GEO Competitor",
         readOnlyHint: false,
@@ -48,16 +55,17 @@ export function registerGeoCompetitorTools(server: McpServer, client: NotraClien
       handleError(async () => summarizeCompetitorUpsert(body.name, await client.upsertGeoCompetitor(projectId, body))),
   );
 
-  server.registerTool(
-    "suggest_geo_competitors",
+  server.tool(
     {
+      name: "suggest_geo_competitors",
       description:
-        "Discover likely competitors for a website domain using AI. Results are cached per organization and domain.",
+        "Discover likely competitors for a website domain using AI. Returns the domain, its detected field and suggested competitors with name, domain, description and confidence. Suggestions are not tracked until you add them with upsert_geo_competitor or import_geo_competitors. Results are cached per organization and domain.",
       annotations: {
         title: "Suggest GEO Competitors",
         readOnlyHint: false,
         openWorldHint: true,
         destructiveHint: false,
+        idempotentHint: false,
       },
       inputSchema: shareJsonSchema(suggestGeoCompetitorsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("suggestGeoCompetitors")),
@@ -65,10 +73,11 @@ export function registerGeoCompetitorTools(server: McpServer, client: NotraClien
     ({ projectId, domain }) => handleError(() => client.suggestGeoCompetitors(projectId, domain)),
   );
 
-  server.registerTool(
-    "delete_geo_competitor",
+  server.tool(
     {
-      description: "Stop tracking a GEO competitor. The name is matched case-insensitively.",
+      name: "delete_geo_competitor",
+      description:
+        "Stop tracking a GEO competitor so it no longer counts in share-of-voice reporting. The name is matched case-insensitively. To undo, add it again with upsert_geo_competitor, re-entering its domain, synonyms, kind and color. Returns the removed name and the remaining competitor count.",
       annotations: {
         title: "Delete GEO Competitor",
         readOnlyHint: false,
@@ -83,16 +92,17 @@ export function registerGeoCompetitorTools(server: McpServer, client: NotraClien
       handleError(async () => summarizeCompetitorDelete(name, await client.deleteGeoCompetitor(projectId, name))),
   );
 
-  server.registerTool(
-    "import_geo_competitors",
+  server.tool(
     {
+      name: "import_geo_competitors",
       description:
-        "Bulk import GEO competitors from structured rows or raw CSV text. Existing competitors are updated in place rather than duplicated.",
+        "Bulk import GEO competitors from structured rows or raw CSV text. New names are added; a row matching an existing competitor's name (case-insensitively) updates its domain, kind and synonyms when given. Repeated names in the input are skipped and nothing is deleted. Returns imported, updated and skipped counts, per-line issues and the full competitor list.",
       annotations: {
         title: "Import GEO Competitors",
         readOnlyHint: false,
         openWorldHint: false,
         destructiveHint: true,
+        idempotentHint: false,
       },
       inputSchema: shareJsonSchema(geoCompetitorImportSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("importGeoCompetitors")),

@@ -6,7 +6,9 @@ export const geoResourceIdSchema = z
   .min(1)
   .regex(/^[A-Za-z0-9_-]{1,100}$/);
 
-export const projectIdSchema = geoResourceIdSchema.describe("The GEO project ID (see list_projects)");
+export const projectIdSchema = geoResourceIdSchema.describe(
+  "ID of the GEO project to work in. Get it from list_projects.",
+);
 
 export const geoDaySchema = z.iso.date("Expected a valid YYYY-MM-DD date");
 
@@ -17,9 +19,15 @@ export const geoWindowShape = {
     .min(1)
     .max(365)
     .optional()
-    .describe("Rolling window size in days. Ignored when from/to are set."),
-  from: geoDaySchema.optional().describe("Window start date (YYYY-MM-DD)"),
-  to: geoDaySchema.optional().describe("Window end date (YYYY-MM-DD)"),
+    .describe(
+      "Length of the reporting window in days, counting back from today. Ignored when from and to are set. When days, from and to are all omitted, the tool uses its default window.",
+    ),
+  from: geoDaySchema
+    .optional()
+    .describe("First day of a fixed reporting window. Set it together with to; it replaces the rolling days window."),
+  to: geoDaySchema
+    .optional()
+    .describe("Last day of a fixed reporting window. Set it together with from; it replaces the rolling days window."),
 };
 
 export const geoPromptTextSchema = z.string().trim().min(8).max(300);

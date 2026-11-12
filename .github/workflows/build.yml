@@ -44,7 +44,7 @@ jobs:
           import { listPostsSchema } from './build/schemas/post.js';
 
           listPostsSchema.parse({ status: 'draft,published' });
-          const server = createServer('ci-smoke-test');
+          const server = createServer();
           await server.close();
           console.log(`Server initialization and compiled validation passed on ${process.version}`);
           NODE

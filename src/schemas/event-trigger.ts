@@ -9,13 +9,17 @@ import {
 export const triggerIdSchema = z.string().min(1).describe("The event trigger ID (see list_event_triggers)");
 
 export const eventTriggerBodyShape = {
-  sourceType: z.enum(EVENT_TRIGGER_SOURCE_TYPE_VALUES).describe("Event source. Only GitHub webhooks are supported."),
+  sourceType: z
+    .enum(EVENT_TRIGGER_SOURCE_TYPE_VALUES)
+    .describe(
+      "Where the events that fire the trigger come from: GitHub webhooks from the repositories in targets.repositoryIds",
+    ),
   sourceConfig: z
     .object({
       eventTypes: z
         .array(z.enum(EVENT_TRIGGER_EVENT_TYPE_VALUES))
         .min(1)
-        .describe("GitHub events that fire the trigger"),
+        .describe("GitHub events that fire the trigger: release when a release is published, push when commits land"),
       includePreReleases: z
         .boolean()
         .optional()
@@ -40,7 +44,9 @@ export const eventTriggerBodyShape = {
       publishDestination: z
         .enum(EVENT_TRIGGER_PUBLISH_DESTINATION_VALUES)
         .optional()
-        .describe("Where auto-published content goes"),
+        .describe(
+          "Deprecated and ignored. Auto-published content is only marked as published in Notra; publish to GitHub or a Notra site from the post instead.",
+        ),
       brandVoiceId: z.string().min(1).optional().describe("Brand identity ID from list_brand_identities"),
     })
     .optional()
@@ -53,7 +59,12 @@ export const eventTriggerBodyShape = {
 };
 
 export const listEventTriggersSchema = z.object({
-  repositoryIds: z.array(z.string().min(1)).optional().describe("Only triggers targeting these GitHub integration IDs"),
+  repositoryIds: z
+    .array(z.string().min(1))
+    .optional()
+    .describe(
+      "Only return triggers that listen to these GitHub integration IDs, from the github array of list_integrations. Omit to list all triggers.",
+    ),
 });
 
 export const getEventTriggerSchema = z.object({ triggerId: triggerIdSchema });

@@ -1,6 +1,9 @@
+import type { CallToolResult } from "mcp-use";
 import { formatMcpError } from "./mcp-error.js";
 
-export async function handleError<T>(fn: () => Promise<T>) {
+type HandledResult = (CallToolResult & { structuredContent: any }) | (CallToolResult & { isError: true });
+
+export async function handleError<T>(fn: () => Promise<T>): Promise<HandledResult> {
   try {
     const data = await fn();
     const result = {
@@ -11,7 +14,7 @@ export async function handleError<T>(fn: () => Promise<T>) {
       return { ...result, structuredContent: data as Record<string, unknown> };
     }
 
-    return result;
+    return { ...result, structuredContent: undefined };
   } catch (error) {
     const message = formatMcpError(error);
     return {

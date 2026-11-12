@@ -3,6 +3,20 @@ import { GEO_TRAFFIC_CATEGORY_VALUES, GEO_TRAFFIC_VISITOR_TYPE_VALUES } from "..
 import { GEO_ANALYTICS_PATH_MAX_LENGTH, GEO_TRAFFIC_SITES_VALUES } from "../constants/geo.js";
 import { geoResourceIdSchema, geoShortTextSchema, geoWindowShape, projectIdSchema } from "./geo-fields.js";
 
+const geoTrafficWindowShape = {
+  ...geoWindowShape,
+  days: geoWindowShape.days.describe(
+    "Length of the reporting window in days, counting back from today. Ignored when from and to are set. When days, from and to are all omitted, the last 30 days are used.",
+  ),
+};
+
+const geoMcpWindowShape = {
+  ...geoWindowShape,
+  days: geoWindowShape.days.describe(
+    "Length of the reporting window in days, counting back from today. Ignored when from and to are set. When days, from and to are all omitted, the last 14 days are used.",
+  ),
+};
+
 /** The host, page and Notra Sites filters the dashboard's Analytics tab offers. */
 const geoTrafficFilterShape = {
   host: geoShortTextSchema
@@ -18,43 +32,62 @@ const geoTrafficFilterShape = {
   sites: z
     .enum(GEO_TRAFFIC_SITES_VALUES)
     .optional()
-    .describe("exclude leaves out traffic to sites hosted on Notra Sites"),
+    .describe("Set to exclude to leave out traffic to sites hosted on Notra Sites. Omit to include that traffic."),
 };
 
 export const getGeoTrafficOverviewSchema = z.object({
   projectId: projectIdSchema,
-  ...geoWindowShape,
+  ...geoTrafficWindowShape,
   ...geoTrafficFilterShape,
 });
 
 export const getGeoTrafficLogSchema = z.object({
   projectId: projectIdSchema,
-  limit: z.number().int().min(1).max(200).optional().describe("Maximum events to return (1-200)"),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(200)
+    .optional()
+    .describe("Number of most recent events to return. The log has no time window, so this bounds the result."),
   visitorTypes: z
     .array(z.enum(GEO_TRAFFIC_VISITOR_TYPE_VALUES))
     .max(3)
     .optional()
-    .describe("Filter to crawler and/or ai_referral traffic"),
-  categories: z.array(z.enum(GEO_TRAFFIC_CATEGORY_VALUES)).max(3).optional().describe("Filter by crawler category"),
+    .describe(
+      "Visitor types to include: crawler for AI bots fetching pages, ai_referral for people who clicked through from an AI answer. Omit for both.",
+    ),
+  categories: z
+    .array(z.enum(GEO_TRAFFIC_CATEGORY_VALUES))
+    .max(3)
+    .optional()
+    .describe(
+      "Crawler categories to include: training-crawler collects model training data, search-index builds an AI search index, assistant-browse fetches pages live while answering. Omit for all.",
+    ),
 });
 
 export const listGeoTrafficJourneysSchema = z.object({
   projectId: projectIdSchema,
-  limit: z.number().int().min(1).max(100).optional().describe("Maximum journeys to return (1-100)"),
-  ...geoWindowShape,
+  limit: z.number().int().min(1).max(100).optional().describe("Number of journeys to return, most recent first"),
+  ...geoTrafficWindowShape,
 });
 
 export const getGeoTrafficJourneySchema = z.object({
   projectId: projectIdSchema,
   journeyId: z.string().min(1).max(128).describe("The journey ID from list_geo_traffic_journeys"),
-  ...geoWindowShape,
+  ...geoTrafficWindowShape,
 });
 
 export const listGeoTrafficPagesSchema = z.object({
   projectId: projectIdSchema,
-  limit: z.number().int().min(1).max(500).optional().describe("Maximum pages to return (1-500)"),
-  visitorType: z.enum(GEO_TRAFFIC_VISITOR_TYPE_VALUES).optional().describe("Filter to crawler or ai_referral traffic"),
-  ...geoWindowShape,
+  limit: z.number().int().min(1).max(500).optional().describe("Number of top pages to return, ranked by visits"),
+  visitorType: z
+    .enum(GEO_TRAFFIC_VISITOR_TYPE_VALUES)
+    .optional()
+    .describe(
+      "Only count crawler (AI bots fetching pages) or ai_referral (people who clicked through from an AI answer) visits. Omit for both.",
+    ),
+  ...geoTrafficWindowShape,
 });
 
 export const getGeoIngestSetupSchema = z.object({
@@ -65,7 +98,7 @@ export const getGeoIngestSetupSchema = z.object({
 
 export const getGeoWebAnalyticsSchema = z.object({
   projectId: projectIdSchema,
-  ...geoWindowShape,
+  ...geoTrafficWindowShape,
   ...geoTrafficFilterShape,
 });
 
@@ -74,24 +107,24 @@ export const getGeoWebAnalyticsUtmSchema = z.object({
   dimension: z
     .enum(["source", "medium", "campaign", "term", "content"])
     .describe("UTM parameter to break sessions down by"),
-  ...geoWindowShape,
+  ...geoTrafficWindowShape,
   ...geoTrafficFilterShape,
 });
 
 export const getGeoTrafficJourneyStatsSchema = z.object({
   projectId: projectIdSchema,
-  ...geoWindowShape,
+  ...geoTrafficWindowShape,
 });
 
 export const geoProjectOnlySchema = z.object({ projectId: projectIdSchema });
 
 export const getGeoMcpAnalyticsSchema = z.object({
   projectId: projectIdSchema,
-  ...geoWindowShape,
+  ...geoMcpWindowShape,
 });
 
 export const getGeoMcpToolAnalyticsSchema = z.object({
   projectId: projectIdSchema,
   toolName: geoShortTextSchema.describe("Tool name as your MCP server registers it (see get_geo_mcp_analytics)"),
-  ...geoWindowShape,
+  ...geoMcpWindowShape,
 });

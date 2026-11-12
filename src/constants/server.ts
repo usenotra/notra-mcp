@@ -1,16 +1,15 @@
 export const SERVER_INSTRUCTIONS = [
-  "Notra: create, schedule and publish content, manage brand identities, integrations and reusable writing skills.",
-  "To write about recent work, call `list_integrations`, then `list_github_activity` to see what shipped. Draft the post yourself with `create_post`, or let Notra draft it with `generate_post`. Then publish it with `update_post` or `schedule_post`.",
-  "Notra Sites are hosted blogs and changelogs built from a GitHub repository. Call `list_sites` first. To get a saved post onto a Site, `preview_post_on_site` builds a private preview and `publish_post_to_site` opens a pull request that publishes it once merged. When a build fails, `get_site_deployment` returns its diagnostics and build log.",
-  "Sites blogs keep their authors in the site's blog.json. Call `list_site_authors`; author edits stay unpublished Design changes until `publish_site_design`, which deploys the live site, so confirm with the user before publishing or before setting `force`. Credit a site author on a blog post with its `site:<id>` ref in `update_post`'s `authorIds`.",
-  "GEO tools are scoped to projects. Call `list_projects` first, then use `get_geo_snapshot` for a compact diagnosis and recommended next actions. Use settings, prompt, sequence, persona, and competitor tools to configure tracking. `create_geo_scan` starts a scan; visibility tools return results. Prefer prompt-result summaries plus targeted detail over the unbounded full result list. Content-gap and brief tools plan articles. Traffic tools report AI crawler and referral activity and the website analytics notra.js collects. GEO tools require an organization-scoped API key and the GEO plan.",
-  "Account API keys can reach several workspaces. If a tool reports that a workspace must be selected, call `list_workspaces`, ask the user which workspace to use, and tell them to set it as NOTRA_ORGANIZATION_ID (stdio), or connect to /mcp/<workspace> or send the X-Notra-Organization-Id header (HTTP). This connection cannot switch workspaces by itself.",
-  "Scans, sequence runs, persona runs, persona generation, and content briefs use billed AI credits. Confirm with the user before starting them.",
-  "Use only task-specific business content. Do not request or send health records, biometric data, government identifiers, payment card data, passwords, API keys, or authentication secrets through tool inputs. Complete authentication and credential setup in Notra's dashboard. Do not include conversation history or unrelated personal information in content or feedback.",
-  "`submit_feedback` sends a message to the Notra team. Only call it when the user explicitly asks to send feedback to Notra, and only with content the user has approved. Never call it on your own initiative, for example after a tool error or an unsupported request; at most, mention that the user can send feedback if they want to.",
+  "Notra: write, schedule and publish content, and track how AI assistants mention a brand (GEO).",
+  "Confirm with the user before scans, sequence or persona runs, persona generation and content briefs (they use billed AI credits), and before `publish_site_design` or `force`. Only call `submit_feedback` when the user explicitly asks, with content they approved. Never send secrets, credentials, payment or health data, or unrelated personal information through tool inputs.",
+  "Content: `list_integrations`, then `list_github_activity` shows what shipped. Draft with `create_post` or let Notra draft with `generate_post`, then publish with `update_post` or `schedule_post`.",
+  "Sites (hosted blogs and changelogs): start with `list_sites`. `preview_post_on_site` builds a private preview, `publish_post_to_site` opens a publishing pull request, `get_site_deployment` explains failed builds. Author edits stay unpublished until `publish_site_design`; credit an author with its `site:<id>` ref in `update_post`'s `authorIds`.",
+  "GEO: start with `list_projects`, then `get_geo_snapshot` for a diagnosis and next actions. `create_geo_scan` starts a scan; visibility tools return results. Prefer prompt-result summaries plus targeted detail. GEO needs an organization-scoped key and the GEO plan.",
+  "If a tool says a workspace must be selected, call `list_workspaces`, ask which one to use, and have the user set NOTRA_ORGANIZATION_ID (stdio), connect to /mcp/<workspace>, or send X-Notra-Organization-Id (HTTP).",
 ].join("\n\n");
 
 export const SERVER_TITLE = "Notra";
+export const SERVER_DESCRIPTION =
+  "Turn shipped work into blog posts, changelogs and social posts, publish them to hosted Notra Sites, and track how ChatGPT, Claude, Perplexity and Gemini mention your brand, competitors and content gaps.";
 export const SERVER_WEBSITE_URL = "https://www.usenotra.com";
 export const SERVER_DOCUMENTATION_URL = "https://www.usenotra.com/docs";
 export const SERVER_ICON_SVG_URL = "https://www.usenotra.com/favicon.svg";
@@ -20,3 +19,16 @@ export const SERVER_ICONS = [
   { src: SERVER_ICON_SVG_URL, mimeType: "image/svg+xml", sizes: ["any"] },
   { src: SERVER_ICON_PNG_URL, mimeType: "image/png", sizes: ["180x180"] },
 ];
+
+export const SERVER_REGISTRY_NAME = "io.github.usenotra/notra";
+export const SERVER_CARD_DESCRIPTION =
+  "Write and publish content from shipped work, and track your brand's AI search visibility.";
+export const SERVER_REPOSITORY_URL = "https://github.com/usenotra/notra-mcp";
+export const SERVER_CARD_SCHEMA_URL = "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json";
+export const SERVER_CARD_CONTENT_TYPE = "application/mcp-server-card+json";
+export const AI_CATALOG_CONTENT_TYPE = "application/ai-catalog+json";
+export const SERVER_DIRECTORY_LISTINGS = {
+  chatgpt: "https://chatgpt.com/plugins/plugin_asdk_app_6ad054bf08248191a320ed1334e3ffde",
+  claude: "https://claude.ai/directory/notra",
+  composio: "https://composio.dev/toolkits/notra",
+};

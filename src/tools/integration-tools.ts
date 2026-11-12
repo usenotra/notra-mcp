@@ -4,29 +4,35 @@ import {
   deleteIntegrationSchema,
   listGithubActivitySchema,
 } from "../schemas/integration.js";
-import type { McpServer } from "@modelcontextprotocol/server";
+import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
-export function registerIntegrationTools(server: McpServer, client: NotraClient) {
-  server.registerTool(
-    "list_integrations",
+export function registerIntegrationTools(server: ToolRegistry, client: NotraClient) {
+  server.tool(
     {
+      name: "list_integrations",
       description:
         "List enabled GitHub and Linear integrations for your organization. Includes organization details. The slack array is always empty; Slack connections are managed in the Notra dashboard and are not exposed by this API.",
-      annotations: { title: "List Integrations", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      annotations: {
+        title: "List Integrations",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(listIntegrationsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listIntegrations")),
     },
     () => handleError(() => client.listIntegrations()),
   );
 
-  server.registerTool(
-    "list_github_activity",
+  server.tool(
     {
+      name: "list_github_activity",
       description:
         "List what shipped in a connected GitHub repository: pull requests merged into the default branch (default), commits on it, or published releases, within a time window (default: last 7 days). Each item has the title, body, author and link. Use it to decide what to write about, then write the post yourself with create_post, or let Notra draft it with generate_post. Reads GitHub live; follow pagination.nextPage until it is null, since a page can hold fewer items than the page size.",
       annotations: {
@@ -34,6 +40,7 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
         readOnlyHint: true,
         openWorldHint: true,
         destructiveHint: false,
+        idempotentHint: true,
       },
       inputSchema: shareJsonSchema(listGithubActivitySchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getGitHubActivity")),
@@ -41,9 +48,9 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
     ({ integrationId, ...params }) => handleError(() => client.listGithubActivity(integrationId, params)),
   );
 
-  server.registerTool(
-    "create_github_integration",
+  server.tool(
     {
+      name: "create_github_integration",
       description:
         "Connect a public GitHub repository for content generation. For private repositories, configure access in the Notra dashboard; never request or send a personal access token in chat.",
       annotations: {
@@ -51,6 +58,7 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
         readOnlyHint: false,
         openWorldHint: true,
         destructiveHint: false,
+        idempotentHint: false,
       },
       inputSchema: shareJsonSchema(createGithubIntegrationSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createGitHubIntegration")),
@@ -59,11 +67,11 @@ export function registerIntegrationTools(server: McpServer, client: NotraClient)
       handleError(() => client.createGithubIntegration({ owner, repo, branch: branch ?? undefined })),
   );
 
-  server.registerTool(
-    "delete_integration",
+  server.tool(
     {
+      name: "delete_integration",
       description:
-        "Delete a GitHub or Linear integration. Returns any schedules or events that were disabled as a result.",
+        "Permanently disconnect a GitHub or Linear integration from Notra; it cannot be restored and has to be connected again to be used. Schedules and event triggers that relied on it are disabled, and the response lists them in disabledSchedules and disabledEvents. Confirm with the user first.",
       annotations: {
         title: "Delete Integration",
         readOnlyHint: false,

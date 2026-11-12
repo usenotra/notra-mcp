@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/server";
+import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import type { NotraClient } from "../notra-client.js";
 import {
@@ -11,16 +11,18 @@ import {
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
-export function registerWebhookTools(server: McpServer, client: NotraClient) {
-  server.registerTool(
-    "list_webhook_endpoints",
+export function registerWebhookTools(server: ToolRegistry, client: NotraClient) {
+  server.tool(
     {
-      description: "List HTTPS endpoints subscribed to Notra events. Signing secrets are not returned.",
+      name: "list_webhook_endpoints",
+      description:
+        "List the HTTPS endpoints subscribed to Notra events, with each endpoint's ID, URL, subscribed event types, enabled flag and creation time. Signing secrets are not returned.",
       annotations: {
         title: "List Webhook Endpoints",
         readOnlyHint: true,
         openWorldHint: false,
         destructiveHint: false,
+        idempotentHint: true,
       },
       inputSchema: shareJsonSchema(listWebhookEndpointsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listWebhookEndpoints")),
@@ -28,10 +30,11 @@ export function registerWebhookTools(server: McpServer, client: NotraClient) {
     () => handleError(() => client.listWebhookEndpoints()),
   );
 
-  server.registerTool(
-    "delete_webhook_endpoint",
+  server.tool(
     {
-      description: "Remove a webhook subscription and cancel its unsent deliveries",
+      name: "delete_webhook_endpoint",
+      description:
+        "Permanently remove a webhook endpoint so it stops receiving Notra events, and cancel its deliveries that have not been sent yet. It cannot be restored. Returns the deleted endpoint's ID.",
       annotations: {
         title: "Delete Webhook Endpoint",
         readOnlyHint: false,
@@ -45,9 +48,9 @@ export function registerWebhookTools(server: McpServer, client: NotraClient) {
     ({ endpointId }) => handleError(() => client.deleteWebhookEndpoint(endpointId)),
   );
 
-  server.registerTool(
-    "list_webhook_deliveries",
+  server.tool(
     {
+      name: "list_webhook_deliveries",
       description:
         "List webhook deliveries across all endpoints, newest first. Page with offset while hasMore is true.",
       annotations: {
@@ -55,6 +58,7 @@ export function registerWebhookTools(server: McpServer, client: NotraClient) {
         readOnlyHint: true,
         openWorldHint: false,
         destructiveHint: false,
+        idempotentHint: true,
       },
       inputSchema: shareJsonSchema(listWebhookDeliveriesSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listWebhookDeliveries")),
@@ -62,27 +66,34 @@ export function registerWebhookTools(server: McpServer, client: NotraClient) {
     (params) => handleError(() => client.listWebhookDeliveries(params)),
   );
 
-  server.registerTool(
-    "get_webhook_delivery",
+  server.tool(
     {
+      name: "get_webhook_delivery",
       description: "Get a webhook delivery's payload and attempt history",
-      annotations: { title: "Get Webhook Delivery", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      annotations: {
+        title: "Get Webhook Delivery",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(getWebhookDeliverySchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getWebhookDelivery")),
     },
     ({ deliveryId }) => handleError(() => client.getWebhookDelivery(deliveryId)),
   );
 
-  server.registerTool(
-    "retry_webhook_delivery",
+  server.tool(
     {
+      name: "retry_webhook_delivery",
       description:
-        "Queue a failed webhook delivery to be sent again, keeping its attempt history. This sends data to the subscribed external endpoint again and may repeat downstream effects",
+        "Queue a failed webhook delivery to be sent again, keeping its attempt history. This sends the same payload to the subscribed external endpoint again, which may repeat downstream effects there and cannot be recalled, so confirm with the user. Find failed deliveries with list_webhook_deliveries. Returns the delivery ID; check its outcome with get_webhook_delivery.",
       annotations: {
         title: "Retry Webhook Delivery",
         readOnlyHint: false,
         openWorldHint: true,
         destructiveHint: true,
+        idempotentHint: false,
       },
       inputSchema: shareJsonSchema(retryWebhookDeliverySchema),
       outputSchema: shareJsonSchema(apiOutputSchema("retryWebhookDelivery")),

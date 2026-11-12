@@ -1,6 +1,16 @@
 import "zod/compile";
-import { McpServer } from "@modelcontextprotocol/server";
-import { SERVER_ICONS, SERVER_INSTRUCTIONS, SERVER_TITLE, SERVER_WEBSITE_URL } from "./constants/server.js";
+import type { HonoRequest } from "hono";
+import { MCPServer, registerViews } from "mcp-use";
+import type { OAuthAuthInfo } from "mcp-use/oauth";
+import { MCP_BASE_PATH } from "./constants/http.js";
+import {
+  SERVER_DESCRIPTION,
+  SERVER_FAVICON_URL,
+  SERVER_ICONS,
+  SERVER_INSTRUCTIONS,
+  SERVER_TITLE,
+  SERVER_WEBSITE_URL,
+} from "./constants/server.js";
 import { NotraClient } from "./notra-client.js";
 import { registerBrandIdentityTools } from "./tools/brand-identity-tools.js";
 import { registerEventTriggerTools } from "./tools/event-trigger-tools.js";
@@ -27,14 +37,21 @@ import { registerSkillTools } from "./tools/skill-tools.js";
 import { registerWebhookTools } from "./tools/webhook-tools.js";
 import { registerListWorkspacesTool, registerWhoAmITool } from "./tools/workspace-tools.js";
 import type { AuthContext } from "./types/auth.js";
-import type { CreateServerOptions } from "./types/server.js";
+import type { CreateServerOptions, NotraMcpServer, ToolRegistry } from "./types/server.js";
 import type { Toolset } from "./types/toolset.js";
 import { parseToolsets } from "./utils/toolsets.js";
 import { instrumentMcpUsage } from "./utils/mcp-usage.js";
+import { getOAuthConfig } from "./utils/oauth-config.js";
+import { createOAuthProvider } from "./utils/oauth-provider.js";
+import { selectRequestOrganization } from "./utils/organization.js";
+import { getOrganizationScope, getRequestAuth, runInRequestScope } from "./utils/request-scope.js";
+import { loadViewsManifest } from "./utils/views.js";
 
 export const SERVER_VERSION = "1.5.0";
 
-type Registrar = (server: McpServer, client: NotraClient) => void;
+process.env.MCP_USE_ANONYMIZED_TELEMETRY ??= "false";
+
+type Registrar = (server: ToolRegistry, client: NotraClient) => void;
 
 const CONTENT_REGISTRARS: readonly Registrar[] = [
   registerPostTools,
@@ -78,76 +95,84 @@ const SHARED_REGISTRARS: readonly Registrar[] = [
     }),
 ];
 
-/**
- * Maps every tool name to the registrar that registers it, learned once at
- * module load by running our own registrars against a recording stand-in
- * (registrars only ever call `server.registerTool`; their handlers capture
- * the client without calling it). HTTP builds a server per request, so the
- * modern path uses this to register only the module owning the called tool
- * instead of all ~100 — registration dominates per-request CPU otherwise.
- */
-const TOOL_OWNERS: ReadonlyMap<string, { registrar: Registrar; toolset?: Toolset }> = (() => {
-  const owners = new Map<string, { registrar: Registrar; toolset?: Toolset }>();
-  const probeClient = new NotraClient("tool-owner-probe");
-  const learn = (registrar: Registrar, toolset?: Toolset) => {
-    const probe = {
-      registerTool: (name: string) => {
-        owners.set(name, { registrar, toolset });
+function requestToolsets(request: HonoRequest | undefined): ReadonlySet<Toolset> {
+  const query = request?.queries("toolsets");
+  return parseToolsets(query === undefined ? process.env.NOTRA_MCP_TOOLSETS : query.join(","));
+}
+
+function requestAuth(authInfo: OAuthAuthInfo | undefined, headers: Headers | undefined): AuthContext {
+  const auth = authInfo?.extra?.auth as AuthContext | undefined;
+  if (!auth) {
+    throw new Error("Authenticated MCP request is missing auth context");
+  }
+  // Account API keys pick their workspace per request, from the scoped URL or
+  // else the header. OAuth tokens are bound to their consent workspace.
+  if (auth.kind === "apiKey") {
+    const organizationId = selectRequestOrganization(getOrganizationScope(), headers ?? new Headers());
+    return organizationId ? { ...auth, organizationId } : auth;
+  }
+  return auth;
+}
+
+export function createServer(options: CreateServerOptions = {}): NotraMcpServer {
+  const server = new MCPServer<AuthContext>({
+    name: "notra",
+    title: SERVER_TITLE,
+    description: SERVER_DESCRIPTION,
+    version: SERVER_VERSION,
+    websiteUrl: SERVER_WEBSITE_URL,
+    icons: SERVER_ICONS,
+    favicon: SERVER_FAVICON_URL,
+    instructions: SERVER_INSTRUCTIONS,
+    basePath: MCP_BASE_PATH,
+    oauth: createOAuthProvider(getOAuthConfig(), options.authorizationServerMetadata),
+    publicLandingPage: true,
+    logging: { enabled: false },
+  });
+
+  const client = new NotraClient(getRequestAuth);
+  const toolOwners = new Map<string, Toolset | undefined>();
+  const register = (registrars: readonly Registrar[], toolset?: Toolset) => {
+    const registry: ToolRegistry = {
+      tool: (definition, callback) => {
+        toolOwners.set(definition.name, toolset);
+        return server.tool(definition, callback);
       },
-    } as unknown as McpServer;
-    registrar(probe, probeClient);
+    };
+    for (const registrar of registrars) registrar(registry, client);
   };
-  for (const registrar of CONTENT_REGISTRARS) learn(registrar, "content");
-  for (const registrar of GEO_REGISTRARS) learn(registrar, "geo");
-  for (const registrar of SHARED_REGISTRARS) learn(registrar);
-  return owners;
-})();
 
-export function createServer(auth: string | AuthContext, options: CreateServerOptions = {}): McpServer {
-  const client = new NotraClient(auth);
-  const toolsets = options.toolsets ?? parseToolsets(process.env.NOTRA_MCP_TOOLSETS);
+  register(CONTENT_REGISTRARS, "content");
+  register(GEO_REGISTRARS, "geo");
+  register(SHARED_REGISTRARS);
 
-  const server = new McpServer(
-    {
-      name: "notra",
-      title: SERVER_TITLE,
-      version: SERVER_VERSION,
-      websiteUrl: SERVER_WEBSITE_URL,
-      icons: SERVER_ICONS,
-    },
-    { instructions: SERVER_INSTRUCTIONS },
-  );
+  const views = options.withoutViews ? undefined : loadViewsManifest();
+  if (views) server[registerViews](views);
+
+  // The connection URL is scoped to one workspace (`/mcp/{organization}`), so
+  // workspace discovery is hidden like Sentry's org-scoped MCP URLs.
+  const isVisible = (name: string, enabled: ReadonlySet<Toolset>) => {
+    if (!toolOwners.has(name)) return true;
+    if (name === "list_workspaces" && getOrganizationScope() !== undefined) return false;
+    const toolset = toolOwners.get(name);
+    return toolset === undefined || enabled.has(toolset);
+  };
 
   if (options.trackUsage) {
-    instrumentMcpUsage(
-      server,
-      { name: "notra", version: SERVER_VERSION },
-      typeof auth === "string" ? { kind: "apiKey", token: auth } : auth,
-      (name) => TOOL_OWNERS.has(name),
-    );
+    instrumentMcpUsage(server, { name: "notra", version: SERVER_VERSION }, (name) => toolOwners.has(name));
   }
 
-  // A tools/call needs only the module owning that tool. Unknown or
-  // toolset-filtered names fall through to full registration so the SDK
-  // answers with its standard "tool not found" error.
-  const isRegistered = (registrar: Registrar) =>
-    !(options.organizationScoped && registrar === registerListWorkspacesTool);
+  server.use("mcp:tools/list", async (ctx, next) => {
+    const enabled = requestToolsets(ctx.req);
+    return (await next()).filter((tool) => isVisible(tool.name, enabled));
+  });
 
-  const owner = options.onlyTool ? TOOL_OWNERS.get(options.onlyTool) : undefined;
-  if (owner && (owner.toolset === undefined || toolsets.has(owner.toolset)) && isRegistered(owner.registrar)) {
-    owner.registrar(server, client);
-    return server;
-  }
-
-  if (toolsets.has("content")) {
-    for (const registrar of CONTENT_REGISTRARS) registrar(server, client);
-  }
-  if (toolsets.has("geo")) {
-    for (const registrar of GEO_REGISTRARS) registrar(server, client);
-  }
-  for (const registrar of SHARED_REGISTRARS) {
-    if (isRegistered(registrar)) registrar(server, client);
-  }
+  server.use("mcp:tools/call", async (ctx, next) => {
+    if (!isVisible(ctx.params.name, requestToolsets(ctx.req))) {
+      return { isError: true, content: [{ type: "text", text: `Tool ${ctx.params.name} not found` }] };
+    }
+    return runInRequestScope({ auth: requestAuth(ctx.auth, ctx.req?.raw.headers), signal: ctx.req?.raw.signal }, next);
+  });
 
   return server;
 }

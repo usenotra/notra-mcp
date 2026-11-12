@@ -3,17 +3,27 @@ import { GENERATABLE_CONTENT_TYPE_VALUES } from "../constants/post.js";
 
 const scheduleCronConfigSchema = z
   .object({
-    frequency: z.enum(["daily", "weekly", "monthly"]).describe("How often the schedule should run"),
-    hour: z.number().int().min(0).max(23).describe("UTC hour to run at (0-23)"),
-    minute: z.number().int().min(0).max(59).describe("UTC minute to run at (0-59)"),
+    frequency: z
+      .enum(["daily", "weekly", "monthly"])
+      .describe("How often the schedule runs: daily, weekly on dayOfWeek, or monthly on dayOfMonth"),
+    hour: z.number().int().min(0).max(23).describe("Hour of the day the schedule runs, in UTC"),
+    minute: z.number().int().min(0).max(59).describe("Minute past the hour the schedule runs, in UTC"),
     dayOfWeek: z
       .number()
       .int()
       .min(0)
       .max(6)
       .optional()
-      .describe("UTC weekday for weekly schedules (0=Sunday, 6=Saturday)"),
-    dayOfMonth: z.number().int().min(1).max(31).optional().describe("UTC day of month for monthly schedules (1-31)"),
+      .describe(
+        "Day of the week a weekly schedule runs, in UTC, where 0 is Sunday and 6 is Saturday. Required when frequency is weekly.",
+      ),
+    dayOfMonth: z
+      .number()
+      .int()
+      .min(1)
+      .max(31)
+      .optional()
+      .describe("Day of the month a monthly schedule runs, in UTC. Required when frequency is monthly."),
   })
   .superRefine((cron, ctx) => {
     if (cron.frequency === "weekly" && cron.dayOfWeek === undefined) {
@@ -25,8 +35,10 @@ const scheduleCronConfigSchema = z
   });
 
 const integrationIdsSchema = z.array(z.string().min(1));
-const repositoryIdsDescription = "GitHub integration IDs from list_integrations (github array)";
-const linearIntegrationIdsDescription = "Linear integration IDs from list_integrations (linear array)";
+const repositoryIdsDescription =
+  "GitHub integration IDs to generate from, taken from the github array of list_integrations";
+const linearIntegrationIdsDescription =
+  "Linear integration IDs to generate from, taken from the linear array of list_integrations";
 
 const scheduleSourceConfigSchema = z
   .object({
@@ -34,17 +46,23 @@ const scheduleSourceConfigSchema = z
   })
   .describe("Cron trigger configuration");
 
-const outputTypeSchema = z.enum(GENERATABLE_CONTENT_TYPE_VALUES).describe("Type of content to generate");
-const publishDestinationSchema = z
-  .enum(["webflow", "framer", "custom"])
-  .describe("Where generated content should be published");
+const outputTypeSchema = z
+  .enum(GENERATABLE_CONTENT_TYPE_VALUES)
+  .describe("Kind of post each run writes, such as a changelog or a LinkedIn post");
+const publishDestinationDescription =
+  "Deprecated and ignored. Auto-published content is only marked as published in Notra; publish to GitHub or a Notra site from the post instead.";
+const publishDestinationSchema = z.enum(["webflow", "framer", "custom"]).describe(publishDestinationDescription);
 const lookbackWindowSchema = z
   .enum(["current_day", "yesterday", "last_7_days", "last_14_days", "last_30_days"])
-  .describe("Time window for gathering data before generation (default: last_7_days)");
+  .describe(
+    "How far back each run looks for GitHub and Linear activity to write about. The last 7 days are used when it is not set.",
+  );
 
 export const schedulePayloadSchema = z.object({
-  name: z.string().min(1).max(120).describe("Schedule name (1-120 characters)"),
-  sourceType: z.literal("cron").describe("Schedule trigger type"),
+  name: z.string().min(1).max(120).describe("Label for the schedule shown in Notra"),
+  sourceType: z
+    .literal("cron")
+    .describe("How the schedule is triggered. cron is the only option and runs it on the timing in sourceConfig.cron."),
   sourceConfig: scheduleSourceConfigSchema,
   targets: z
     .object({
@@ -61,33 +79,44 @@ export const schedulePayloadSchema = z.object({
   outputConfig: z
     .object({
       publishDestination: publishDestinationSchema.optional(),
-      brandVoiceId: z.string().min(1).optional().describe("Brand voice ID to use for scheduled output"),
+      brandVoiceId: z
+        .string()
+        .min(1)
+        .optional()
+        .describe(
+          "Brand identity ID, from list_brand_identities, whose voice each run writes in. Omit to use the default brand identity.",
+        ),
     })
     .optional()
     .describe("Optional publishing and voice settings"),
-  enabled: z.boolean().describe("Whether the schedule is active"),
+  enabled: z.boolean().describe("true to run the schedule on its timing, false to create it paused"),
   autoPublish: z.boolean().optional().describe("Whether to auto-publish generated content (default false)"),
   lookbackWindow: lookbackWindowSchema.optional(),
 });
 
 export const listSchedulesSchema = z.object({
-  repositoryIds: z.array(z.string().min(1)).optional().describe("Only return schedules targeting these repository IDs"),
+  repositoryIds: z
+    .array(z.string().min(1))
+    .optional()
+    .describe(
+      "Only return schedules that read from these GitHub integration IDs, from the github array of list_integrations. Omit to list all schedules.",
+    ),
 });
 
 export const updateScheduleSchema = z
   .object({
-    scheduleId: z.string().min(1).describe("The schedule ID to update"),
-    name: z.string().min(1).max(120).optional().describe("New schedule name (1-120 characters)"),
+    scheduleId: z.string().min(1).describe("ID of the schedule to change, as returned by list_schedules"),
+    name: z.string().min(1).max(120).optional().describe("New label for the schedule. Omit to keep the current name."),
     sourceConfig: scheduleSourceConfigSchema.optional().describe("Replaces the cron configuration as a whole"),
     targets: z
       .object({
         repositoryIds: integrationIdsSchema
           .optional()
-          .describe(`${repositoryIdsDescription}. Replaces the GitHub targets; omit to keep them`),
+          .describe(`${repositoryIdsDescription}. Replaces the current GitHub targets; omit to keep them.`),
         linearIntegrationIds: integrationIdsSchema
           .optional()
           .describe(
-            `${linearIntegrationIdsDescription}. Replaces the Linear targets; omit to keep them, [] removes them`,
+            `${linearIntegrationIdsDescription}. Replaces the current Linear targets; omit to keep them, [] removes them.`,
           ),
       })
       .optional()
@@ -95,13 +124,23 @@ export const updateScheduleSchema = z
     outputType: outputTypeSchema.optional(),
     outputConfig: z
       .object({
-        publishDestination: publishDestinationSchema.nullable().optional(),
-        brandVoiceId: z.string().min(1).nullable().optional().describe("Brand voice ID to use for scheduled output"),
+        publishDestination: publishDestinationSchema
+          .nullable()
+          .optional()
+          .describe(`${publishDestinationDescription} null clears it; omit to keep it.`),
+        brandVoiceId: z
+          .string()
+          .min(1)
+          .nullable()
+          .optional()
+          .describe(
+            "Brand identity ID, from list_brand_identities, whose voice each run writes in. null switches to the default brand identity; omit to keep it.",
+          ),
       })
       .nullable()
       .optional()
       .describe("Merged field by field into the current settings; null clears a field, or all of them"),
-    enabled: z.boolean().optional().describe("Whether the schedule is active"),
+    enabled: z.boolean().optional().describe("false pauses the schedule and true resumes it. Omit to leave it as is."),
     autoPublish: z.boolean().optional().describe("Whether to auto-publish generated content"),
     lookbackWindow: lookbackWindowSchema.optional(),
   })
@@ -110,14 +149,20 @@ export const updateScheduleSchema = z
   });
 
 export const deleteScheduleSchema = z.object({
-  scheduleId: z.string().min(1).describe("The schedule ID to delete"),
+  scheduleId: z.string().min(1).describe("ID of the schedule to delete, as returned by list_schedules"),
 });
 
 export const runScheduleSchema = z.object({
-  scheduleId: z.string().min(1).describe("The schedule ID to run"),
+  scheduleId: z.string().min(1).describe("ID of the enabled schedule to run now, as returned by list_schedules"),
 });
 
 export const listScheduleRunsSchema = z.object({
-  scheduleId: z.string().min(1).describe("The schedule ID whose runs to list"),
-  limit: z.number().int().min(1).max(50).optional().describe("Most recent runs to return (1-50, default 10)"),
+  scheduleId: z.string().min(1).describe("ID of the schedule whose runs to list, as returned by list_schedules"),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .optional()
+    .describe("How many of the most recent runs to return. Defaults to 10."),
 });

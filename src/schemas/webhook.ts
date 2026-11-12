@@ -9,11 +9,21 @@ export const listWebhookEndpointsSchema = z.object({});
 export const deleteWebhookEndpointSchema = z.object({ endpointId: endpointIdSchema });
 
 export const listWebhookDeliveriesSchema = z.object({
-  offset: z.number().int().min(0).max(100_000).optional().describe("Number of deliveries to skip (default 0)"),
+  offset: z
+    .number()
+    .int()
+    .min(0)
+    .max(100_000)
+    .optional()
+    .describe(
+      "How many of the newest deliveries to skip, for paging. Add the number of deliveries already received while hasMore is true. Omit to start at the newest.",
+    ),
   status: z
     .enum(WEBHOOK_DELIVERY_STATUS_FILTER_VALUES)
     .optional()
-    .describe("Only deliveries with this status (default all)"),
+    .describe(
+      "Only return deliveries in this state. Pass failed to find deliveries worth retrying. Omit or pass all for every state.",
+    ),
 });
 
 export const getWebhookDeliverySchema = z.object({ deliveryId: deliveryIdSchema });

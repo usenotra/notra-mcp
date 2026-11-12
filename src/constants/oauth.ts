@@ -37,3 +37,4 @@ export const OAUTH_PERMISSION_RESOURCES = [
 ] as const;
 
 export const OAUTH_ACCESS_CLAIM = "urn:notra:access";
+export const API_KEY_AUTH_TTL_SECONDS = 60 * 60;

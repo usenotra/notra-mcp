@@ -153,6 +153,7 @@ export type ApiOperationId =
   | "updateProject"
   | "updateSchedule"
   | "updateSiteAuthorPage"
+  | "updateSiteSections"
   | "upsertGeoCompetitor"
   | "upsertSiteAuthor";
 
@@ -368,7 +369,13 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           outputConfig: {
             type: ["object", "null"],
             properties: {
-              publishDestination: { type: "string", enum: ["webflow", "framer", "custom"] },
+              publishDestination: {
+                type: "string",
+                enum: ["webflow", "framer", "custom"],
+                description:
+                  "Deprecated and ignored. Auto-published posts are only marked as published in Notra; publish to GitHub or a Notra site from the post instead.",
+                deprecated: true,
+              },
               brandVoiceId: { type: "string", minLength: 1 },
               notify: {
                 type: "object",
@@ -886,7 +893,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               publishDestination: {
                 type: "string",
                 enum: ["webflow", "framer", "custom"],
-                description: "Where auto-published posts are sent.",
+                description:
+                  "Deprecated and ignored. Auto-published posts are only marked as published in Notra; publish to GitHub or a Notra site from the post instead.",
+                deprecated: true,
               },
               brandVoiceId: {
                 type: "string",
@@ -1578,7 +1587,13 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           outputConfig: {
             type: ["object", "null"],
             properties: {
-              publishDestination: { type: "string", enum: ["webflow", "framer", "custom"] },
+              publishDestination: {
+                type: "string",
+                enum: ["webflow", "framer", "custom"],
+                description:
+                  "Deprecated and ignored. Auto-published posts are only marked as published in Notra; publish to GitHub or a Notra site from the post instead.",
+                deprecated: true,
+              },
               brandVoiceId: { type: "string", minLength: 1 },
               notify: {
                 type: "object",
@@ -2150,7 +2165,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       webSnippet: {
         type: "string",
         description:
-          "Script tag that installs notra.js with the public key. Only present when web analytics is enabled for the workspace.",
+          'Script tag that installs notra.js with the public key, pinned to the current build with its Subresource Integrity hash and crossorigin="anonymous". Build an auto-updating tag from webScript.url instead if you want new builds without copying the tag again. Only present when web analytics is enabled for the workspace.',
       },
       webScript: {
         type: "object",
@@ -3714,7 +3729,10 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       imported: {
         type: ["object", "null"],
         properties: {
-          provider: { type: "string", enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum"] },
+          provider: {
+            type: "string",
+            enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum", "rybbit", "databuddy"],
+          },
           until: { type: "string", description: "Last imported day." },
           nativeStart: { type: ["string", "null"], description: "First day Notra tracked natively, when known." },
         },
@@ -3791,7 +3809,10 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       imported: {
         type: ["object", "null"],
         properties: {
-          provider: { type: "string", enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum"] },
+          provider: {
+            type: "string",
+            enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum", "rybbit", "databuddy"],
+          },
           until: { type: "string", description: "Last imported day." },
           nativeStart: { type: ["string", "null"], description: "First day Notra tracked natively, when known." },
         },
@@ -4514,6 +4535,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           publicOrigin: { type: "string" },
           aliasOrigin: { type: "string", description: "Notra-hosted address that always serves the Site." },
           mounts: { type: "object", properties: { blog: { type: "string" }, changelog: { type: "string" } } },
+          mountsFromConfig: {
+            type: "boolean",
+            description:
+              "True when the live build's blog.json sets the sections, so the dashboard can't change them. Change them with PATCH /v1/sites/{siteId}/sections or in blog.json.",
+          },
           previewsEnabled: { type: "boolean" },
           previewVisibility: { type: "string", enum: ["public", "protected"] },
           smartDeployments: { type: "boolean" },
@@ -4541,6 +4567,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "publicOrigin",
           "aliasOrigin",
           "mounts",
+          "mountsFromConfig",
           "previewsEnabled",
           "previewVisibility",
           "smartDeployments",
@@ -5121,7 +5148,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       webSnippet: {
         type: "string",
         description:
-          "Script tag that installs notra.js with the public key. Only present when web analytics is enabled for the workspace.",
+          'Script tag that installs notra.js with the public key, pinned to the current build with its Subresource Integrity hash and crossorigin="anonymous". Build an auto-updating tag from webScript.url instead if you want new builds without copying the tag again. Only present when web analytics is enabled for the workspace.',
       },
       webScript: {
         type: "object",
@@ -5334,7 +5361,13 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             outputConfig: {
               type: ["object", "null"],
               properties: {
-                publishDestination: { type: "string", enum: ["webflow", "framer", "custom"] },
+                publishDestination: {
+                  type: "string",
+                  enum: ["webflow", "framer", "custom"],
+                  description:
+                    "Deprecated and ignored. Auto-published posts are only marked as published in Notra; publish to GitHub or a Notra site from the post instead.",
+                  deprecated: true,
+                },
                 brandVoiceId: { type: "string", minLength: 1 },
                 notify: {
                   type: "object",
@@ -5467,7 +5500,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             projectId: { type: "string" },
             provider: {
               type: "string",
-              enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum"],
+              enum: ["plausible", "plausible_csv", "vercel", "cloudflare", "cloudflare_rum", "rybbit", "databuddy"],
             },
             kind: { type: "string", enum: ["web", "geo"], description: "web: page views; geo: AI crawler requests." },
             sourceLabel: { type: "string" },
@@ -6932,7 +6965,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 publishDestination: {
                   type: "string",
                   enum: ["webflow", "framer", "custom"],
-                  description: "Where auto-published posts are sent.",
+                  description:
+                    "Deprecated and ignored. Auto-published posts are only marked as published in Notra; publish to GitHub or a Notra site from the post instead.",
+                  deprecated: true,
                 },
                 brandVoiceId: {
                   type: "string",
@@ -7719,7 +7754,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       webSnippet: {
         type: "string",
         description:
-          "Script tag that installs notra.js with the public key. Only present when web analytics is enabled for the workspace.",
+          'Script tag that installs notra.js with the public key, pinned to the current build with its Subresource Integrity hash and crossorigin="anonymous". Build an auto-updating tag from webScript.url instead if you want new builds without copying the tag again. Only present when web analytics is enabled for the workspace.',
       },
       webScript: {
         type: "object",
@@ -8321,7 +8356,13 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           outputConfig: {
             type: ["object", "null"],
             properties: {
-              publishDestination: { type: "string", enum: ["webflow", "framer", "custom"] },
+              publishDestination: {
+                type: "string",
+                enum: ["webflow", "framer", "custom"],
+                description:
+                  "Deprecated and ignored. Auto-published posts are only marked as published in Notra; publish to GitHub or a Notra site from the post instead.",
+                deprecated: true,
+              },
               brandVoiceId: { type: "string", minLength: 1 },
               notify: {
                 type: "object",
@@ -9042,7 +9083,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               publishDestination: {
                 type: "string",
                 enum: ["webflow", "framer", "custom"],
-                description: "Where auto-published posts are sent.",
+                description:
+                  "Deprecated and ignored. Auto-published posts are only marked as published in Notra; publish to GitHub or a Notra site from the post instead.",
+                deprecated: true,
               },
               brandVoiceId: {
                 type: "string",
@@ -9180,6 +9223,29 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+  },
+  updateSiteSections: {
+    type: "object",
+    properties: {
+      site: {
+        type: "object",
+        properties: { id: { type: "string" }, name: { type: "string" } },
+        required: ["id", "name"],
+      },
+      sections: {
+        type: "object",
+        properties: { blog: { type: "string" }, changelog: { type: "string" } },
+        description:
+          "The sections blog.json sets with unpublished changes applied. They take over from the dashboard setting once a production build of them goes live.",
+      },
+      liveSections: {
+        type: "object",
+        properties: { blog: { type: "string" }, changelog: { type: "string" } },
+        description: "The paths the live site serves now.",
+      },
+      hasUnpublishedChanges: { type: "boolean" },
+    },
+    required: ["site", "sections", "liveSections", "hasUnpublishedChanges"],
   },
   upsertGeoCompetitor: {
     type: "object",

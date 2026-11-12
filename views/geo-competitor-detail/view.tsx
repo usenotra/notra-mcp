@@ -1,0 +1,82 @@
+import { TimeChart } from "../shared/charts";
+import { formatCount, formatDay, formatPercent, sumBy } from "../shared/format";
+import { engineFamily, isAnswerEngine } from "../shared/engines";
+import { Card, Kpis, NotraView } from "../shared/layout";
+import { pick, SECONDARY } from "../shared/palette";
+import { DataTable } from "../shared/table";
+
+type Output = {
+  configured: boolean;
+  points: { day: string; mentions: number; checks: number }[];
+  prompts: {
+    promptId: string;
+    prompt: string;
+    engine: string;
+    capturedAt: string;
+    mentioned: boolean;
+    position: number | null;
+  }[];
+};
+
+export default function GeoCompetitorDetail() {
+  return (
+    <NotraView<Output>
+      title="Competitor mentions"
+      subtitle={(_, input) => (typeof input?.brand === "string" ? input.brand : undefined)}
+      isEmpty={(output) => !output.configured || output.points.length === 0}
+      emptyMessage="No checks mention this brand in the selected period."
+    >
+      {(output, theme) => {
+        const points = [...output.points].sort((a, b) => a.day.localeCompare(b.day));
+        const mentions = sumBy(points, (point) => point.mentions);
+        const checks = sumBy(points, (point) => point.checks);
+        const recent = output.prompts.filter((prompt) => prompt.mentioned && isAnswerEngine(prompt.engine)).slice(0, 6);
+        return (
+          <>
+            <Kpis
+              items={[
+                { label: "Mentions", value: formatCount(mentions) },
+                { label: "Checks", value: formatCount(checks) },
+                { label: "Mention rate", value: formatPercent(checks ? mentions / checks : null) },
+              ]}
+            />
+            <Card title="Mentions per day">
+              <TimeChart
+                days={points.map((point) => point.day)}
+                variant="bar"
+                series={[
+                  {
+                    key: "mentions",
+                    label: "Mentions",
+                    color: pick(SECONDARY, theme),
+                    values: points.map((point) => point.mentions),
+                  },
+                ]}
+              />
+            </Card>
+            {recent.length ? (
+              <DataTable
+                title="Recent prompts that mention it"
+                columns={[
+                  { label: "Prompt", wrap: true },
+                  { label: "Engine" },
+                  { label: "Position", numeric: true },
+                  { label: "Day", numeric: true },
+                ]}
+                rows={recent.map((prompt) => ({
+                  key: `${prompt.promptId}-${prompt.engine}-${prompt.capturedAt}`,
+                  cells: [
+                    prompt.prompt,
+                    engineFamily(prompt.engine),
+                    prompt.position ?? "–",
+                    formatDay(prompt.capturedAt),
+                  ],
+                }))}
+              />
+            ) : null}
+          </>
+        );
+      }}
+    </NotraView>
+  );
+}

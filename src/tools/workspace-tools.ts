@@ -1,4 +1,4 @@
-import type { McpServer } from "@modelcontextprotocol/server";
+import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import type { NotraClient } from "../notra-client.js";
 import {
@@ -48,13 +48,19 @@ export async function getWhoAmI(client: NotraClient): Promise<WhoAmIResponse> {
   };
 }
 
-export function registerWhoAmITool(server: McpServer, client: NotraClient) {
-  server.registerTool(
-    "whoami",
+export function registerWhoAmITool(server: ToolRegistry, client: NotraClient) {
+  server.tool(
     {
+      name: "whoami",
       description:
         "Show the current Notra workspace and authenticated account. Use this to confirm which workspace this MCP connection operates against.",
-      annotations: { title: "Who Am I", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      annotations: {
+        title: "Who Am I",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(whoAmIInputSchema),
       outputSchema: shareJsonSchema(whoAmIOutputSchema),
     },
@@ -65,13 +71,19 @@ export function registerWhoAmITool(server: McpServer, client: NotraClient) {
 }
 
 /** Workspace discovery; omitted on workspace-scoped connection URLs (`/mcp/{organization}`). */
-export function registerListWorkspacesTool(server: McpServer, client: NotraClient) {
-  server.registerTool(
-    "list_workspaces",
+export function registerListWorkspacesTool(server: ToolRegistry, client: NotraClient) {
+  server.tool(
     {
+      name: "list_workspaces",
       description:
-        "List accepted and pending Notra workspaces available to the authenticated account. Organization API keys only return their current workspace. Account API keys return every workspace their user belongs to; the user picks the one other tools act on with NOTRA_ORGANIZATION_ID (stdio), or the /mcp/<workspace> URL or X-Notra-Organization-Id header (HTTP).",
-      annotations: { title: "List Workspaces", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+        "List accepted and pending Notra workspaces available to the authenticated account. Organization API keys only return their current workspace. Account API keys return every workspace their user belongs to; the user picks the one other tools act on with NOTRA_ORGANIZATION_ID (stdio), or the /mcp/<workspace> URL or X-Notra-Organization-Id header (HTTP). Returns currentWorkspace, each workspace's ID, slug, name, role, status and isCurrent flag, and how the connection is authenticated.",
+      annotations: {
+        title: "List Workspaces",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(listWorkspacesInputSchema),
       outputSchema: shareJsonSchema(listWorkspacesOutputSchema),
     },

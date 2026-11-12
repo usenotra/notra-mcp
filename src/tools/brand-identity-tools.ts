@@ -10,40 +10,54 @@ import {
   updateBrandColorSchema,
   deleteBrandColorSchema,
 } from "../schemas/brand-identity.js";
-import type { McpServer } from "@modelcontextprotocol/server";
+import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
-export function registerBrandIdentityTools(server: McpServer, client: NotraClient) {
-  server.registerTool(
-    "list_brand_identities",
+export function registerBrandIdentityTools(server: ToolRegistry, client: NotraClient) {
+  server.tool(
     {
-      description: "List all brand identities configured for your organization",
-      annotations: { title: "List Brand Identities", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      name: "list_brand_identities",
+      description:
+        "List all brand identities in your organization with their name, default flag, website, company details, tone, audience, custom instructions and language. Use an id as brandIdentityId in other tools.",
+      annotations: {
+        title: "List Brand Identities",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(listBrandIdentitiesSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listBrandIdentities")),
     },
     () => handleError(() => client.listBrandIdentities()),
   );
 
-  server.registerTool(
-    "get_brand_identity",
+  server.tool(
     {
+      name: "get_brand_identity",
       description: "Get a single brand identity by its ID, including tone, audience, and language settings",
-      annotations: { title: "Get Brand Identity", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      annotations: {
+        title: "Get Brand Identity",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(getBrandIdentitySchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getBrandIdentity")),
     },
     ({ brandIdentityId }) => handleError(() => client.getBrandIdentity(brandIdentityId)),
   );
 
-  server.registerTool(
-    "update_brand_identity",
+  server.tool(
     {
-      description: "Update a brand identity's settings including name, tone, audience, language, and more",
+      name: "update_brand_identity",
+      description:
+        "Change a brand identity's name, website, company details, tone, audience, instructions or language. Only the fields you pass change. null clears company details, tone, audience, instructions or language; name and website cannot be cleared. Overwritten values are not kept. The new settings shape content generated afterwards. isDefault makes it the default brand identity for tools and schedules that name none. Returns the updated brand identity.",
       annotations: {
         title: "Update Brand Identity",
         readOnlyHint: false,
@@ -57,10 +71,11 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     ({ brandIdentityId, ...body }) => handleError(() => client.updateBrandIdentity(brandIdentityId, body)),
   );
 
-  server.registerTool(
-    "delete_brand_identity",
+  server.tool(
     {
-      description: "Delete a brand identity. Returns any schedules or events that were disabled as a result.",
+      name: "delete_brand_identity",
+      description:
+        "Permanently delete a brand identity; it cannot be restored. Schedules and event triggers that used it are disabled, and the response lists them in disabledSchedules and disabledEvents so they can be reconfigured. Confirm with the user first.",
       annotations: {
         title: "Delete Brand Identity",
         readOnlyHint: false,
@@ -74,9 +89,9 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     ({ brandIdentityId }) => handleError(() => client.deleteBrandIdentity(brandIdentityId)),
   );
 
-  server.registerTool(
-    "generate_brand_identity",
+  server.tool(
     {
+      name: "generate_brand_identity",
       description:
         "Queue async brand identity generation from a website URL. Notra will scrape the site and extract brand info. Use get_brand_identity_generation_status to poll for completion.",
       annotations: {
@@ -84,6 +99,7 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
         readOnlyHint: false,
         openWorldHint: true,
         destructiveHint: false,
+        idempotentHint: false,
       },
       inputSchema: shareJsonSchema(generateBrandIdentitySchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createBrandIdentity")),
@@ -91,15 +107,17 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     (params) => handleError(() => client.generateBrandIdentity(params)),
   );
 
-  server.registerTool(
-    "get_brand_identity_generation_status",
+  server.tool(
     {
-      description: "Check the status of an async brand identity generation job",
+      name: "get_brand_identity_generation_status",
+      description:
+        "Check a brand identity generation job started by generate_brand_identity. Returns the job status, current step out of total steps, any error, and the brandIdentityId being filled in. Stop polling once status is completed or failed.",
       annotations: {
         title: "Get Brand Identity Generation Status",
         readOnlyHint: true,
         openWorldHint: false,
         destructiveHint: false,
+        idempotentHint: true,
       },
       inputSchema: shareJsonSchema(getBrandIdentityGenerationStatusSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getBrandIdentityGeneration")),
@@ -107,33 +125,46 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
     ({ jobId }) => handleError(() => client.getBrandIdentityGenerationStatus(jobId)),
   );
 
-  server.registerTool(
-    "list_brand_colors",
+  server.tool(
     {
+      name: "list_brand_colors",
       description:
         "List the brand guideline colors of a brand identity, including light/dark hex values, role, and usage",
-      annotations: { title: "List Brand Colors", readOnlyHint: true, openWorldHint: false, destructiveHint: false },
+      annotations: {
+        title: "List Brand Colors",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
       inputSchema: shareJsonSchema(listBrandColorsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listBrandColors")),
     },
     ({ brandIdentityId }) => handleError(() => client.listBrandColors(brandIdentityId)),
   );
 
-  server.registerTool(
-    "create_brand_color",
+  server.tool(
     {
+      name: "create_brand_color",
       description: "Add a color to a brand identity's guidelines",
-      annotations: { title: "Create Brand Color", readOnlyHint: false, openWorldHint: false, destructiveHint: false },
+      annotations: {
+        title: "Create Brand Color",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+      },
       inputSchema: shareJsonSchema(createBrandColorSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createBrandColor")),
     },
     ({ brandIdentityId, ...body }) => handleError(() => client.createBrandColor(brandIdentityId, body)),
   );
 
-  server.registerTool(
-    "update_brand_color",
+  server.tool(
     {
-      description: "Update a brand color's hex values, name, role, or usage. Only the provided fields change.",
+      name: "update_brand_color",
+      description:
+        "Change a brand color's hex values, name, role, or usage. Only the provided fields change, null clears name, darkValue or usage, and overwritten values are not kept. Get colorId from list_brand_colors. Returns the updated color.",
       annotations: {
         title: "Update Brand Color",
         readOnlyHint: false,
@@ -148,10 +179,11 @@ export function registerBrandIdentityTools(server: McpServer, client: NotraClien
       handleError(() => client.updateBrandColor(brandIdentityId, colorId, body)),
   );
 
-  server.registerTool(
-    "delete_brand_color",
+  server.tool(
     {
-      description: "Delete a color from a brand identity's guidelines",
+      name: "delete_brand_color",
+      description:
+        "Permanently remove one color from a brand identity's guidelines. It cannot be restored; recreate it with create_brand_color if needed. Returns the deleted color's ID.",
       annotations: {
         title: "Delete Brand Color",
         readOnlyHint: false,

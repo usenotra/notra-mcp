@@ -8,16 +8,18 @@
     "notra-mcp": "build/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/build-views.mjs",
     "start": "node build/index.js",
     "start:http": "node build/http.js",
     "prepublishOnly": "pnpm run build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p views",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:api-coverage": "pnpm run build && node scripts/check-api-coverage.mjs",
     "generate:output-schemas": "node scripts/generate-output-schemas.mjs",
-    "check:output-schemas": "node scripts/generate-output-schemas.mjs --check"
+    "check:output-schemas": "node scripts/generate-output-schemas.mjs --check",
+    "build:server": "tsc",
+    "sync:ui": "node scripts/sync-ui.mjs"
   },
   "files": [
     "build"
@@ -42,20 +44,29 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@modelcontextprotocol/express": "^2.0.0",
-    "@modelcontextprotocol/node": "^2.0.0",
-    "@modelcontextprotocol/server": "^2.0.0",
     "@usenotra/geo": "^0.8.1",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1",
+    "hono": "^4.13.17",
     "jose": "^6.2.3",
+    "mcp-use": "2.12.3",
     "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@types/express": "^5.0.6",
+    "@base-ui/react": "^1.9.0",
+    "@hugeicons/core-free-icons": "^4.4.0",
+    "@hugeicons/react": "^1.1.10",
+    "@mcp-use/client": "^2.4.5",
+    "@tailwindcss/vite": "4.3.3",
     "@types/node": "^25.5.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "cn": "^0.5.2",
     "prettier": "^3.9.4",
-    "typescript": "^6.0.2"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "4.3.3",
+    "typescript": "^6.0.2",
+    "vite": "8.1.6"
   },
   "packageManager": "pnpm@10.34.5"
 }

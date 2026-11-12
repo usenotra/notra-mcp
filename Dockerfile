@@ -1,11 +1,13 @@
-FROM node:22-slim@sha256:689c11043dad91472750cd824c97dd5e2318e9dd6f954e492fe7af0135d33ceb AS base
+FROM node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS base
 WORKDIR /app
 RUN corepack enable
 
 FROM base AS builder
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
-COPY tsconfig.json ./
+COPY tsconfig.json vite.config.ts ./
+COPY scripts ./scripts
+COPY views ./views
 COPY src ./src
 RUN pnpm run build
 

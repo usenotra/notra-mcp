@@ -1,3 +1,5 @@
+import type { AuthContext } from "./auth.js";
+
 export interface RequestTimeoutOptions {
   timeoutMs?: number;
   signal?: AbortSignal;
@@ -14,4 +16,6 @@ export interface RequestOptions<
 
 export type RequestScope = {
   signal?: AbortSignal;
+  auth?: AuthContext;
+  organizationScope?: string;
 };

@@ -7,7 +7,9 @@ export const listGeoPromptsSchema = z.object({
 
 export const createGeoPromptSchema = z.object({
   projectId: projectIdSchema,
-  prompt: geoPromptTextSchema.describe("The prompt to track (8-300 characters), phrased like a real user query"),
+  prompt: geoPromptTextSchema.describe(
+    "Question to ask the answer engines, phrased the way a real buyer would ask an AI assistant",
+  ),
 });
 
 export const updateGeoPromptSchema = z.object({

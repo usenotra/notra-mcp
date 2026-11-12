@@ -16,7 +16,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { McpServer } from "@modelcontextprotocol/server";
 import { NotraClient } from "../build/notra-client.js";
 import { createServer } from "../build/server.js";
 import { loadSpec } from "./load-openapi-spec.mjs";
@@ -135,20 +134,24 @@ async function collectSourceFiles(dir) {
 }
 
 /** Tool names the built server registers at runtime. */
-function listRegisteredTools() {
+async function listRegisteredTools() {
   delete process.env.NOTRA_MCP_TOOLSETS;
-  const names = new Set();
-  const registerTool = McpServer.prototype.registerTool;
-  McpServer.prototype.registerTool = function (name, ...rest) {
-    names.add(name);
-    return registerTool.call(this, name, ...rest);
-  };
-  try {
-    createServer("coverage-token");
-  } finally {
-    McpServer.prototype.registerTool = registerTool;
-  }
-  return names;
+  const response = await createServer().fetch(
+    new Request("http://localhost/mcp", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer coverage-token",
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+        "MCP-Protocol-Version": "2025-06-18",
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+    }),
+  );
+  const body = await response.text();
+  const data = body.split("\n").find((line) => line.startsWith("data:"));
+  const { result } = JSON.parse(data ? data.slice(5) : body);
+  return new Set(result.tools.map((tool) => tool.name));
 }
 
 /** Splits a source file into top-level function declarations. */
@@ -170,7 +173,7 @@ async function mapMethodsToTools(registeredTools) {
   ];
   for (const file of files) {
     for (const fn of splitTopLevelFunctions(await readFile(file, "utf8"))) {
-      const blocks = fn.body.split(/\.registerTool\(\s*"/).slice(1);
+      const blocks = fn.body.split(/\.tool\(\s*\{\s*name:\s*"/).slice(1);
       if (blocks.length === 0) {
         if (!helpers.has(fn.name)) helpers.set(fn.name, []);
         helpers.get(fn.name).push(fn.body);
@@ -213,7 +216,7 @@ function printGroup(title, rows) {
 async function main() {
   // Load the spec before recordClientRoutes swaps out globalThis.fetch.
   const spec = await loadSpec();
-  const usage = await mapMethodsToTools(listRegisteredTools());
+  const usage = await mapMethodsToTools(await listRegisteredTools());
   const { recorded, methods } = await recordClientRoutes();
   const specRoutes = listSpecRoutes(spec);
 

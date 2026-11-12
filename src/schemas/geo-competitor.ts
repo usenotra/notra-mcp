@@ -10,7 +10,11 @@ export const listGeoCompetitorsSchema = z.object({
 export const upsertGeoCompetitorSchema = z.object({
   projectId: projectIdSchema,
   name: geoShortTextSchema.describe("Competitor brand name"),
-  previousName: geoShortTextSchema.optional().describe("Current name when renaming an existing competitor"),
+  previousName: geoShortTextSchema
+    .optional()
+    .describe(
+      "The competitor's existing name, when renaming it to name. Omit when creating a competitor or updating one without renaming.",
+    ),
   domain: z.string().max(128).nullable().describe("Competitor website domain, or null if unknown"),
   synonyms: z
     .array(geoShortTextSchema)
@@ -18,7 +22,12 @@ export const upsertGeoCompetitorSchema = z.object({
     .optional()
     .describe("Alternative names that count as a mention"),
   kind: z.enum(GEO_COMPETITOR_KIND_VALUES).optional().describe("Whether the competitor is direct or indirect"),
-  color: z.string().max(128).nullable().optional().describe("Display color used in dashboard charts"),
+  color: z
+    .string()
+    .max(128)
+    .nullable()
+    .optional()
+    .describe("Color for this competitor in Notra dashboard charts, such as #2563eb. Omit to keep the current color."),
 });
 
 export const suggestGeoCompetitorsSchema = z.object({

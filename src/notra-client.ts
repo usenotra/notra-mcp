@@ -53,6 +53,8 @@ import type {
   PublishSiteDesignRequest,
   PublishSiteDesignResponse,
   SetSiteAuthorPageRequest,
+  SiteSections,
+  UpdateSiteSectionsResponse,
   SiteAuthorsResponse,
   SiteListResponse,
   UpsertSiteAuthorRequest,
@@ -194,7 +196,7 @@ import { describeApiError } from "./utils/api-error.js";
 import { withoutHiddenReadinessChecks } from "./utils/geo-agent-readiness.js";
 import { appendQueryParams } from "./utils/query-params.js";
 import { describeOrganizationError } from "./utils/organization.js";
-import { createRequestSignal } from "./utils/request-signal.js";
+import { createRequestSignal } from "./utils/request-scope.js";
 
 function sitePath(siteId: string, suffix: string): string {
   return `/v1/sites/${encodeURIComponent(siteId)}${suffix}`;
@@ -239,12 +241,21 @@ function requestHeaders(auth: AuthContext, accept: string, withoutOrganization =
 }
 
 export class NotraClient {
-  private auth: AuthContext;
+  private resolveAuth: () => AuthContext;
   private baseUrl: string;
 
-  constructor(auth: string | AuthContext, baseUrl: string = NOTRA_API_BASE) {
-    this.auth = typeof auth === "string" ? { kind: "apiKey", token: auth } : auth;
+  constructor(auth: string | AuthContext | (() => AuthContext), baseUrl: string = NOTRA_API_BASE) {
+    if (typeof auth === "function") {
+      this.resolveAuth = auth;
+    } else {
+      const fixed: AuthContext = typeof auth === "string" ? { kind: "apiKey", token: auth } : auth;
+      this.resolveAuth = () => fixed;
+    }
     this.baseUrl = baseUrl;
+  }
+
+  private get auth(): AuthContext {
+    return this.resolveAuth();
   }
 
   private async request<T, B = undefined>(method: string, path: string, options?: RequestOptions<B>): Promise<T> {
@@ -584,6 +595,14 @@ export class NotraClient {
     return this.request<SiteAuthorsResponse, SetSiteAuthorPageRequest>(
       "PATCH",
       `/v1/sites/${encodeURIComponent(siteId)}/author-page`,
+      { body },
+    );
+  }
+
+  async updateSiteSections(siteId: string, body: SiteSections): Promise<UpdateSiteSectionsResponse> {
+    return this.request<UpdateSiteSectionsResponse, SiteSections>(
+      "PATCH",
+      `/v1/sites/${encodeURIComponent(siteId)}/sections`,
       { body },
     );
   }

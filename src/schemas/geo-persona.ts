@@ -6,8 +6,9 @@ import {
   GEO_PERSONA_SUMMARY_MAX_LENGTH,
 } from "../constants/geo.js";
 import { geoResourceIdSchema, geoWindowShape, projectIdSchema } from "./geo-fields.js";
+import { apiOutputSchema } from "../utils/output-schema.js";
 
-const personaIdSchema = geoResourceIdSchema.describe("The persona ID (see list_geo_personas)");
+const personaIdSchema = geoResourceIdSchema.describe("ID of the GEO persona to act on. Get it from list_geo_personas.");
 
 const personaFieldSchema = z.string().trim().min(1).max(GEO_PERSONA_FIELD_MAX_LENGTH);
 const personaSummarySchema = z.string().trim().min(1).max(GEO_PERSONA_SUMMARY_MAX_LENGTH);
@@ -21,22 +22,43 @@ export const updateGeoPersonaSchema = z
   .object({
     projectId: projectIdSchema,
     personaId: personaIdSchema,
-    enabled: z.boolean().optional().describe("Whether scheduled scans play this persona"),
-    name: personaFieldSchema.optional().describe("Buyer archetype label, such as Budgeter (1-200 characters)"),
+    enabled: z
+      .boolean()
+      .optional()
+      .describe("true to play this persona in scheduled scans, false to skip it. Omit to keep the current state."),
+    name: personaFieldSchema.optional().describe("Short buyer archetype label shown for the persona, such as Budgeter"),
     role: personaFieldSchema
       .regex(/^\S+(?:\s+\S+)?$/, "Use at most two words")
       .optional()
-      .describe("Job title, at most two words"),
-    company: personaFieldSchema.optional().describe("Company profile (1-200 characters)"),
-    summary: personaSummarySchema.optional().describe("Motivations and background (1-800 characters)"),
-    searchStyle: personaSummarySchema.optional().describe("How the persona searches (1-800 characters)"),
+      .describe("Job title the persona holds, at most two words, such as CFO or Growth Lead"),
+    company: personaFieldSchema
+      .optional()
+      .describe("Kind of company the persona works at, such as a 200-person logistics company"),
+    summary: personaSummarySchema
+      .optional()
+      .describe("Background and motivations that shape what the persona asks AI assistants"),
+    searchStyle: personaSummarySchema
+      .optional()
+      .describe("How the persona phrases questions and researches options when asking AI assistants"),
     profile: z
       .object({
-        goals: personaProfileListSchema.optional(),
-        painPoints: personaProfileListSchema.optional(),
-        currentStack: personaProfileListSchema.optional(),
-        buyingTriggers: personaProfileListSchema.optional(),
-        objections: personaProfileListSchema.optional(),
+        goals: personaProfileListSchema
+          .optional()
+          .describe("Outcomes the persona wants to achieve, one per entry. Replaces the stored goals."),
+        painPoints: personaProfileListSchema
+          .optional()
+          .describe("Problems the persona has today, one per entry. Replaces the stored pain points."),
+        currentStack: personaProfileListSchema
+          .optional()
+          .describe("Tools or vendors the persona uses now, one per entry. Replaces the stored stack."),
+        buyingTriggers: personaProfileListSchema
+          .optional()
+          .describe(
+            "Events that make the persona start looking for a solution, one per entry. Replaces the stored list.",
+          ),
+        objections: personaProfileListSchema
+          .optional()
+          .describe("Reasons the persona might hesitate to buy, one per entry. Replaces the stored objections."),
       })
       .refine((lists) => Object.values(lists).some((list) => list !== undefined), {
         message: "Provide at least one profile list to replace",
@@ -94,7 +116,9 @@ export const generateGeoPersonasSchema = z
     promptsOnly: z
       .literal(true)
       .optional()
-      .describe("With personaId, only rewrite its conversation prompts and keep its details"),
+      .describe(
+        "Set with personaId to rewrite only that persona's conversation prompts and keep its profile. Omit to regenerate the whole persona.",
+      ),
   })
   .refine(({ personaId, brief }) => !(personaId && brief), { message: "Choose a persona or a brief, not both" })
   .refine(({ personaId, promptsOnly }) => !promptsOnly || Boolean(personaId), {
@@ -104,4 +128,10 @@ export const generateGeoPersonasSchema = z
 
 export const getGeoPersonaGenerationSchema = z.object({
   projectId: projectIdSchema,
+});
+
+export const geoPersonaActivityOutputSchema = (apiOutputSchema("getGeoPersonaActivity") as z.ZodObject).extend({
+  personas: z
+    .array(z.object({ id: z.string(), name: z.string() }))
+    .describe("Names of the project's personas, to label the personaId of each point"),
 });
