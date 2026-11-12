@@ -9,6 +9,7 @@ import { ORGANIZATION_SCOPE_PATTERN } from "./constants/organization.js";
 import { AI_CATALOG_CONTENT_TYPE, SERVER_CARD_CONTENT_TYPE, SERVER_ICON_SVG_URL } from "./constants/server.js";
 import { createServer, SERVER_VERSION } from "./server.js";
 import { authenticateBearerToken, parseBearerToken } from "./utils/auth.js";
+import { trackInitialize } from "./utils/mcp-usage.js";
 import { getMcpResourceUrl, getOAuthConfig, getProtectedResourceMetadata } from "./utils/oauth-config.js";
 import { fetchAuthorizationServerMetadata } from "./utils/oauth-provider.js";
 import { oauthTokenMatchesScope } from "./utils/oauth-scope.js";
@@ -68,6 +69,7 @@ server.get("/.well-known/ai-catalog.json", (c) =>
 for (const path of [MCP_BASE_PATH, `${MCP_BASE_PATH}/*`] as const) {
   server.use(path, limitBody, validateToolsets);
 }
+server.use(MCP_BASE_PATH, trackInitialize({ name: "notra", version: SERVER_VERSION }));
 
 // Account API keys pick their workspace from the scoped URL. OAuth tokens are
 // bound to their consent workspace, so a scoped URL naming another workspace
