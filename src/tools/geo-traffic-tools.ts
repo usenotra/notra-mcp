@@ -46,7 +46,7 @@ export function registerGeoTrafficTools(server: ToolRegistry, client: NotraClien
     {
       name: "get_geo_traffic_log",
       description:
-        "Get the most recent individual requests from AI crawlers and referrals. This endpoint has no time window; use limit to bound it. Returns configured, log (per event: capturedAt, visitorType, source, agent, category, confidence, path, host, country, ua, journeyId and wantsMarkdown), total and the organization.",
+        "Get the most recent individual requests from AI crawlers and referrals. It covers the last 90 days and takes no window; use limit to bound it. Returns configured, log (per event: capturedAt, visitorType, source, agent, category, confidence, path, host, country, ua, journeyId and wantsMarkdown), total and the organization.",
       annotations: {
         title: "Get AI Traffic Log",
         readOnlyHint: true,

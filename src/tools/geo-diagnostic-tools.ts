@@ -22,7 +22,7 @@ export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_snapshot",
       description:
-        "Get a compact GEO diagnosis across visibility, sentiment, scan changes, competitors, content gaps, shelf sources, readiness and AI traffic. Returns generatedAt, the window, visibility totals, sections for sentiment, changes, competitors, contentGaps, shelf, agentReadiness and traffic (each null when it could not be loaded, with a matching entry in warnings), recommendedNextActions and the organization. Each recommended next action has a priority, action, reason, and names the tool and arguments to call, or tool null when it needs the Notra dashboard; confirm with the user before actions with usesCredits.",
+        "Get a compact GEO diagnosis across visibility, sentiment, scan changes, competitors, content gaps, shelf sources, readiness and AI traffic. Without days or from, the visibility and competitor sections cover all stored history, while sentiment and traffic cover the last 30 days. Returns generatedAt, the window, visibility totals, sections for sentiment, changes, competitors, contentGaps, shelf, agentReadiness and traffic (each null when it could not be loaded, with a matching entry in warnings), recommendedNextActions and the organization. Each recommended next action has a priority, action, reason, and names the tool and arguments to call, or tool null when it needs the Notra dashboard; confirm with the user before actions with usesCredits.",
       annotations: {
         title: "Get GEO Snapshot",
         readOnlyHint: true,
@@ -76,7 +76,7 @@ export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_sentiment",
       description:
-        "Get aggregate GEO sentiment for the window. Returns positive, neutral and negative mention counts, shares and score, the same figures per engine and per day, and a comparison with the previous period of the same length, plus a configured flag and the organization.",
+        "Get aggregate GEO sentiment for the window, which defaults to the last 30 days. Returns positive, neutral and negative mention counts, shares and score, the same figures per engine and per day, and a comparison with the previous period of the same length, plus a configured flag and the organization.",
       annotations: {
         title: "Get GEO Sentiment",
         readOnlyHint: true,
@@ -100,7 +100,7 @@ export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_sentiment_analysis",
       description:
-        "Get the stored thematic GEO sentiment analysis without starting a billed analysis run. Returns status, a message, the organization and, when an analysis exists, result with when it was generated, how many answers were sampled out of the eligible ones, and the themes found in AI answers with their polarity, claims and supporting evidence.",
+        "Get the stored thematic GEO sentiment analysis without starting a billed analysis run. The window defaults to the last 30 days. Returns status, a message, the organization and, when an analysis exists, result with when it was generated, how many answers were sampled out of the eligible ones, and the themes found in AI answers with their polarity, claims and supporting evidence.",
       annotations: {
         title: "Get GEO Sentiment Analysis",
         readOnlyHint: true,
@@ -118,7 +118,7 @@ export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraCl
     {
       name: "list_geo_sentiment_evidence",
       description:
-        "Page through the full AI answers that sentiment scores are based on, for one project and window. Returns items (id, scanId, promptId, prompt, engine, language, capturedAt, full answer and excerpt), nextCursor (null on the last page) and the organization. Pass nextCursor back as cursor for the next page.",
+        "Page through the full AI answers to tracked prompts that mentioned the brand negatively, newest first, 25 per page. The window defaults to the last 30 days. Returns items (id, scanId, promptId, prompt, engine, language, capturedAt, full answer and excerpt), nextCursor (null on the last page) and the organization. Pass nextCursor back as cursor for the next page.",
       annotations: {
         title: "List GEO Sentiment Evidence",
         readOnlyHint: true,

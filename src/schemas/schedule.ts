@@ -92,7 +92,12 @@ export const schedulePayloadSchema = z.object({
     .optional()
     .describe("Optional publishing and voice settings"),
   enabled: z.boolean().describe("true to run the schedule on its timing, false to create it paused"),
-  autoPublish: z.boolean().optional().describe("Whether to auto-publish generated content (default false)"),
+  autoPublish: z
+    .boolean()
+    .optional()
+    .describe(
+      "Save generated changelogs and blog posts as published in Notra instead of as drafts. Other output types stay drafts, and nothing is pushed to GitHub or a Notra Site. Defaults to false.",
+    ),
   lookbackWindow: lookbackWindowSchema.optional(),
 });
 
@@ -148,7 +153,12 @@ export const updateScheduleSchema = z
       .optional()
       .describe("Merged field by field into the current settings; null clears a field, or all of them"),
     enabled: z.boolean().optional().describe("false pauses the schedule and true resumes it. Omit to leave it as is."),
-    autoPublish: z.boolean().optional().describe("Whether to auto-publish generated content"),
+    autoPublish: z
+      .boolean()
+      .optional()
+      .describe(
+        "Save generated changelogs and blog posts as published in Notra instead of as drafts. Other output types stay drafts, and nothing is pushed to GitHub or a Notra Site. Omit to keep the current setting.",
+      ),
     lookbackWindow: lookbackWindowSchema.optional(),
   })
   .refine(({ scheduleId: _scheduleId, ...fields }) => Object.values(fields).some((value) => value !== undefined), {

@@ -55,7 +55,9 @@ export const eventTriggerBodyShape = {
   autoPublish: z
     .boolean()
     .optional()
-    .describe("Publish generated content immediately instead of saving a draft (default false)"),
+    .describe(
+      "Save generated changelogs and blog posts as published in Notra instead of as drafts. Other output types stay drafts, and nothing is pushed to GitHub or a Notra Site. Defaults to false.",
+    ),
 };
 
 export const listEventTriggersSchema = z.object({
@@ -82,6 +84,8 @@ export const updateEventTriggerSchema = z.object({
     .describe("How generated content is styled and published; null or omitted means none"),
   autoPublish: z
     .boolean()
-    .describe("Publish generated content immediately instead of saving a draft. Send the current value back."),
+    .describe(
+      "Save generated changelogs and blog posts as published in Notra instead of as drafts. Other output types stay drafts, and nothing is pushed to GitHub or a Notra Site. Send the current value back.",
+    ),
 });
 export const deleteEventTriggerSchema = z.object({ triggerId: triggerIdSchema });

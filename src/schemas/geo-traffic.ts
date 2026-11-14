@@ -6,14 +6,14 @@ import { geoResourceIdSchema, geoShortTextSchema, geoWindowShape, projectIdSchem
 const geoTrafficWindowShape = {
   ...geoWindowShape,
   days: geoWindowShape.days.describe(
-    "Rolling reporting window in days, ending today. Ignored when from and to are set. Omit days, from and to for the last 30 days.",
+    "Rolling reporting window in days, ending today. Ignored when from is set. Omit days and from for the last 30 days.",
   ),
 };
 
 const geoMcpWindowShape = {
   ...geoWindowShape,
   days: geoWindowShape.days.describe(
-    "Rolling reporting window in days, ending today. Ignored when from and to are set. Omit days, from and to for the last 14 days.",
+    "Rolling reporting window in days, ending today. Ignored when from is set. Omit days and from for the last 14 days.",
   ),
 };
 
@@ -49,7 +49,7 @@ export const getGeoTrafficLogSchema = z.object({
     .min(1)
     .max(200)
     .optional()
-    .describe("Number of most recent events to return. Omit for the API's default count."),
+    .describe("Number of most recent events to return. Defaults to 50."),
   visitorTypes: z
     .array(z.enum(GEO_TRAFFIC_VISITOR_TYPE_VALUES))
     .max(3)
@@ -74,7 +74,7 @@ export const listGeoTrafficJourneysSchema = z.object({
     .min(1)
     .max(100)
     .optional()
-    .describe("Number of journeys to return, most recent first. Omit for the API's default count."),
+    .describe("Number of journeys to return, most recent first. Defaults to 25."),
   ...geoTrafficWindowShape,
 });
 
@@ -96,7 +96,7 @@ export const listGeoTrafficPagesSchema = z.object({
     .min(1)
     .max(500)
     .optional()
-    .describe("Number of top pages to return, ranked by visits. Omit for the API's default count."),
+    .describe("Number of top pages to return, ranked by visits. Defaults to 20."),
   visitorType: z
     .enum(GEO_TRAFFIC_VISITOR_TYPE_VALUES)
     .optional()

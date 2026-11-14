@@ -20,7 +20,7 @@ export const geoWindowShape = {
     .max(365)
     .optional()
     .describe(
-      "Rolling reporting window in days, ending today. Ignored when from and to are set. Omit days, from and to to use the default window stated in the tool description, or the API's default when none is stated.",
+      "Rolling reporting window in days. Ignored when from is set. Omit days and from to use the default window stated in the tool description.",
     ),
   from: geoDaySchema
     .optional()
