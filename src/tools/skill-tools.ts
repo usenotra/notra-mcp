@@ -17,7 +17,7 @@ export function registerSkillTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "list_skills",
       description:
-        "List your organization's reusable writing skills with each skill's ID, name, description, whether it is a built-in system skill, and last update time. Use get_skill for a skill's full instructions.",
+        "List your organization's reusable writing skills with each skill's ID, name, description, whether it is a built-in system skill, and last update time. Returns skills (id, name, description, isSystem, updatedAt). Use get_skill for a skill's full instructions.",
       annotations: {
         title: "List Skills",
         readOnlyHint: true,
@@ -35,7 +35,7 @@ export function registerSkillTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "get_skill",
       description:
-        "Get one reusable writing skill by name, including its description, full instruction content, whether it is a built-in system skill, and timestamps.",
+        "Get one reusable writing skill by name. Returns skill (id, name, description, content with the full instructions, isSystem for built-in system skills, createdAt and updatedAt).",
       annotations: {
         title: "Get Skill",
         readOnlyHint: true,
@@ -53,7 +53,7 @@ export function registerSkillTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "create_skill",
       description:
-        "Save a new reusable writing skill in your organization: a named set of writing instructions plus a short description of when to use it. Returns the created skill.",
+        "Save a new reusable writing skill in your organization: a named set of writing instructions plus a short description of when to use it. Returns the created skill, with the same fields as get_skill.",
       annotations: {
         title: "Create Skill",
         readOnlyHint: false,
@@ -71,7 +71,7 @@ export function registerSkillTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "update_skill",
       description:
-        "Change a writing skill's name, description, or instructions, looked up by currentName. Only the fields you pass change; description and content are replaced in full and previous versions are not kept. Built-in system skills cannot be renamed. Returns the updated skill.",
+        "Change a writing skill's name, description, or instructions, looked up by currentName. Only the fields you pass change; description and content are replaced in full and previous versions are not kept. Built-in system skills cannot be renamed. Returns the updated skill, with the same fields as get_skill.",
       annotations: {
         title: "Update Skill",
         readOnlyHint: false,
@@ -89,7 +89,7 @@ export function registerSkillTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "delete_skill",
       description:
-        "Permanently delete a writing skill by name; it cannot be restored, so confirm with the user first. Built-in system skills cannot be deleted. Returns success.",
+        "Permanently delete a writing skill by name; it cannot be restored, so confirm with the user first. Built-in system skills cannot be deleted. Returns success, true when the skill was deleted.",
       annotations: {
         title: "Delete Skill",
         readOnlyHint: false,

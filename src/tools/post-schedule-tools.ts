@@ -10,7 +10,7 @@ export function registerPostScheduleTools(server: ToolRegistry, client: NotraCli
     {
       name: "get_post_schedule",
       description:
-        "Get a post's publishing schedule and the state of every destination. Returns a null schedule when nothing is scheduled.",
+        "Get a post's publishing schedule and the state of every destination. Returns schedule (postId, scheduledAt, timeZone, and publications: one entry per destination with its status, attempts, lastError and resultUrl once published) and the organization. schedule is null when nothing is scheduled.",
       annotations: {
         title: "Get Post Schedule",
         readOnlyHint: true,
@@ -28,7 +28,7 @@ export function registerPostScheduleTools(server: ToolRegistry, client: NotraCli
     {
       name: "schedule_post",
       description:
-        "Schedule an existing post to publish in Notra at scheduledAt, and optionally to GitHub (a pull request that is merged by default) or a connected X or LinkedIn account. Replaces any schedule that has not started. Use cancel_post_schedule to stop destinations before they run; once a post reaches GitHub or social media it cannot be unpublished from here, so confirm with the user. Later post edits are included when publishing runs, within about a minute of scheduledAt. Returns the schedule and its destinations.",
+        "Schedule an existing post to publish in Notra at scheduledAt, and optionally to GitHub (a pull request that is merged by default) or a connected X or LinkedIn account. Replaces any schedule that has not started. Use cancel_post_schedule to stop destinations before they run; once a post reaches GitHub or social media it cannot be unpublished from here, so confirm with the user. Later post edits are included when publishing runs, within about a minute of scheduledAt. Returns schedule (postId, scheduledAt, timeZone, and publications with each destination's status) and the organization.",
       annotations: {
         title: "Schedule Post",
         readOnlyHint: false,
@@ -46,7 +46,7 @@ export function registerPostScheduleTools(server: ToolRegistry, client: NotraCli
     {
       name: "cancel_post_schedule",
       description:
-        "Cancel a post's pending publishing destinations and clear failed ones. Returns canceled, the number of destinations that were canceled or cleared, and inProgress, which is true when a destination was already publishing; those cannot be interrupted and finish on their own.",
+        "Cancel a post's pending publishing destinations and clear failed ones. Returns the organization, canceled, the number of destinations that were canceled or cleared, and inProgress, which is true when a destination was already publishing; those cannot be interrupted and finish on their own.",
       annotations: {
         title: "Cancel Post Schedule",
         readOnlyHint: false,

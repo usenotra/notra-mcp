@@ -13,9 +13,9 @@ export function registerGeoAgentReadinessTools(server: ToolRegistry, client: Not
     {
       name: "get_geo_agent_readiness",
       description:
-        "Get the latest agent readiness report for the project's website: score, failed/partial checks with recommendations, any scan still in flight, and the score history. Never starts a scan.",
+        "Get the stored agent readiness results for the project's website. Never starts a scan. Returns targetUrl, report (the latest completed report or null: score, scoreLabel, scoreBreakdown, issues with each failed or partial check's details and recommendation, scannedAt), scan (a newer run that is still running or failed, or null), history (completed scans oldest first with score and failed and partial counts), comparison (checks resolved, added, improved or worsened since the previous scan, null until there are two) and the organization.",
       annotations: {
-        title: "Get Agent Readiness",
+        title: "Get Website AI Agent Readiness",
         readOnlyHint: true,
         openWorldHint: false,
         destructiveHint: false,
@@ -37,7 +37,7 @@ export function registerGeoAgentReadinessTools(server: ToolRegistry, client: Not
     {
       name: "start_geo_agent_readiness_scan",
       description:
-        "Queue an agent readiness scan of the project's website. Returns the report ID and alreadyRunning, which is true when a scan against the same URL was already running and is reused. Poll get_geo_agent_readiness for the result. Requires the agent readiness feature for the organization.",
+        "Queue an agent readiness scan of the project's website. Returns reportId, alreadyRunning (true when a scan against the same URL was already running and is reused) and the organization. Poll get_geo_agent_readiness for the result. Requires the agent readiness feature for the organization.",
       annotations: {
         title: "Start Agent Readiness Scan",
         readOnlyHint: false,

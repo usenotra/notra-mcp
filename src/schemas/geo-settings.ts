@@ -84,6 +84,6 @@ export const updateGeoSettingsSchema = z.object({
     .multipleOf(GEO_SCAN_HOURS_PER_DAY)
     .optional()
     .describe(
-      `How often recurring scans run, in hours; use whole days. Common values: ${GEO_SCAN_INTERVAL_HOURS.join(", ")} (daily to monthly)`,
+      `How often recurring scans run, in hours. Common values: ${GEO_SCAN_INTERVAL_HOURS.join(", ")} (daily to monthly)`,
     ),
 });

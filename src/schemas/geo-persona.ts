@@ -30,7 +30,7 @@ export const updateGeoPersonaSchema = z
     role: personaFieldSchema
       .regex(/^\S+(?:\s+\S+)?$/, "Use at most two words")
       .optional()
-      .describe("Job title the persona holds, at most two words, such as CFO or Growth Lead"),
+      .describe("Job title the persona holds, such as CFO or Growth Lead"),
     company: personaFieldSchema
       .optional()
       .describe("Kind of company the persona works at, such as a 200-person logistics company"),
@@ -64,7 +64,7 @@ export const updateGeoPersonaSchema = z
         message: "Provide at least one profile list to replace",
       })
       .optional()
-      .describe("Profile lists to replace (up to 6 entries each). Omitted lists keep their value."),
+      .describe("Profile lists to replace. Omitted lists keep their value."),
   })
   .refine(
     ({ enabled, name, role, company, summary, searchStyle, profile }) =>

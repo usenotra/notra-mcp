@@ -5,12 +5,12 @@ const skillNameSchema = z
   .min(1)
   .max(64)
   .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/)
-  .describe(
-    "Name that identifies the skill: lowercase letters, digits and hyphens, not starting or ending with a hyphen, at most 64 characters, such as release-notes-style. list_skills shows existing names",
-  );
+  .describe("Name that identifies the skill, such as release-notes-style. list_skills shows existing names");
 
 export const skillPayloadSchema = z.object({
-  name: skillNameSchema,
+  name: skillNameSchema.describe(
+    "Name for the new skill, such as release-notes-style; get_skill, update_skill and delete_skill look it up by this name",
+  ),
   description: z.string().min(1).max(1000).describe("Short description of when the skill should be used"),
   content: z
     .string()
@@ -22,7 +22,7 @@ export const skillPayloadSchema = z.object({
 export const listSkillsSchema = z.object({});
 
 export const getSkillSchema = z.object({
-  name: skillNameSchema,
+  name: skillNameSchema.describe("Name of the skill to read, from list_skills"),
 });
 
 export const updateSkillSchema = z.object({
@@ -49,5 +49,5 @@ export const updateSkillSchema = z.object({
 });
 
 export const deleteSkillSchema = z.object({
-  name: skillNameSchema,
+  name: skillNameSchema.describe("Name of the skill to delete, from list_skills"),
 });

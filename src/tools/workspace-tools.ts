@@ -53,7 +53,7 @@ export function registerWhoAmITool(server: ToolRegistry, client: NotraClient) {
     {
       name: "whoami",
       description:
-        "Show the current Notra workspace and authenticated account. Use this to confirm which workspace this MCP connection operates against.",
+        "Show the current Notra workspace and authenticated account. Use this to confirm which workspace this MCP connection operates against. Returns workspace (id, slug, name, logo) and authentication, whose type is apiKey or oauth; OAuth connections also include accountId and the granted scopes.",
       annotations: {
         title: "Who Am I",
         readOnlyHint: true,
@@ -76,7 +76,7 @@ export function registerListWorkspacesTool(server: ToolRegistry, client: NotraCl
     {
       name: "list_workspaces",
       description:
-        "List accepted and pending Notra workspaces available to the authenticated account. Organization API keys only return their current workspace. Account API keys return every workspace their user belongs to; the user picks the one other tools act on with NOTRA_ORGANIZATION_ID (stdio), or the /mcp/<workspace> URL or X-Notra-Organization-Id header (HTTP). Returns currentWorkspace, each workspace's ID, slug, name, role, status and isCurrent flag, and how the connection is authenticated.",
+        "List accepted and pending Notra workspaces available to the authenticated account. Organization API keys only return their current workspace. Account API keys return every workspace their user belongs to; the user picks the one other tools act on with NOTRA_ORGANIZATION_ID (stdio), or the /mcp/<workspace> URL or X-Notra-Organization-Id header (HTTP). Returns currentWorkspace (id, slug, name, logo), workspaces (each with id, slug, name, logo, role, status and isCurrent), and authentication, whose type is apiKey or oauth; OAuth connections also include accountId and the granted scopes.",
       annotations: {
         title: "List Workspaces",
         readOnlyHint: true,

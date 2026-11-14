@@ -23,7 +23,7 @@ export function registerGeoVisibilityTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_visibility_overview",
       description:
-        "Get GEO mention rates per answer engine for every engine the project tracks. Returns per engine: checks, mentions, mention rate, citations, visibility rate, average position and last check time.",
+        "Get GEO mention rates per answer engine for every engine the project tracks. Omit days, from and to to use the API's default window. Returns configured (false when the analytics backend is not set up), engines (per engine: engine ID, checks, mentions, mentionRate, citations, visibility, visibilityRate, avgPosition and lastCheckedAt) and the organization.",
       annotations: {
         title: "Get GEO Visibility Overview",
         readOnlyHint: true,
@@ -47,7 +47,7 @@ export function registerGeoVisibilityTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_visibility_timeseries",
       description:
-        "Get daily GEO visibility per answer engine, one point per day and engine, with checks, mentions, citations, visibility and average position.",
+        "Get daily GEO visibility per answer engine. Returns configured, points (one per day and engine with day, engine, checks, mentions, citations, visibility and avgPosition) and the organization.",
       annotations: {
         title: "Get GEO Visibility Timeseries",
         readOnlyHint: true,
@@ -71,7 +71,7 @@ export function registerGeoVisibilityTools(server: ToolRegistry, client: NotraCl
     {
       name: "list_geo_prompt_result_summaries",
       description:
-        "List filtered, paginated GEO prompt results without full answer text or sources. Use checkId with get_geo_prompt_result_detail.",
+        "List the latest GEO answer per prompt and engine, filtered and paginated, without full answer text or sources. Returns configured, results (per row: promptId, engine, prompt, mentioned, ownedSourceCited, position, sentiment, competitors, lastCheckedAt and checkId), nextCursor (null on the last page) and the organization. Pass a row's checkId to get_geo_prompt_result_detail for the full answer.",
       annotations: {
         title: "List GEO Prompt Result Summaries",
         readOnlyHint: true,
@@ -89,7 +89,7 @@ export function registerGeoVisibilityTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_prompt_result_detail",
       description:
-        "Get the full record of one GEO check: prompt, engine, complete answer text, whether the brand was mentioned or an owned source cited, position, sentiment, competitors named, search queries the engine ran, grounding sources, and token counts with truncation info.",
+        "Get the full record of one GEO check. Returns result (promptId, engine, prompt, the complete answer, mentioned, ownedSourceCited, position, sentiment, competitors named, excerpt, searchQueries the engine ran, grounding sources, lastCheckedAt, finishReason, token counts and truncated) and the organization.",
       annotations: {
         title: "Get GEO Prompt Result Detail",
         readOnlyHint: true,
@@ -107,7 +107,7 @@ export function registerGeoVisibilityTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_competitor_share",
       description:
-        "Get GEO share of voice: the top brands by mentions with their share of all mentions, plus a summary of the remaining brands. Filter with brands, cap with limit, and set includeTrends for daily trends of the returned brands.",
+        "Get GEO share of voice: the top brands by mentions with their share of all mentions, plus a summary of the remaining brands. Filter with brands, cap with limit, and set includeTrends for daily trends of the returned brands. Returns configured, totalBrands, totalMentions, points (per brand: brand, mentions, share and, with includeTrends, trend), otherBrands (count, mentions and share of brands not in points), timeseries (only with includeTrends) and the organization.",
       annotations: {
         title: "Get GEO Competitor Share",
         readOnlyHint: true,
@@ -138,7 +138,7 @@ export function registerGeoVisibilityTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_language_share",
       description:
-        "Get GEO visibility broken down by tracked language. Returns per language: checks, mentions, mention rate, citations, visibility rate, average position and a daily trend.",
+        "Get GEO visibility broken down by tracked language. Only tracked prompts count, not sequences or personas. Returns configured, points (per language: language, checks, mentions, mentionRate, citations, visibility, visibilityRate, avgPosition and a daily trend) and the organization.",
       annotations: {
         title: "Get GEO Language Share",
         readOnlyHint: true,
@@ -157,7 +157,7 @@ export function registerGeoVisibilityTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_competitor_detail",
       description:
-        "Get one competitor's GEO mention history. Returns daily mentions and checks plus the prompts that produced them, with engine, capture time, whether the competitor was mentioned and its position. Use the brand names reported by get_geo_competitor_share.",
+        "Get one competitor's GEO mention history. Use the brand names reported by get_geo_competitor_share. When days, from and to are omitted, the API uses its competitor-detail default window, which can differ from the default of the other visibility tools. Returns configured, points (daily mentions and checks), prompts (the prompts behind them with promptId, prompt, engine, capturedAt, mentioned and position) and the organization.",
       annotations: {
         title: "Get GEO Competitor Detail",
         readOnlyHint: true,

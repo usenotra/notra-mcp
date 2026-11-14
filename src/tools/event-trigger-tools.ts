@@ -16,7 +16,7 @@ export function registerEventTriggerTools(server: ToolRegistry, client: NotraCli
     {
       name: "list_event_triggers",
       description:
-        "List event triggers that generate content automatically from GitHub releases or pushes, with each trigger's ID, name, event types, target repositories, output type, publishing settings and enabled and autoPublish flags. repositoryMap labels each targeted GitHub integration ID with its owner/repo.",
+        "List event triggers that generate content automatically from GitHub releases or pushes, with each trigger's ID, name, event types, target repositories, output type, publishing settings and enabled and autoPublish flags. repositoryMap labels each targeted GitHub integration ID with its owner/repo. Returns eventTriggers, repositoryMap and the organization.",
       annotations: {
         title: "List Event Triggers",
         readOnlyHint: true,
@@ -34,7 +34,7 @@ export function registerEventTriggerTools(server: ToolRegistry, client: NotraCli
     {
       name: "get_event_trigger",
       description:
-        "Get one event trigger by its ID with its full configuration: event types, pre-release and commit filters, target repositories, output type, outputConfig, enabled and autoPublish. Use it before update_event_trigger, which needs every field sent back.",
+        "Get one event trigger by its ID with its full configuration: event types, pre-release and commit filters, target repositories, output type, outputConfig, enabled and autoPublish. Use it before update_event_trigger, which needs every field sent back. Returns eventTrigger (id, name, sourceType, sourceConfig, targets, outputType, outputConfig, enabled, autoPublish and timestamps) and the organization.",
       annotations: {
         title: "Get Event Trigger",
         readOnlyHint: true,
@@ -52,7 +52,7 @@ export function registerEventTriggerTools(server: ToolRegistry, client: NotraCli
     {
       name: "create_event_trigger",
       description:
-        "Create an event trigger that generates content whenever a GitHub release or push happens in the targeted repositories. Generated content uses AI credits each time the trigger fires. When autoPublish is true, generated content is marked as published in Notra. An enabled trigger keeps firing until it is disabled with update_event_trigger or deleted. Returns the created trigger.",
+        "Create an event trigger that generates content whenever a GitHub release or push happens in the targeted repositories. Generated content uses AI credits each time the trigger fires. When autoPublish is true, generated content is marked as published in Notra. An enabled trigger keeps firing until it is disabled with update_event_trigger or deleted. Returns the created eventTrigger, with the same fields as get_event_trigger, and the organization.",
       annotations: {
         title: "Create Event Trigger",
         readOnlyHint: false,
@@ -70,7 +70,7 @@ export function registerEventTriggerTools(server: ToolRegistry, client: NotraCli
     {
       name: "update_event_trigger",
       description:
-        "Replace an event trigger's whole configuration. Fields you leave out are reset, not kept, so read it with get_event_trigger first and send every field back. When autoPublish is true, future generated content is marked as published in Notra.",
+        "Replace an event trigger's whole configuration. Fields you leave out are reset, not kept, so read it with get_event_trigger first and send every field back. When autoPublish is true, future generated content is marked as published in Notra. Returns the updated eventTrigger, with the same fields as get_event_trigger, and the organization.",
       annotations: {
         title: "Update Event Trigger",
         readOnlyHint: false,
@@ -90,7 +90,7 @@ export function registerEventTriggerTools(server: ToolRegistry, client: NotraCli
     {
       name: "delete_event_trigger",
       description:
-        "Permanently delete an event trigger so new GitHub releases or pushes no longer generate content; it cannot be restored. To pause it instead, set enabled to false with update_event_trigger. Returns the deleted trigger's ID.",
+        "Permanently delete an event trigger so new GitHub releases or pushes no longer generate content; it cannot be restored. To pause it instead, set enabled to false with update_event_trigger. Returns the deleted trigger's id and the organization it belonged to.",
       annotations: {
         title: "Delete Event Trigger",
         readOnlyHint: false,

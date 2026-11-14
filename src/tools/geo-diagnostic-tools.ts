@@ -22,7 +22,7 @@ export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_snapshot",
       description:
-        "Get a compact GEO diagnosis across visibility, sentiment, scan changes, competitors, content gaps, shelf sources, readiness and AI traffic. Each recommended next action names the tool and arguments to call, or tool null when it needs the Notra dashboard; confirm with the user before actions with usesCredits.",
+        "Get a compact GEO diagnosis across visibility, sentiment, scan changes, competitors, content gaps, shelf sources, readiness and AI traffic. Returns generatedAt, the window, visibility totals, sections for sentiment, changes, competitors, contentGaps, shelf, agentReadiness and traffic (each null when it could not be loaded, with a matching entry in warnings), recommendedNextActions and the organization. Each recommended next action has a priority, action, reason, and names the tool and arguments to call, or tool null when it needs the Notra dashboard; confirm with the user before actions with usesCredits.",
       annotations: {
         title: "Get GEO Snapshot",
         readOnlyHint: true,
@@ -40,7 +40,7 @@ export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_changes",
       description:
-        "Compare the two latest GEO scans and list gained or lost mentions, positions and citations. Returns both scans' IDs and finish times, summary counts per change type, and one event per prompt and engine with previous and current mention state and position, plus the competitors and domains involved.",
+        "Compare the two latest GEO scans and list gained or lost mentions, positions and citations. Returns both scans' IDs and finish times, summary counts per change type, and one event per prompt and engine with previous and current mention state and position, plus the competitors and domains involved, and the organization.",
       annotations: {
         title: "Get GEO Changes",
         readOnlyHint: true,
@@ -58,7 +58,7 @@ export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_prompt_history",
       description:
-        "Get compact historical checks for one prompt. Returns one row per check with its ID, scan ID, engine, whether the brand was mentioned or an owned source cited, position, sentiment, competitors, language and capture time. Use a returned check id with get_geo_prompt_result_detail for the full answer.",
+        "Get compact historical checks for one prompt. Returns a configured flag, the promptId, the organization and one row per check with its ID, scan ID, engine, whether the brand was mentioned or an owned source cited, position, sentiment, competitors, language and capture time. Use a returned check id with get_geo_prompt_result_detail for the full answer.",
       annotations: {
         title: "Get GEO Prompt History",
         readOnlyHint: true,
@@ -76,7 +76,7 @@ export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_sentiment",
       description:
-        "Get aggregate GEO sentiment for the window. Returns positive, neutral and negative mention counts, shares and score, the same figures per engine and per day, and a comparison with the previous period of the same length.",
+        "Get aggregate GEO sentiment for the window. Returns positive, neutral and negative mention counts, shares and score, the same figures per engine and per day, and a comparison with the previous period of the same length, plus a configured flag and the organization.",
       annotations: {
         title: "Get GEO Sentiment",
         readOnlyHint: true,
@@ -100,7 +100,7 @@ export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_geo_sentiment_analysis",
       description:
-        "Get the stored thematic GEO sentiment analysis without starting a billed analysis run. Returns its status and, when one exists, the themes found in AI answers with their polarity, claims and supporting evidence.",
+        "Get the stored thematic GEO sentiment analysis without starting a billed analysis run. Returns status, a message, the organization and, when an analysis exists, result with when it was generated, how many answers were sampled out of the eligible ones, and the themes found in AI answers with their polarity, claims and supporting evidence.",
       annotations: {
         title: "Get GEO Sentiment Analysis",
         readOnlyHint: true,
@@ -118,7 +118,7 @@ export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraCl
     {
       name: "list_geo_sentiment_evidence",
       description:
-        "Page through the full AI answers that sentiment scores are based on, for one project and window. Each item has the prompt, engine, language, scan, capture time, full answer and excerpt. Pass nextCursor back as cursor for the next page.",
+        "Page through the full AI answers that sentiment scores are based on, for one project and window. Returns items (id, scanId, promptId, prompt, engine, language, capturedAt, full answer and excerpt), nextCursor (null on the last page) and the organization. Pass nextCursor back as cursor for the next page.",
       annotations: {
         title: "List GEO Sentiment Evidence",
         readOnlyHint: true,
@@ -136,7 +136,7 @@ export function registerGeoDiagnosticTools(server: ToolRegistry, client: NotraCl
     {
       name: "list_geo_shelf_sources",
       description:
-        "List cited and manually tracked GEO shelf sources: pages AI answers cite. Returns each source's URL, domain, title, kind, ownership, citation counts and engines, competitor placements on the page, and opportunity state. Pass nextOffset as offset for the next page.",
+        "List cited and manually tracked GEO shelf sources: pages AI answers cite. Returns each source's URL, domain, title, kind, ownership, citation counts and engines, competitor placements on the page, and opportunity state, newest updates first, plus nextOffset (null on the last page) and the organization. Pass nextOffset as offset for the next page.",
       annotations: {
         title: "List GEO Shelf Sources",
         readOnlyHint: true,

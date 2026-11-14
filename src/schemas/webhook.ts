@@ -1,8 +1,8 @@
 import * as z from "zod";
 import { WEBHOOK_DELIVERY_STATUS_FILTER_VALUES } from "../constants/webhook.js";
 
-const endpointIdSchema = z.string().min(1).describe("The webhook endpoint ID (see list_webhook_endpoints)");
-const deliveryIdSchema = z.string().min(1).describe("The webhook delivery ID (see list_webhook_deliveries)");
+const endpointIdSchema = z.string().min(1).describe("ID of the webhook endpoint, from list_webhook_endpoints");
+const deliveryIdSchema = z.string().min(1).describe("ID of the webhook delivery, from list_webhook_deliveries");
 
 export const listWebhookEndpointsSchema = z.object({});
 

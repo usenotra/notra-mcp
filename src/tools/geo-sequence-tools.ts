@@ -18,7 +18,7 @@ export function registerGeoSequenceTools(server: ToolRegistry, client: NotraClie
     {
       name: "list_geo_sequences",
       description:
-        "List a project's GEO prompt sequences: multi-turn conversations played against answer engines. Returns each sequence's ID, name, ordered steps, whether it is enabled for scans, and creation time.",
+        "List a project's GEO prompt sequences: multi-turn conversations played against answer engines. Returns each sequence's ID, name, ordered steps, whether it is enabled for scans, and creation time, plus the organization.",
       annotations: {
         title: "List GEO Sequences",
         readOnlyHint: true,
@@ -36,9 +36,9 @@ export function registerGeoSequenceTools(server: ToolRegistry, client: NotraClie
     {
       name: "create_geo_sequence",
       description:
-        "Add a multi-turn prompt sequence to a project. Its steps are sent in order as one conversation to each answer engine, to track brand mentions across follow-up questions. Enabled sequences play during scans, which use billed AI credits; run_geo_sequence plays one right away. Returns the saved sequence with its ID.",
+        "Add a multi-turn prompt sequence to a project. Its steps are sent in order as one conversation to each answer engine, to track brand mentions across follow-up questions. Enabled sequences play during scans, which use billed AI credits; run_geo_sequence plays one right away. Returns the saved sequence (id, name, steps, enabled, createdAt) and the organization.",
       annotations: {
-        title: "Create GEO Sequence",
+        title: "Create AI Search Prompt Sequence",
         readOnlyHint: false,
         openWorldHint: false,
         destructiveHint: false,
@@ -54,7 +54,7 @@ export function registerGeoSequenceTools(server: ToolRegistry, client: NotraClie
     {
       name: "update_geo_sequence",
       description:
-        "Change a GEO prompt sequence's name, steps or enabled state. Omitted fields keep their value; new steps replace all existing turns. Disabling stops the sequence from playing in scans. Reversible by sending the previous values. Get sequence IDs from list_geo_sequences. Returns the updated sequence.",
+        "Change a GEO prompt sequence's name, steps or enabled state. Omitted fields keep their value; new steps replace all existing turns. Disabling stops the sequence from playing in scans. Reversible by sending the previous values. Get sequence IDs from list_geo_sequences. Returns the updated sequence (id, name, steps, enabled, createdAt) and the organization.",
       annotations: {
         title: "Update GEO Sequence",
         readOnlyHint: false,
@@ -72,7 +72,7 @@ export function registerGeoSequenceTools(server: ToolRegistry, client: NotraClie
     {
       name: "delete_geo_sequence",
       description:
-        "Permanently delete a GEO prompt sequence so scans no longer play it. This cannot be undone. To pause it instead, set enabled to false with update_geo_sequence. Get sequence IDs from list_geo_sequences. Returns the deleted sequence's ID.",
+        "Permanently delete a GEO prompt sequence so scans no longer play it. This cannot be undone. To pause it instead, set enabled to false with update_geo_sequence. Get sequence IDs from list_geo_sequences. Returns the deleted sequence's id and the organization.",
       annotations: {
         title: "Delete GEO Sequence",
         readOnlyHint: false,

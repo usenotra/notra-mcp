@@ -22,7 +22,7 @@ export function registerGeoCompetitorTools(server: ToolRegistry, client: NotraCl
     {
       name: "list_geo_competitors",
       description:
-        "List the competitors tracked for a project's GEO share-of-voice reporting. Returns each competitor's ID, name, domain, synonyms that count as mentions, kind (direct or indirect) and chart color.",
+        "List the competitors tracked for a project's GEO share-of-voice reporting. Returns each competitor's ID, name, domain, synonyms that count as mentions, kind (direct or indirect) and chart color, plus the organization.",
       annotations: {
         title: "List GEO Competitors",
         readOnlyHint: true,
@@ -40,7 +40,7 @@ export function registerGeoCompetitorTools(server: ToolRegistry, client: NotraCl
     {
       name: "upsert_geo_competitor",
       description:
-        "Create or update a tracked GEO competitor. Matches on name, case-insensitively; send previousName to rename an existing competitor. domain is always overwritten; omitted synonyms, kind and color keep their stored value. Reversible by upserting the previous values. Changes future share-of-voice reporting. Returns the saved competitor and the new total; call list_geo_competitors for the full list.",
+        "Create or update a tracked GEO competitor. Matches on name, case-insensitively; send previousName to rename an existing competitor. domain is always overwritten; omitted synonyms, kind and color keep their stored value. Reversible by upserting the previous values. Changes future share-of-voice reporting. Returns competitor (id, name, domain, synonyms, kind, color; null if the saved name could not be matched in the response), totalCompetitors after the change and the organization; call list_geo_competitors for the full list.",
       annotations: {
         title: "Upsert GEO Competitor",
         readOnlyHint: false,
@@ -59,9 +59,9 @@ export function registerGeoCompetitorTools(server: ToolRegistry, client: NotraCl
     {
       name: "suggest_geo_competitors",
       description:
-        "Discover likely competitors for a website domain using AI. Returns the domain, its detected field and suggested competitors with name, domain, description and confidence. Suggestions are not tracked until you add them with upsert_geo_competitor or import_geo_competitors. Results are cached per organization and domain.",
+        "Discover likely competitors for a website domain using AI. Returns the domain, its detected field, suggested competitors (name, domain, description, confidence) and the organization. Suggestions are not tracked until you add them with upsert_geo_competitor or import_geo_competitors. Results are cached per organization and domain.",
       annotations: {
-        title: "Suggest GEO Competitors",
+        title: "Suggest AI Search Competitors",
         readOnlyHint: false,
         openWorldHint: true,
         destructiveHint: false,
@@ -96,7 +96,7 @@ export function registerGeoCompetitorTools(server: ToolRegistry, client: NotraCl
     {
       name: "import_geo_competitors",
       description:
-        "Bulk import GEO competitors from structured rows or raw CSV text. New names are added; a row matching an existing competitor's name (case-insensitively) updates its domain, kind and synonyms when given. Repeated names in the input are skipped and nothing is deleted. Returns imported, updated and skipped counts, per-line issues and the full competitor list.",
+        "Bulk import GEO competitors from structured rows or raw CSV text. New names are added; a row matching an existing competitor's name (case-insensitively) updates its domain, kind and synonyms when given. Repeated names in the input are skipped and nothing is deleted. Returns imported, updated and skipped counts, issues listing CSV lines rejected while parsing, the full competitor list (id, name, domain, synonyms, kind, color) and the organization.",
       annotations: {
         title: "Import GEO Competitors",
         readOnlyHint: false,

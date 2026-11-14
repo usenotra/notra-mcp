@@ -42,7 +42,7 @@ export function registerGeoPersonaTools(server: ToolRegistry, client: NotraClien
     {
       name: "update_geo_persona",
       description:
-        "Turn a GEO persona on or off for scheduled scans, or edit its details. Editing details clears its conversation prompts, so call generate_geo_personas with personaId and promptsOnly: true before running it again. Archived personas must be restored first.",
+        "Turn a GEO persona on or off for scheduled scans, or edit its details. Editing details clears its conversation prompts, so call generate_geo_personas with personaId and promptsOnly: true before running it again. Archived personas must be restored first. Returns the updated persona (id, name, role, company, summary, searchStyle, profile lists, conversationPrompts, enabled, archivedAt, memories, createdAt, updatedAt) and the organization.",
       annotations: {
         title: "Update GEO Persona",
         readOnlyHint: false,
@@ -60,7 +60,7 @@ export function registerGeoPersonaTools(server: ToolRegistry, client: NotraClien
     {
       name: "archive_geo_persona",
       description:
-        "Archive and disable a GEO persona so future scans skip it. Its past results stay readable and restore_geo_persona brings it back.",
+        "Archive and disable a GEO persona so future scans skip it. Its past results stay readable and restore_geo_persona brings it back. Returns the archived persona's id and the organization.",
       annotations: {
         title: "Archive GEO Persona",
         readOnlyHint: false,
@@ -78,7 +78,7 @@ export function registerGeoPersonaTools(server: ToolRegistry, client: NotraClien
     {
       name: "restore_geo_persona",
       description:
-        "Restore an archived GEO persona. It comes back disabled; turn it on with update_geo_persona. Fails when the project already has five active personas.",
+        "Restore an archived GEO persona. It comes back disabled; turn it on with update_geo_persona. Fails when the project already has five active personas. Returns the restored persona (id, name, role, company, summary, searchStyle, profile lists, conversationPrompts, enabled, archivedAt, memories, createdAt, updatedAt) and the organization.",
       annotations: {
         title: "Restore GEO Persona",
         readOnlyHint: false,
@@ -96,7 +96,7 @@ export function registerGeoPersonaTools(server: ToolRegistry, client: NotraClien
     {
       name: "get_geo_persona_results",
       description:
-        "Get every turn of one scan's conversations for a GEO persona, per engine: the prompt, the answer, whether the brand was mentioned, its position and the cited sources. Defaults to the latest scan; scans lists the others, newest first.",
+        "Get every turn of one scan's conversations for a GEO persona, per engine: the prompt, the answer, whether the brand was mentioned, its position and the cited sources. Defaults to the latest scan. Returns results (one per turn and engine with scanId, turn, engine, prompt, answer, mentioned, position, sentiment, excerpt, searchQueries, sources, snapshotVersion and lastCheckedAt), scans that played this persona (id, capturedAt, newest first), selectedScanId and the organization.",
       annotations: {
         title: "Get GEO Persona Results",
         readOnlyHint: true,
@@ -114,7 +114,7 @@ export function registerGeoPersonaTools(server: ToolRegistry, client: NotraClien
     {
       name: "get_geo_persona_activity",
       description:
-        "Get daily checks and brand mentions per GEO persona and persona version. Returns the window's from and to dates and one point per persona, version and day with checks, mentions and last check time. Defaults to the last 30 days.",
+        "Get daily checks and brand mentions per GEO persona and persona version. Returns the window's from and to dates and one point per persona, version and day with checks, mentions and last check time, plus personas (id, name) to label each point's personaId and the organization. Defaults to the last 30 days.",
       annotations: {
         title: "Get GEO Persona Activity",
         readOnlyHint: true,
@@ -145,7 +145,7 @@ export function registerGeoPersonaTools(server: ToolRegistry, client: NotraClien
     {
       name: "run_geo_persona",
       description:
-        "Play a GEO persona's conversation now. This uses AI credits at twice the rate of a single prompt check. API-based answer engines run in this call, which can take several minutes; the result reports their checks, mentions and engines. Consumer apps are queued as a background scan instead: poll get_geo_scan, passing the returned queuedScanId as scanId. If the call fails with a 409 the run is still finishing on its own; do not run it again, read get_geo_persona_results later.",
+        "Play a GEO persona's conversation now. This uses AI credits at twice the rate of a single prompt check. API-based answer engines run in this call, which can take several minutes; the result reports their checks, mentions and engines. Consumer apps are queued as a background scan instead, named by queuedScanId (null when nothing was queued) with its queuedEngines: poll get_geo_scan, passing queuedScanId as scanId. The organization is also returned. If the call fails with a 409 the run is still finishing on its own; do not run it again, read get_geo_persona_results later.",
       annotations: {
         title: "Run GEO Persona",
         readOnlyHint: false,
@@ -163,9 +163,9 @@ export function registerGeoPersonaTools(server: ToolRegistry, client: NotraClien
     {
       name: "generate_geo_personas",
       description:
-        "Start AI persona generation in the background. Uses billed AI credits. With only projectId it creates a full set from the project's brand, prompts and competitors; brief adds one persona; personaId regenerates that persona in place, replacing its details (with promptsOnly, only its conversation prompts). One job runs per project; while one runs, it is returned instead. Returns the job's ID, status and error. Poll get_geo_persona_generation_status until completed or failed, then call list_geo_personas.",
+        "Start AI persona generation in the background. Uses billed AI credits. With only projectId it creates a full set from the project's brand, prompts and competitors; brief adds one persona; personaId regenerates that persona in place, replacing its details (with promptsOnly, only its conversation prompts). One job runs per project; while one runs, it is returned instead. Returns job (id, status, personaId, startedAt, error), or null when none ran recently, and the organization. Poll get_geo_persona_generation_status until completed or failed, then call list_geo_personas.",
       annotations: {
-        title: "Generate GEO Personas",
+        title: "Generate AI Search Personas",
         readOnlyHint: false,
         openWorldHint: true,
         destructiveHint: true,
@@ -181,7 +181,7 @@ export function registerGeoPersonaTools(server: ToolRegistry, client: NotraClien
     {
       name: "get_geo_persona_generation_status",
       description:
-        "Get the project's latest GEO persona generation job: its ID, status, the persona it targets, start time and error message. Use it to poll after generate_geo_personas. A job that never started within a few minutes is reported as failed.",
+        "Get the project's latest GEO persona generation job. Returns job (id, status, personaId it targets, startedAt, error), or null when none ran recently, and the organization. Use it to poll after generate_geo_personas. A job that never started within a few minutes is reported as failed.",
       annotations: {
         title: "Get GEO Persona Generation Status",
         readOnlyHint: true,

@@ -13,9 +13,7 @@ export const listGeoScansSchema = z.object({
     .int()
     .min(1)
     .optional()
-    .describe(
-      "Page to return, starting at 1; use pagination.nextPage from the previous response. Omit for the first page.",
-    ),
+    .describe("Page to return; use pagination.nextPage from the previous response. Omit for the first page."),
 });
 
 export const getGeoScanSchema = z.object({

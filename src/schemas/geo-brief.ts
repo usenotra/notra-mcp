@@ -65,7 +65,9 @@ export const planGeoContentBriefSchema = z.object({
 
 export const getGeoContentBriefSchema = z.object({
   projectId: projectIdSchema,
-  briefId: geoResourceIdSchema.describe("The brief ID to retrieve"),
+  briefId: geoResourceIdSchema.describe(
+    "ID of the brief, from list_geo_content_briefs, plan_geo_content_brief or brief.briefId on a list_geo_content_gaps row",
+  ),
 });
 
 const briefLineSchema = z
@@ -77,7 +79,9 @@ const briefLineSchema = z
 export const updateGeoContentBriefSchema = z
   .object({
     projectId: projectIdSchema,
-    briefId: geoResourceIdSchema.describe("The brief ID to update"),
+    briefId: geoResourceIdSchema.describe(
+      "ID of a draft or failed brief, from list_geo_content_briefs, plan_geo_content_brief or brief.briefId on a list_geo_content_gaps row",
+    ),
     expectedUpdatedAt: z.iso
       .datetime()
       .optional()

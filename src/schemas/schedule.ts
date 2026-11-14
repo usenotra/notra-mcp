@@ -15,7 +15,7 @@ const scheduleCronConfigSchema = z
       .max(6)
       .optional()
       .describe(
-        "Day of the week a weekly schedule runs, in UTC, where 0 is Sunday and 6 is Saturday. Required when frequency is weekly.",
+        "Day of the week a weekly schedule runs, in UTC, counting Sunday as 0. Required when frequency is weekly.",
       ),
     dayOfMonth: z
       .number()
@@ -62,12 +62,14 @@ export const schedulePayloadSchema = z.object({
   name: z.string().min(1).max(120).describe("Label for the schedule shown in Notra"),
   sourceType: z
     .literal("cron")
-    .describe("How the schedule is triggered. cron is the only option and runs it on the timing in sourceConfig.cron."),
+    .describe("How the schedule is triggered; cron runs it on the timing in sourceConfig.cron"),
   sourceConfig: scheduleSourceConfigSchema,
   targets: z
     .object({
       repositoryIds: integrationIdsSchema.optional().describe(repositoryIdsDescription),
-      linearIntegrationIds: integrationIdsSchema.optional().describe(linearIntegrationIdsDescription),
+      linearIntegrationIds: integrationIdsSchema
+        .optional()
+        .describe(`${linearIntegrationIdsDescription}. Omit to read every enabled Linear integration; [] reads none.`),
     })
     .refine(
       ({ repositoryIds, linearIntegrationIds }) =>
@@ -106,7 +108,12 @@ export const listSchedulesSchema = z.object({
 export const updateScheduleSchema = z
   .object({
     scheduleId: z.string().min(1).describe("ID of the schedule to change, as returned by list_schedules"),
-    name: z.string().min(1).max(120).optional().describe("New label for the schedule. Omit to keep the current name."),
+    name: z
+      .string()
+      .min(1)
+      .max(120)
+      .optional()
+      .describe("New display name for the schedule in Notra. Omit to keep the current name."),
     sourceConfig: scheduleSourceConfigSchema.optional().describe("Replaces the cron configuration as a whole"),
     targets: z
       .object({
@@ -164,5 +171,5 @@ export const listScheduleRunsSchema = z.object({
     .min(1)
     .max(50)
     .optional()
-    .describe("How many of the most recent runs to return. Defaults to 10."),
+    .describe("Number of the most recent runs to return. Defaults to 10."),
 });

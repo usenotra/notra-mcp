@@ -95,7 +95,9 @@ export const importSiteAuthorsSchema = z.object({
     .min(1)
     .max(100)
     .optional()
-    .describe("Notra author IDs to import. Omit to import every Notra author whose slug is not in blog.json yet."),
+    .describe(
+      "Notra author IDs to import, such as the ids without a site: prefix in get_post's metadata.authors. Omit to import every Notra author whose slug is not in blog.json yet.",
+    ),
   replace: z
     .boolean()
     .optional()
@@ -115,12 +117,12 @@ export const updateSiteSectionsSchema = z.object({
     .string()
     .regex(SITE_PATH_PATTERN, "Must start with a single /, like /blog")
     .optional()
-    .describe("Path the blog is served at, starting with /, like /blog. Omit to turn the blog off."),
+    .describe("Path the blog is served at, such as /blog. Omit to turn the blog off."),
   changelog: z
     .string()
     .regex(SITE_PATH_PATTERN, "Must start with a single /, like /changelog")
     .optional()
-    .describe("Path the changelog is served at, starting with /, like /changelog. Omit to turn the changelog off."),
+    .describe("Path the changelog is served at, such as /changelog. Omit to turn the changelog off."),
 });
 
 export const publishSiteDesignSchema = z.object({
@@ -137,8 +139,8 @@ export const publishSiteDesignSchema = z.object({
 const deploymentIdSchema = z
   .string()
   .min(1)
-  .describe("ID of the deployment to inspect, as returned by list_site_deployments");
-const postIdSchema = z.string().min(1).describe("ID of a saved blog post or changelog (see list_posts)");
+  .describe("ID of the deployment, as returned by list_site_deployments or deploy_site");
+const postIdSchema = z.string().min(1).describe("ID of a saved blog post or changelog, as returned by list_posts");
 
 export const siteSchema = z.object({ siteId: siteIdSchema });
 
@@ -160,7 +162,10 @@ export const siteDeploymentSchema = z.object({ siteId: siteIdSchema, deploymentI
 export const createSitePostPreviewSchema = z.object({
   siteId: siteIdSchema,
   postId: postIdSchema,
-  lifetime: z.enum(["1h", "1d", "3d", "7d"]).optional().describe("How long the preview stays open (default 1d)"),
+  lifetime: z
+    .enum(["1h", "1d", "3d", "7d"])
+    .optional()
+    .describe("How long the preview stays available before it expires. Defaults to 1d."),
 });
 
 export const sitePostSchema = z.object({ siteId: siteIdSchema, postId: postIdSchema });
