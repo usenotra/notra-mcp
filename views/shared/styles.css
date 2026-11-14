@@ -176,6 +176,15 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     margin: 0;
+    scrollbar-gutter: auto;
+  }
+
+  * {
+    scrollbar-width: none;
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
   }
 }
 

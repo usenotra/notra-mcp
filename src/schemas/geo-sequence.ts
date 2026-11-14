@@ -21,7 +21,7 @@ export const createGeoSequenceSchema = z.object({
 export const updateGeoSequenceSchema = z
   .object({
     projectId: projectIdSchema,
-    sequenceId: geoResourceIdSchema.describe("The sequence ID to update"),
+    sequenceId: geoResourceIdSchema.describe("ID of the sequence to update, from list_geo_sequences"),
     name: geoShortTextSchema.optional().describe("New label for the sequence. Omit to keep the current name."),
     steps: z
       .array(geoPromptTextSchema)
@@ -42,7 +42,7 @@ export const updateGeoSequenceSchema = z
 
 export const deleteGeoSequenceSchema = z.object({
   projectId: projectIdSchema,
-  sequenceId: geoResourceIdSchema.describe("The sequence ID to delete"),
+  sequenceId: geoResourceIdSchema.describe("ID of the sequence to delete, from list_geo_sequences"),
 });
 
 export const runGeoSequenceSchema = z.object({

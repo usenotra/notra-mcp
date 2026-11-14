@@ -9,6 +9,7 @@ import type { NotraClient } from "../notra-client.js";
 import {
   getFeedbackSchema,
   listFeedbackSchema,
+  submitFeedbackOutputSchema,
   submitFeedbackSchema,
   updateFeedbackSchema,
 } from "../schemas/feedback.js";
@@ -35,10 +36,14 @@ export function registerFeedbackTools(server: ToolRegistry, options: FeedbackToo
         idempotentHint: false,
       },
       inputSchema: shareJsonSchema(submitFeedbackSchema),
+      outputSchema: shareJsonSchema(submitFeedbackOutputSchema),
     },
     // Spread into a fresh object: the SDK's CallToolResult carries an index signature that
     // the package's FeedbackToolResult interface lacks.
-    async (args) => ({ ...(await handle(args)) }),
+    async (args) => {
+      const { structuredContent, ...result } = await handle(args);
+      return structuredContent ? { ...result, structuredContent } : { ...result, isError: true as const };
+    },
   );
 }
 
@@ -47,7 +52,7 @@ export function registerFeedbackInboxTools(server: ToolRegistry, client: NotraCl
     {
       name: "list_feedback",
       description:
-        "List feedback your organization received through its feedback URL, MCP servers or SDKs, filtered by triage status, kind or project. Returns each entry's ID, source, kind, sentiment, triage status, title, message and timestamps, plus pagination.",
+        "List feedback your organization received through its feedback URL, MCP servers or SDKs, filtered by triage status, kind or project. Returns feedback (each entry's id, projectId, source, kind, sentiment, status, title, message, agent details, contextUrl, metadata and timestamps) and pagination (limit, currentPage, nextPage, previousPage, totalPages, totalItems).",
       annotations: {
         title: "List Feedback",
         readOnlyHint: true,
@@ -65,7 +70,7 @@ export function registerFeedbackInboxTools(server: ToolRegistry, client: NotraCl
     {
       name: "get_feedback",
       description:
-        "Get one feedback entry by ID with its full message, title, kind, sentiment, triage status, source, agent client and model, tool version, context URL, metadata and timestamps.",
+        "Get one feedback entry by ID. Returns feedback with its id, projectId, full message, title, kind, sentiment, triage status, source, agentClient, agentModel, toolVersion, userAgent, contextUrl, metadata, resolvedAt, createdAt and updatedAt.",
       annotations: {
         title: "Get Feedback",
         readOnlyHint: true,
@@ -83,7 +88,7 @@ export function registerFeedbackInboxTools(server: ToolRegistry, client: NotraCl
     {
       name: "update_feedback",
       description:
-        "Set a feedback entry's triage status to new, triaged, resolved or archived. Only the status changes, the feedback itself is untouched, and the status can be set back at any time. Get feedbackId from list_feedback. Returns the updated entry.",
+        "Set a feedback entry's triage status. Only the status changes, the feedback itself is untouched, and the status can be set back at any time. Get feedbackId from list_feedback. Returns the updated feedback entry, with the same fields as get_feedback.",
       annotations: {
         title: "Update Feedback",
         readOnlyHint: false,

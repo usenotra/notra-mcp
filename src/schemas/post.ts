@@ -10,11 +10,8 @@ import { geoWindowShape } from "./geo-fields.js";
 import { brandIdentityIdFilterSchema, contentTypeFilterSchema, statusFilterSchema } from "./post-filters.js";
 
 export const listPostsSchema = z.object({
-  sort: z
-    .enum(["asc", "desc"])
-    .optional()
-    .describe("Order of posts by creation date: desc lists the newest first, asc the oldest first."),
-  limit: z.number().int().min(1).max(100).optional().describe("How many posts to return per page. Defaults to 10."),
+  sort: z.enum(["asc", "desc"]).optional().describe("Order of posts by creation date. Omit to list the newest first."),
+  limit: z.number().int().min(1).max(100).optional().describe("Number of posts per page. Defaults to 10."),
   page: z
     .number()
     .int()
@@ -143,7 +140,7 @@ export const generatePostSchema = z
       .min(1)
       .optional()
       .describe(
-        "Brand identity ID whose voice and tone to write in, from list_brand_identities. Omit to use the default brand identity.",
+        "Deprecated; use brandIdentityId. Brand identity ID from list_brand_identities whose voice and tone to write in.",
       ),
     brandIdentityId: z
       .string()
@@ -170,10 +167,16 @@ export const generatePostSchema = z
           .min(1)
           .optional()
           .describe("Connected GitHub integration IDs from list_integrations to include"),
-        linear: z.array(z.string().min(1)).min(1).optional().describe("Linear integration IDs to include"),
+        linear: z
+          .array(z.string().min(1))
+          .min(1)
+          .optional()
+          .describe("Linear integration IDs from the linear array of list_integrations to include"),
       })
       .optional()
-      .describe("Integration IDs to use for generation"),
+      .describe(
+        "Source integrations to draw activity from. Omit this and github to use every connected GitHub integration.",
+      ),
     github: z
       .object({
         repositories: z
@@ -186,7 +189,9 @@ export const generatePostSchema = z
           .min(1),
       })
       .optional()
-      .describe("Connected GitHub repositories to analyze. Use owner/repo values returned by list_integrations."),
+      .describe(
+        "Connected GitHub repositories to analyze, by owner and repo as returned by list_integrations, instead of integrations.github.",
+      ),
     dataPoints: z
       .object({
         includePullRequests: z.boolean().optional().describe("Include pull requests (default true)"),
@@ -195,7 +200,9 @@ export const generatePostSchema = z
         includeLinearData: z.boolean().optional().describe("Include Linear data (default false)"),
       })
       .optional()
-      .describe("Types of data to include in generation"),
+      .describe(
+        "Kinds of activity to collect from the selected sources. Keep at least one enabled. Ignored when pullRequest is set.",
+      ),
     selectedItems: z
       .object({
         commitShas: z
@@ -254,7 +261,9 @@ export const generatePostSchema = z
           .describe("Specific Linear issues to include"),
       })
       .optional()
-      .describe("Specific items to include in generation"),
+      .describe(
+        "Restrict generation to specific commits, pull requests, releases or Linear issues instead of everything in the lookback window.",
+      ),
     pullRequest: z
       .object({
         owner: z.string().min(1).describe("GitHub repository owner"),
@@ -321,5 +330,5 @@ export const createPostPullRequestSchema = z
   });
 
 export const getPostGenerationStatusSchema = z.object({
-  jobId: z.string().min(1).describe("The generation job ID to check"),
+  jobId: z.string().min(1).describe("ID of the job to check, from job.id in the generate_post response"),
 });

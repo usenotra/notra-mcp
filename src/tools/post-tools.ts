@@ -25,7 +25,7 @@ export function registerPostTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "list_posts",
       description:
-        "List post summaries from Notra (title, status, type, short excerpt) with optional filters for sorting, pagination, status, content type, and brand identity. Use get_post for full content.",
+        "List post summaries from Notra with optional filters for sorting, pagination, status, content type, and brand identity. Returns posts (id, title, slug, excerpt, imageUrl, contentType, status, createdAt, updatedAt), pagination (currentPage, nextPage, previousPage, totalPages, totalItems) and the organization. Use get_post for full content.",
       annotations: {
         title: "List Posts",
         readOnlyHint: true,
@@ -43,7 +43,7 @@ export function registerPostTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "get_post",
       description:
-        "Get a single post by its ID, including full content in HTML and markdown. For blog posts and changelogs, metadata.authors lists the credited authors; ids starting with site: are authors from the post's Notra Site (see list_site_authors).",
+        "Get a single post by its ID. Returns post (id, title, slug, contentType, status, timestamps; content holds rendered HTML for text posts or the image URL for image posts, markdown the source of text posts, htmlUrl and rawHtml the generated HTML of image posts, metadata the site metadata of blog posts and changelogs) and the organization. metadata.authors lists the credited authors; ids starting with site: are authors from the post's Notra Site (see list_site_authors).",
       annotations: {
         title: "Get Post",
         readOnlyHint: true,
@@ -61,7 +61,7 @@ export function registerPostTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "get_post_agent_reach",
       description:
-        "Get AI traffic to one post's live page on its Notra Site, including its Markdown copy: crawler, citation (assistants reading it while answering someone) and referral (people clicking through from an AI answer) totals, a per-source breakdown and the daily timeseries. Defaults to the last 30 days. agentReach is null when the post isn't live on a Notra Site; configured is false when AI traffic tracking is off.",
+        "Get AI traffic to one post's live page on its Notra Site, including its Markdown copy: crawler, citation (assistants reading it while answering someone) and referral (people clicking through from an AI answer) totals, a per-source breakdown and the daily timeseries. Defaults to the last 30 days. Returns agentReach (postId, siteId, path, url, configured, totals, sources, points) and the organization. agentReach is null when the post isn't live on a Notra Site; configured is false when AI traffic tracking is off.",
       annotations: {
         title: "Get Post Agent Reach",
         readOnlyHint: true,
@@ -124,7 +124,7 @@ export function registerPostTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "delete_post",
       description:
-        "Permanently delete a post by its ID. No tool can restore it, and if the post is published on a hosted site it can disappear from there too, so confirm with the user first. Returns the deleted post's ID.",
+        "Permanently delete a post by its ID. No tool can restore it, and if the post is published on a hosted site it can disappear from there too, so confirm with the user first. Returns id, the deleted post's ID, and the organization.",
       annotations: {
         title: "Delete Post",
         readOnlyHint: false,
@@ -142,7 +142,7 @@ export function registerPostTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "generate_post",
       description:
-        "Queue an async job in which Notra writes a post from your GitHub and Linear activity. Returns the job with its id and status, not the post. Poll get_post_generation_status until it completes; job.postId then holds the new post. Pass pullRequest to write about one pull request, and brief to say what the post should cover. Then create_post_pull_request can put a blog post or changelog into a draft pull request.",
+        "Queue an async job in which Notra writes a post from your GitHub and Linear activity. Returns the job (id, status, contentType, lookbackWindow, postId, error) and the organization, not the post. Poll get_post_generation_status until it completes; job.postId then holds the new post. Pass pullRequest to write about one pull request, and brief to say what the post should cover. Then create_post_pull_request can put a blog post or changelog into a draft pull request.",
       annotations: {
         title: "Generate Post",
         readOnlyHint: false,
@@ -160,7 +160,7 @@ export function registerPostTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "create_post_pull_request",
       description:
-        "Open a draft GitHub pull request for a saved blog post or changelog, using the repository's configured content path, site metadata and images. It is always a draft and never merged. Calling it again for the same post and repository updates its open pull request instead of opening another. Omit integrationId and github when only one repository is connected. Returns the pull request number, URL, branch, file path, and whether it was created or updated.",
+        "Open a draft GitHub pull request for a saved blog post or changelog, using the repository's configured content path, site metadata and images. It is always a draft and never merged. Calling it again for the same post and repository updates its open pull request instead of opening another. Omit integrationId and github when only one repository is connected. Returns pullRequest (number, url, branchName, path, and operation, which says whether it was created or updated) and the organization.",
       annotations: {
         title: "Create Post Pull Request",
         readOnlyHint: false,
@@ -177,7 +177,8 @@ export function registerPostTools(server: ToolRegistry, client: NotraClient) {
   server.tool(
     {
       name: "get_post_generation_status",
-      description: "Check the status of an async post generation job. Returns job status and event log.",
+      description:
+        "Check a post generation job started by generate_post. Returns job (id, status, postId once the post exists, error and errorCode on failure, completedAt) and events, the job's event log (type, message, createdAt). status moves from queued to running and ends as completed, failed or skipped; then fetch job.postId with get_post.",
       annotations: {
         title: "Get Post Generation Status",
         readOnlyHint: true,

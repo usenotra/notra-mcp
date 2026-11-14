@@ -32,7 +32,7 @@ export const upsertGeoCompetitorSchema = z.object({
 
 export const suggestGeoCompetitorsSchema = z.object({
   projectId: projectIdSchema,
-  domain: geoShortTextSchema.describe("Website domain to find competitors for, e.g. example.com"),
+  domain: geoShortTextSchema.describe("Domain of the website to find competitors for, such as example.com"),
 });
 
 export const deleteGeoCompetitorSchema = z.object({

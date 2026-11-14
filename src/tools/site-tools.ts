@@ -89,7 +89,7 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
   server.tool(
     {
       name: "delete_site_author",
-      description: `Remove an author from a Notra Site's blog.json. Deleting an author that is live or credited on posts fails with SITE_AUTHOR_IN_USE until force is true; ask the user first, since those posts then show the id as a plain name. ${STAGED}`,
+      description: `Remove an author from a Notra Site's blog.json. Deleting an author that is live or credited on posts fails with SITE_AUTHOR_IN_USE until force is true; ask the user first, since those posts then show the id as a plain name. Returns the site, its remaining authors, authorPage and hasUnpublishedChanges. ${STAGED}`,
       annotations: {
         title: "Delete Site Author",
         readOnlyHint: false,
@@ -176,7 +176,7 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "get_site",
       description:
-        "Get a Site's settings, live deployment, custom domains with the DNS records they need, and open previews.",
+        "Get a Site's settings, live deployment, custom domains with the DNS records they need, and open previews. Returns site (name, slug, status, repository, productionBranch, liveUrl, mounts, liveDeploymentId, rollbackActive and other settings), domains (hostname, status, isPrimary, DNS records, lastError), previews (previewKey, deploymentId, url, branch, pullRequestNumber) and the organization.",
       annotations: { title: "Get Site", ...SITE_READ_ANNOTATIONS },
       inputSchema: shareJsonSchema(siteSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getSite")),
@@ -188,7 +188,7 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "list_site_deployments",
       description:
-        "List a Site's production and preview builds, newest first, with status, commit, error message and compiler diagnostics (file, line, message).",
+        "List a Site's production and preview builds, newest first. Returns deployments (id, kind, trigger, status, live, branch, commitSha, commitMessage, pullRequestNumber, url, errorMessage, skipReason, diagnostics with file, line and message, and timestamps) and the organization.",
       annotations: { title: "List Site Deployments", ...SITE_READ_ANNOTATIONS },
       inputSchema: shareJsonSchema(listSiteDeploymentsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listSiteDeployments")),
@@ -200,7 +200,7 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "get_site_deployment",
       description:
-        "Get one Site deployment with its compiler diagnostics and the newest build log output. Use it to follow a build until its status is final, or to find out why it failed; fixes go to the Site's GitHub repository (blog.json and the content files).",
+        "Get one Site deployment with its compiler diagnostics and the newest build log output. Returns deployment (id, kind, trigger, status, live, branch, commitSha, url, errorMessage, skipReason, diagnostics, timestamps), log (null when there is none), logTruncated and the organization. Use it to follow a build until its status is final, or to find out why it failed; fixes go to the Site's GitHub repository (blog.json and the content files).",
       annotations: { title: "Get Site Deployment", ...SITE_READ_ANNOTATIONS },
       inputSchema: shareJsonSchema(siteDeploymentSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getSiteDeployment")),
@@ -212,7 +212,7 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "deploy_site",
       description:
-        "Build the newest commit on a Site's production branch. It goes live unless production is pinned to an older build (rollbackActive in get_site), which someone has to promote in the dashboard. Returns the queued deployment; poll get_site_deployment until its status is final.",
+        "Build the newest commit on a Site's production branch. It goes live unless production is pinned to an older build (rollbackActive in get_site), which someone has to promote in the dashboard. Returns the queued deployment (id, kind, trigger, status, branch, commitSha, url, timestamps) and the organization; poll get_site_deployment until its status is final.",
       annotations: {
         title: "Deploy Site",
         readOnlyHint: false,
@@ -230,7 +230,7 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "redeploy_site_deployment",
       description:
-        "Build the same commit as an existing deployment again, for example to retry a failed build. A production deployment older than the live one cannot be rebuilt this way; that is a rollback, done in the dashboard. Poll get_site_deployment until its status is final.",
+        "Build the same commit as an existing deployment again, for example to retry a failed build. A production deployment older than the live one cannot be rebuilt this way; that is a rollback, done in the dashboard. Returns the new deployment (id, kind, trigger, status, branch, commitSha, url, timestamps) and the organization; poll get_site_deployment until its status is final.",
       annotations: {
         title: "Redeploy Site Deployment",
         readOnlyHint: false,
@@ -248,7 +248,7 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "preview_post_on_site",
       description:
-        "Build a private preview of a Site with a saved blog post or changelog added, without changing the repository or the live site, and return its URL. Workspace members open it after signing in; password-protected sharing is set up in the dashboard. Poll get_site_post_preview until live is true before sharing the link.",
+        "Build a private preview of a Site with a saved blog post or changelog added, without changing the repository or the live site. Returns preview (status, live, errorMessage, expiresAt, hasPassword, url) and the organization. Workspace members open it after signing in; password-protected sharing is set up in the dashboard. Poll get_site_post_preview until live is true before sharing the link.",
       annotations: {
         title: "Preview Post on Site",
         readOnlyHint: false,
@@ -266,7 +266,7 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "get_site_post_preview",
       description:
-        "Get a post's preview on a Site: build status, whether it is live, any build error, expiry time, password protection and URL. preview is null when the post has no preview there.",
+        "Get a post's preview on a Site: build status, whether it is live, any build error, expiry time, password protection and URL. Returns preview (status, live, deleting, errorMessage, expiresAt, hasPassword, url) and the organization; preview is null when the post has no preview there.",
       annotations: { title: "Get Site Post Preview", ...SITE_READ_ANNOTATIONS },
       inputSchema: shareJsonSchema(sitePostSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getSitePostPreview")),
@@ -278,7 +278,7 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "publish_post_to_site",
       description:
-        "Open a pull request that adds a saved blog post or changelog, with its images and frontmatter, to a Site's GitHub repository, or update the post's open pull request. The post goes live once someone merges the pull request; it is never committed straight to the production branch.",
+        "Open a pull request that adds a saved blog post or changelog, with its images and frontmatter, to a Site's GitHub repository, or update the post's open pull request. The post goes live once someone merges the pull request; it is never committed straight to the production branch. Returns operation (whether the pull request was created or updated), branchName, path, pullRequestNumber, pullRequestUrl and the organization.",
       annotations: {
         title: "Publish Post to Site",
         readOnlyHint: false,

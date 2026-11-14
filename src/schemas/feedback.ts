@@ -1,19 +1,21 @@
 import * as z from "zod";
-import { feedbackToolInputSchema } from "@usenotra/geo/feedback";
+import { feedbackToolInputSchema, feedbackToolOutputSchema } from "@usenotra/geo/feedback";
 import { FEEDBACK_KIND_VALUES, FEEDBACK_STATUS_VALUES } from "../constants/feedback.js";
 
 export const submitFeedbackSchema = z.object({
   message: feedbackToolInputSchema.message.describe(
-    "What the user wants to tell the Notra team: the bug, feature request, question or praise, with steps or URLs when reporting a problem. Send only content the user approved, without conversation history, personal records, payment data or credentials.",
+    "What the user wants to tell the product team, with steps or URLs when reporting a problem. Send only content the user approved, without conversation history, personal records, payment data or credentials.",
   ),
   title: feedbackToolInputSchema.title.describe(
     "One-line summary of the feedback, used as its headline. Omit to send the message alone.",
   ),
-  kind: feedbackToolInputSchema.kind.describe(
-    "Category of the feedback: a bug report, feature request, praise, question, or other. Omit if unsure.",
+  kind: feedbackToolInputSchema.kind.describe("Category of the feedback. Omit if unsure."),
+  sentiment: feedbackToolInputSchema.sentiment.describe(
+    "Overall tone of the feedback toward the product. Omit if unsure.",
   ),
-  sentiment: feedbackToolInputSchema.sentiment.describe("Overall tone of the feedback toward Notra. Omit if unsure."),
 });
+
+export const submitFeedbackOutputSchema = z.object(feedbackToolOutputSchema);
 
 export const listFeedbackSchema = z.object({
   status: z
@@ -31,7 +33,7 @@ export const listFeedbackSchema = z.object({
     .min(1)
     .optional()
     .describe("Only return entries attached to this project, by ID from list_projects. Omit for all projects."),
-  limit: z.number().int().min(1).max(100).optional().describe("How many feedback entries to return per page"),
+  limit: z.number().int().min(1).max(100).optional().describe("Number of feedback entries per page. Defaults to 25."),
   page: z
     .number()
     .int()
@@ -41,9 +43,9 @@ export const listFeedbackSchema = z.object({
 });
 
 export const getFeedbackSchema = z.object({
-  feedbackId: z.string().min(1).describe("The feedback entry ID (see list_feedback)"),
+  feedbackId: z.string().min(1).describe("ID of the feedback entry, from list_feedback"),
 });
 
 export const updateFeedbackSchema = getFeedbackSchema.extend({
-  status: z.enum(FEEDBACK_STATUS_VALUES).describe("New triage status"),
+  status: z.enum(FEEDBACK_STATUS_VALUES).describe("Triage status to set on the entry"),
 });

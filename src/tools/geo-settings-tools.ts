@@ -13,7 +13,7 @@ export function registerGeoSettingsTools(server: ToolRegistry, client: NotraClie
     {
       name: "get_geo_settings",
       description:
-        "Get a project's GEO settings: tracked company name, aliases, languages, answer engines and the recurring scan configuration",
+        "Get a project's GEO settings: tracked company name, aliases, domains, conversion paths, languages, answer engines and the recurring scan configuration. Returns configured (whether the analytics backend is configured), settings (companyName, aliases, domains, conversionPaths, competitors, languages, engines, the zero-data-retention options enforceZdr and nonZdrApprovedEngines, trackWithoutSearch, pausedAutoPromptIds, removedAutoPromptIds, enabled, scanIntervalHours, scanStartedAt, lastScanAt, isScanning and timestamps; may be null), and the organization.",
       annotations: {
         title: "Get GEO Settings",
         readOnlyHint: true,
@@ -31,7 +31,7 @@ export function registerGeoSettingsTools(server: ToolRegistry, client: NotraClie
     {
       name: "list_geo_engines",
       description:
-        "List the answer engine IDs a project can track. Includes model APIs and consumer surfaces such as google/ai-overview (Google AI Overview), google/gemini (the Gemini app) and openai/chatgpt (the ChatGPT app). Use these IDs for engines in update_geo_settings.",
+        "List the answer engine IDs a project can track. Includes model APIs and consumer surfaces such as google/ai-overview (Google AI Overview), google/gemini (the Gemini app) and openai/chatgpt (the ChatGPT app). Use these IDs for engines in update_geo_settings. Returns engines (id, label, provider, zdr for zero-data-retention coverage, default for engines in the default set for new projects, supportsGroundedChecks) and the organization.",
       annotations: {
         title: "List GEO Engines",
         readOnlyHint: true,
@@ -49,7 +49,7 @@ export function registerGeoSettingsTools(server: ToolRegistry, client: NotraClie
     {
       name: "update_geo_settings",
       description:
-        "Change a project's GEO settings and restart the recurring scan schedule. Send only the fields to change; omitted fields keep their stored value. List fields replace the whole list, so include existing entries you want to keep, or they are dropped. Changes are reversible by sending the old values. Recurring scans use billed AI credits, so more engines or languages, or a shorter interval, raise spend. Use engine IDs from list_geo_engines. Returns the saved settings.",
+        "Change a project's GEO settings and restart the recurring scan schedule. Send only the fields to change; omitted fields keep their stored value. List fields replace the whole list, so include existing entries you want to keep, or they are dropped. Changes are reversible by sending the old values. Recurring scans use billed AI credits, so more engines or languages, or a shorter interval, raise spend. Use engine IDs from list_geo_engines. Returns the saved settings, with the same fields as get_geo_settings, plus configured and the organization.",
       annotations: {
         title: "Update GEO Settings",
         readOnlyHint: false,

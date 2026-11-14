@@ -12,7 +12,9 @@ export const getGeoChangesSchema = z.object({ projectId: projectIdSchema });
 export const getGeoPromptHistorySchema = z.object({
   projectId: projectIdSchema,
   promptId: geoResourceIdSchema.describe("Tracked prompt ID from list_geo_prompts or a prompt result summary"),
-  scanId: geoResourceIdSchema.optional().describe("Only checks from this scan (see list_geo_scans)"),
+  scanId: geoResourceIdSchema
+    .optional()
+    .describe("Limit the history to checks from this scan, from list_geo_scans. Omit to include every scan."),
 });
 
 export const getGeoSentimentSchema = z.object({
@@ -30,14 +32,14 @@ export const listGeoSentimentEvidenceSchema = z.object({
 
 export const listGeoShelfSourcesSchema = z.object({
   projectId: projectIdSchema,
-  offset: z.number().int().min(0).max(100_000).default(0).describe("Rows to skip; pass the previous nextOffset"),
-  limit: z
+  offset: z
     .number()
     .int()
-    .min(1)
-    .max(100)
-    .default(20)
-    .describe("Number of sources per page. Pass nextOffset as offset to get the next page."),
+    .min(0)
+    .max(100_000)
+    .default(0)
+    .describe("Sources to skip. Pass nextOffset from the previous page; omit for the first page."),
+  limit: z.number().int().min(1).max(100).default(20).describe("Number of sources per page"),
 });
 
 const readinessReportStatusSchema = apiResponsePropertySchema("getGeoAgentReadiness", "report", "status");

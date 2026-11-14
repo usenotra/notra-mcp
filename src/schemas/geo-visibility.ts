@@ -20,14 +20,12 @@ export const getGeoVisibilityTimeseriesSchema = z.object({
 export const listGeoPromptResultSummariesSchema = z.object({
   projectId: projectIdSchema,
   ...geoWindowShape,
-  cursor: z.string().regex(/^\d+$/).optional().describe("Cursor returned by the previous page"),
-  limit: z
-    .number()
-    .int()
-    .min(1)
-    .max(100)
-    .default(20)
-    .describe("Number of prompt results per page. Pass nextCursor as cursor to get the next page."),
+  cursor: z
+    .string()
+    .regex(/^\d+$/)
+    .optional()
+    .describe("nextCursor from the previous list_geo_prompt_result_summaries response. Omit for the first page."),
+  limit: z.number().int().min(1).max(100).default(20).describe("Number of prompt results per page"),
   engine: geoShortTextSchema
     .optional()
     .describe("Only results from this answer engine ID, as listed by list_geo_engines"),
@@ -43,7 +41,9 @@ export const listGeoPromptResultSummariesSchema = z.object({
 
 export const getGeoPromptResultDetailSchema = z.object({
   projectId: projectIdSchema,
-  checkId: geoResourceIdSchema.describe("Check ID returned by a prompt summary or history row"),
+  checkId: geoResourceIdSchema.describe(
+    "Check ID: a checkId from list_geo_prompt_result_summaries or a checks[].id from get_geo_prompt_history",
+  ),
 });
 
 export const getGeoCompetitorShareSchema = z.object({

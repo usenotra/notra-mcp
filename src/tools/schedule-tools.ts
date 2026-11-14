@@ -18,7 +18,7 @@ export function registerScheduleTools(server: ToolRegistry, client: NotraClient)
     {
       name: "list_schedules",
       description:
-        "List content generation schedules with their name, cron timing, GitHub and Linear targets, output type, brand identity, publishing settings and enabled and autoPublish flags. repositoryMap labels each targeted GitHub integration ID with its owner/repo. Optionally filter by GitHub integration IDs.",
+        "List content generation schedules with their name, cron timing, GitHub and Linear targets, output type, brand identity, publishing settings and enabled and autoPublish flags. repositoryMap labels each targeted GitHub integration ID with its owner/repo. Optionally filter by GitHub integration IDs. Returns schedules (each with id, name, sourceConfig.cron, targets, outputType, outputConfig, enabled, autoPublish, lookbackWindow and timestamps), repositoryMap, and the organization the schedules belong to.",
       annotations: {
         title: "List Schedules",
         readOnlyHint: true,
@@ -36,7 +36,7 @@ export function registerScheduleTools(server: ToolRegistry, client: NotraClient)
     {
       name: "create_schedule",
       description:
-        "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger. It reads from GitHub repositories (targets.repositoryIds), Linear integrations (targets.linearIntegrationIds), or both; get IDs from list_integrations. Generation uses AI credits. When autoPublish is true, generated content is marked as published in Notra. An enabled schedule keeps running until it is paused with update_schedule or deleted. Returns the created schedule.",
+        "Create a content generation schedule using a cron-style daily, weekly, or monthly trigger. It reads from GitHub repositories (targets.repositoryIds), Linear integrations (targets.linearIntegrationIds), or both; get IDs from list_integrations. Generation uses AI credits. When autoPublish is true, generated content is marked as published in Notra. An enabled schedule keeps running until it is paused with update_schedule or deleted. Returns the created schedule (id, name, sourceConfig, targets, outputType, outputConfig, enabled, autoPublish, lookbackWindow and timestamps) and the organization it belongs to.",
       annotations: {
         title: "Create Schedule",
         readOnlyHint: false,
@@ -54,7 +54,7 @@ export function registerScheduleTools(server: ToolRegistry, client: NotraClient)
     {
       name: "update_schedule",
       description:
-        "Update an existing content generation schedule. Only the fields you pass change, and fields you leave out stay as they are; for example { scheduleId, enabled: false } pauses it. targets and outputConfig merge field by field, sourceConfig replaces the cron as a whole, and null clears an outputConfig field. When autoPublish is true, future generated content is marked as published in Notra. Returns the updated schedule.",
+        "Update an existing content generation schedule. Only the fields you pass change, and fields you leave out stay as they are; for example { scheduleId, enabled: false } pauses it. targets and outputConfig merge field by field, sourceConfig replaces the cron as a whole, and null clears an outputConfig field. When autoPublish is true, future generated content is marked as published in Notra. Returns the updated schedule, with the same fields as create_schedule, and the organization it belongs to.",
       annotations: {
         title: "Update Schedule",
         readOnlyHint: false,
@@ -72,7 +72,7 @@ export function registerScheduleTools(server: ToolRegistry, client: NotraClient)
     {
       name: "delete_schedule",
       description:
-        "Permanently delete a content generation schedule so it no longer runs; it cannot be restored. To stop it temporarily, set enabled to false with update_schedule instead. Returns the deleted schedule's ID.",
+        "Permanently delete a content generation schedule so it no longer runs; it cannot be restored. To stop it temporarily, set enabled to false with update_schedule instead. Returns the deleted schedule's id and the organization it belonged to.",
       annotations: {
         title: "Delete Schedule",
         readOnlyHint: false,
@@ -90,7 +90,7 @@ export function registerScheduleTools(server: ToolRegistry, client: NotraClient)
     {
       name: "run_schedule",
       description:
-        "Run an enabled content generation schedule once right now, outside its cron timing. Generation uses AI credits. When the schedule has autoPublish on, the result is marked as published in Notra, like a scheduled run. Returns a runId; follow it with list_schedule_runs until its status leaves running. If the call fails, check list_schedule_runs before retrying, because the run may have started anyway.",
+        "Run an enabled content generation schedule once right now, outside its cron timing. Generation uses AI credits. When the schedule has autoPublish on, the result is marked as published in Notra, like a scheduled run. Returns the runId and the organization; follow it with list_schedule_runs until its status leaves running. If the call fails, check list_schedule_runs before retrying, because the run may have started anyway.",
       annotations: {
         title: "Run Schedule",
         readOnlyHint: false,
@@ -108,7 +108,7 @@ export function registerScheduleTools(server: ToolRegistry, client: NotraClient)
     {
       name: "list_schedule_runs",
       description:
-        "List a schedule's most recent runs, newest first, with status, error message and the draft post each run created (use get_post with postId)",
+        "List a schedule's most recent runs, newest first. Returns runs (each with id, status, title, postId of the draft post it created for use with get_post, errorMessage, manual for on-demand runs rather than scheduled ones, startedAt and finishedAt) and the organization.",
       annotations: {
         title: "List Schedule Runs",
         readOnlyHint: true,

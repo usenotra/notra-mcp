@@ -6,7 +6,7 @@ import {
   EVENT_TRIGGER_SOURCE_TYPE_VALUES,
 } from "../constants/event-trigger.js";
 
-export const triggerIdSchema = z.string().min(1).describe("The event trigger ID (see list_event_triggers)");
+export const triggerIdSchema = z.string().min(1).describe("ID of the event trigger, from list_event_triggers");
 
 export const eventTriggerBodyShape = {
   sourceType: z
@@ -55,7 +55,9 @@ export const eventTriggerBodyShape = {
   autoPublish: z
     .boolean()
     .optional()
-    .describe("Publish generated content immediately instead of saving a draft (default false)"),
+    .describe(
+      "Save generated changelogs and blog posts as published in Notra instead of as drafts. Other output types stay drafts, and nothing is pushed to GitHub or a Notra Site. Defaults to false.",
+    ),
 };
 
 export const listEventTriggersSchema = z.object({
@@ -82,6 +84,8 @@ export const updateEventTriggerSchema = z.object({
     .describe("How generated content is styled and published; null or omitted means none"),
   autoPublish: z
     .boolean()
-    .describe("Publish generated content immediately instead of saving a draft. Send the current value back."),
+    .describe(
+      "Save generated changelogs and blog posts as published in Notra instead of as drafts. Other output types stay drafts, and nothing is pushed to GitHub or a Notra Site. Send the current value back.",
+    ),
 });
 export const deleteEventTriggerSchema = z.object({ triggerId: triggerIdSchema });

@@ -17,7 +17,8 @@ export function registerProjectTools(server: ToolRegistry, client: NotraClient) 
   server.tool(
     {
       name: "list_projects",
-      description: "List the organization's GEO projects. Most GEO tools take a projectId; call this first to find it.",
+      description:
+        "List the organization's GEO projects. Most GEO tools take a projectId; call this first to find it. Returns projects (id, name, brandSettingsId for the linked brand identity, createdAt) and the organization.",
       annotations: {
         title: "List Projects",
         readOnlyHint: true,
@@ -35,7 +36,7 @@ export function registerProjectTools(server: ToolRegistry, client: NotraClient) 
     {
       name: "get_project",
       description:
-        "Get one GEO project by its ID. Returns the project's ID, name, linked brand identity ID (brandSettingsId) and creation time. Use list_projects to find project IDs.",
+        "Get one GEO project by its ID. Returns project (id, name, brandSettingsId for the linked brand identity, createdAt) and the organization. Use list_projects to find project IDs.",
       annotations: {
         title: "Get Project",
         readOnlyHint: true,
@@ -53,7 +54,7 @@ export function registerProjectTools(server: ToolRegistry, client: NotraClient) 
     {
       name: "create_project",
       description:
-        "Create a GEO project from a brand identity's website. Notra analyzes the site and adds tracked prompts, competitors, conversations and answer engines, which can take up to a minute. If it times out, check list_projects before retrying so you don't create a duplicate. Review them with list_geo_prompts and list_geo_competitors. Scans stay off unless startScan is true.",
+        "Create a GEO project from a brand identity's website. Notra analyzes the site and adds tracked prompts, competitors, conversations and answer engines, which can take up to a minute. If it times out, check list_projects before retrying so you don't create a duplicate. Review them with list_geo_prompts and list_geo_competitors. Scans stay off unless startScan is true. Returns the created project (id, name, brandSettingsId, createdAt) and the organization.",
       annotations: {
         title: "Create Project",
         readOnlyHint: false,
@@ -71,7 +72,7 @@ export function registerProjectTools(server: ToolRegistry, client: NotraClient) 
     {
       name: "update_project",
       description:
-        "Rename a GEO project or link it to a different brand identity. Send at least one of name or brandSettingsId; omitted fields keep their value. Changes apply immediately and can be reverted by calling this again with the previous values. A new brandSettingsId replaces the current link. Returns the updated project.",
+        "Rename a GEO project or link it to a different brand identity. Send at least one of name or brandSettingsId; omitted fields keep their value. Changes apply immediately and can be reverted by calling this again with the previous values. A new brandSettingsId replaces the current link. Returns the updated project (id, name, brandSettingsId, createdAt) and the organization.",
       annotations: {
         title: "Update Project",
         readOnlyHint: false,
@@ -89,7 +90,7 @@ export function registerProjectTools(server: ToolRegistry, client: NotraClient) 
     {
       name: "delete_project",
       description:
-        "Delete a GEO project and its settings, prompts, sequences, competitors, scans, checks, and reports. This cannot be undone. The organization's last project cannot be deleted.",
+        "Delete a GEO project and its settings, prompts, sequences, competitors, scans, checks, and reports. This cannot be undone. The organization's last project cannot be deleted. Returns the deleted project's id and the organization.",
       annotations: {
         title: "Delete Project",
         readOnlyHint: false,

@@ -6,14 +6,14 @@ import { geoResourceIdSchema, geoShortTextSchema, geoWindowShape, projectIdSchem
 const geoTrafficWindowShape = {
   ...geoWindowShape,
   days: geoWindowShape.days.describe(
-    "Length of the reporting window in days, counting back from today. Ignored when from and to are set. When days, from and to are all omitted, the last 30 days are used.",
+    "Rolling reporting window in days, ending today. Ignored when from is set. Omit days and from for the last 30 days.",
   ),
 };
 
 const geoMcpWindowShape = {
   ...geoWindowShape,
   days: geoWindowShape.days.describe(
-    "Length of the reporting window in days, counting back from today. Ignored when from and to are set. When days, from and to are all omitted, the last 14 days are used.",
+    "Rolling reporting window in days, ending today. Ignored when from is set. Omit days and from for the last 14 days.",
   ),
 };
 
@@ -21,18 +21,18 @@ const geoMcpWindowShape = {
 const geoTrafficFilterShape = {
   host: geoShortTextSchema
     .optional()
-    .describe("Only count this hostname, such as www.example.com. Subdomains are included."),
+    .describe("Only count this hostname, such as www.example.com. Subdomains are included. Omit for every host."),
   path: z
     .string()
     .trim()
     .startsWith("/")
     .max(GEO_ANALYTICS_PATH_MAX_LENGTH)
     .optional()
-    .describe("Only count this exact page path, such as /pricing"),
+    .describe("Only count this exact page path, such as /pricing. Omit for every page."),
   sites: z
     .enum(GEO_TRAFFIC_SITES_VALUES)
     .optional()
-    .describe("Set to exclude to leave out traffic to sites hosted on Notra Sites. Omit to include that traffic."),
+    .describe("Leaves out traffic to sites hosted on Notra Sites. Omit to include that traffic."),
 };
 
 export const getGeoTrafficOverviewSchema = z.object({
@@ -49,7 +49,7 @@ export const getGeoTrafficLogSchema = z.object({
     .min(1)
     .max(200)
     .optional()
-    .describe("Number of most recent events to return. The log has no time window, so this bounds the result."),
+    .describe("Number of most recent events to return. Defaults to 50."),
   visitorTypes: z
     .array(z.enum(GEO_TRAFFIC_VISITOR_TYPE_VALUES))
     .max(3)
@@ -68,19 +68,35 @@ export const getGeoTrafficLogSchema = z.object({
 
 export const listGeoTrafficJourneysSchema = z.object({
   projectId: projectIdSchema,
-  limit: z.number().int().min(1).max(100).optional().describe("Number of journeys to return, most recent first"),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe("Number of journeys to return, most recent first. Defaults to 25."),
   ...geoTrafficWindowShape,
 });
 
 export const getGeoTrafficJourneySchema = z.object({
   projectId: projectIdSchema,
-  journeyId: z.string().min(1).max(128).describe("The journey ID from list_geo_traffic_journeys"),
+  journeyId: z
+    .string()
+    .min(1)
+    .max(128)
+    .describe("journeyId from list_geo_traffic_journeys or from a get_geo_traffic_log event"),
   ...geoTrafficWindowShape,
 });
 
 export const listGeoTrafficPagesSchema = z.object({
   projectId: projectIdSchema,
-  limit: z.number().int().min(1).max(500).optional().describe("Number of top pages to return, ranked by visits"),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(500)
+    .optional()
+    .describe("Number of top pages to return, ranked by visits. Defaults to 20."),
   visitorType: z
     .enum(GEO_TRAFFIC_VISITOR_TYPE_VALUES)
     .optional()
@@ -93,7 +109,9 @@ export const listGeoTrafficPagesSchema = z.object({
 export const getGeoIngestSetupSchema = z.object({
   projectId: projectIdSchema
     .optional()
-    .describe("Return the notra.js web key for this project. Omit for the oldest project."),
+    .describe(
+      "Project whose notra.js web key to return, from list_projects. Omit for the organization's oldest project.",
+    ),
 });
 
 export const getGeoWebAnalyticsSchema = z.object({

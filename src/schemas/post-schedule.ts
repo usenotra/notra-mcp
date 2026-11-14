@@ -9,7 +9,7 @@ export const schedulePostRequestSchema = z.object({
   scheduledAt: z.iso
     .datetime({ offset: true })
     .describe(
-      "ISO 8601 publishing time with a UTC offset. At most one year ahead; up to five minutes in the past publishes immediately.",
+      "When to publish, including a UTC offset, such as 2026-10-06T08:00:00Z. At most one year ahead; up to five minutes in the past publishes immediately.",
     ),
   timeZone: z
     .string()
@@ -17,7 +17,7 @@ export const schedulePostRequestSchema = z.object({
     .max(100)
     .optional()
     .describe(
-      "Time zone name such as Europe/Berlin, used to show the scheduled time in Notra and in notification emails. It does not shift scheduledAt. Omit to use UTC.",
+      "IANA time zone the schedule was picked in, such as Europe/Berlin, used only to show the scheduled time in Notra and in notification emails. It does not shift scheduledAt. Omit to use UTC.",
     ),
   destinations: z
     .array(

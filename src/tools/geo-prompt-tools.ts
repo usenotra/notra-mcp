@@ -21,7 +21,7 @@ export function registerGeoPromptTools(server: ToolRegistry, client: NotraClient
     {
       name: "list_geo_prompts",
       description:
-        "List the GEO prompts tracked for a project: custom prompts plus the ones derived automatically from the brand context",
+        "List the GEO prompts tracked for a project: custom prompts plus the ones derived automatically from the brand context. Returns a configured flag, the prompts (id, prompt text, enabled, source custom or auto, tags, createdAt) and the organization.",
       annotations: {
         title: "List GEO Prompts",
         readOnlyHint: true,
@@ -38,7 +38,8 @@ export function registerGeoPromptTools(server: ToolRegistry, client: NotraClient
   server.tool(
     {
       name: "create_geo_prompt",
-      description: "Track a new GEO prompt so future scans check it against every configured answer engine",
+      description:
+        "Track a new GEO prompt so future scans check it against every configured answer engine. Returns the created prompt (id, prompt text, enabled, source, tags, createdAt) and the organization.",
       annotations: {
         title: "Create GEO Prompt",
         readOnlyHint: false,
@@ -56,7 +57,7 @@ export function registerGeoPromptTools(server: ToolRegistry, client: NotraClient
     {
       name: "update_geo_prompt",
       description:
-        "Enable or disable a tracked GEO prompt. Disabled prompts are skipped by future scans and stay in the project, so you can enable them again later; this is the reversible alternative to delete_geo_prompt. Get prompt IDs from list_geo_prompts. Returns the updated prompt.",
+        "Enable or disable a tracked GEO prompt. Disabled prompts are skipped by future scans and stay in the project, so you can enable them again later; this is the reversible alternative to delete_geo_prompt. Get prompt IDs from list_geo_prompts. Returns the updated prompt (id, prompt text, enabled, source, tags, createdAt) and the organization.",
       annotations: {
         title: "Update GEO Prompt",
         readOnlyHint: false,
@@ -74,7 +75,7 @@ export function registerGeoPromptTools(server: ToolRegistry, client: NotraClient
     {
       name: "delete_geo_prompt",
       description:
-        "Permanently stop tracking a GEO prompt and remove it from the project. This cannot be undone; adding the same text again creates a new prompt. To pause a prompt instead, use update_geo_prompt with enabled false. Get prompt IDs from list_geo_prompts. Returns the deleted prompt's ID.",
+        "Permanently stop tracking a GEO prompt and remove it from the project. This cannot be undone; adding the same text again creates a new prompt. To pause a prompt instead, use update_geo_prompt with enabled false. Get prompt IDs from list_geo_prompts. Returns the deleted prompt's id and the organization.",
       annotations: {
         title: "Delete GEO Prompt",
         readOnlyHint: false,
@@ -92,7 +93,7 @@ export function registerGeoPromptTools(server: ToolRegistry, client: NotraClient
     {
       name: "import_geo_prompts",
       description:
-        "Bulk import GEO prompts from structured rows or raw CSV text. Prompts that already exist are skipped, not duplicated.",
+        "Bulk import GEO prompts from structured rows or raw CSV text. Prompts that already exist are skipped, not duplicated. Returns counts of imported, updated and skipped prompts, issues listing CSV lines rejected while parsing (always empty when rows are sent), and the organization.",
       annotations: {
         title: "Import GEO Prompts",
         readOnlyHint: false,
@@ -110,7 +111,7 @@ export function registerGeoPromptTools(server: ToolRegistry, client: NotraClient
     {
       name: "list_geo_prompt_suggestions",
       description:
-        "List prompts Notra suggests tracking, derived from the project's Google Search Console queries. Each suggestion has an ID, the prompt text, a title and the Search Console keywords behind it with their clicks, impressions and position. Empty until Search Console is connected in the dashboard. Accept or dismiss each with accept_geo_prompt_suggestion or dismiss_geo_prompt_suggestion.",
+        "List prompts Notra suggests tracking, derived from the project's Google Search Console queries. Returns the suggestions (id, prompt text, title, source, createdAt and the Search Console keywords behind it with their clicks, impressions and position) and the organization. Empty until Search Console is connected in the dashboard. Accept or dismiss each with accept_geo_prompt_suggestion or dismiss_geo_prompt_suggestion.",
       annotations: {
         title: "List GEO Prompt Suggestions",
         readOnlyHint: true,
@@ -128,7 +129,7 @@ export function registerGeoPromptTools(server: ToolRegistry, client: NotraClient
     {
       name: "accept_geo_prompt_suggestion",
       description:
-        "Start tracking a suggested prompt: it is added to the project's tracked prompts, and future scans, which use billed AI credits, check it. Returns the tracked prompt. If the project already tracks the same prompt, that prompt is returned instead of a duplicate. Undo with update_geo_prompt or delete_geo_prompt. Get suggestion IDs from list_geo_prompt_suggestions.",
+        "Start tracking a suggested prompt: it is added to the project's tracked prompts, and future scans, which use billed AI credits, check it. Returns the tracked prompt (id, prompt text, enabled, source, tags, createdAt) and the organization. If the project already tracks the same prompt, that prompt is returned instead of a duplicate. Undo with update_geo_prompt or delete_geo_prompt. Get suggestion IDs from list_geo_prompt_suggestions.",
       annotations: {
         title: "Accept GEO Prompt Suggestion",
         readOnlyHint: false,
@@ -146,7 +147,7 @@ export function registerGeoPromptTools(server: ToolRegistry, client: NotraClient
     {
       name: "dismiss_geo_prompt_suggestion",
       description:
-        "Dismiss a suggested prompt without tracking it, hiding it from list_geo_prompt_suggestions. This is permanent: dismissed suggestions cannot be brought back. Tracked prompts are not affected. Returns the suggestion ID and dismissed flag.",
+        "Dismiss a suggested prompt without tracking it, hiding it from list_geo_prompt_suggestions. This is permanent: dismissed suggestions cannot be brought back. Tracked prompts are not affected. Returns the suggestion id, the dismissed flag and the organization.",
       annotations: {
         title: "Dismiss GEO Prompt Suggestion",
         readOnlyHint: false,
