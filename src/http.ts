@@ -4,6 +4,7 @@ import type { Context, Next } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { MCP_BASE_PATH, MCP_JSON_BODY_LIMIT_BYTES } from "./constants/http.js";
 import { OAUTH_AUTHORIZATION_SERVER_METADATA_PATH, OAUTH_PROTECTED_RESOURCE_METADATA_PATH } from "./constants/oauth.js";
+import { MUSE_CHALLENGE_CONTENT, MUSE_CHALLENGE_PATH } from "./constants/muse.js";
 import { OPENAI_APPS_CHALLENGE_PATH, OPENAI_APPS_CHALLENGE_TOKEN } from "./constants/openai-apps.js";
 import { ORGANIZATION_SCOPE_PATTERN } from "./constants/organization.js";
 import { AI_CATALOG_CONTENT_TYPE, SERVER_CARD_CONTENT_TYPE, SERVER_ICON_SVG_URL } from "./constants/server.js";
@@ -130,6 +131,7 @@ server.get(`${OAUTH_PROTECTED_RESOURCE_METADATA_PATH}${MCP_BASE_PATH}/:organizat
 server.get(`${OAUTH_AUTHORIZATION_SERVER_METADATA_PATH}${MCP_BASE_PATH}`, (c) => c.json(authorizationServerMetadata));
 
 server.get(OPENAI_APPS_CHALLENGE_PATH, (c) => c.text(OPENAI_APPS_CHALLENGE_TOKEN));
+server.get(MUSE_CHALLENGE_PATH, (c) => c.text(MUSE_CHALLENGE_CONTENT));
 
 server.get("/favicon.svg", (c) => c.redirect(SERVER_ICON_SVG_URL, 301));
 
