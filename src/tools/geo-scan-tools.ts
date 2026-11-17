@@ -17,7 +17,7 @@ export function registerGeoScanTools(server: ToolRegistry, client: NotraClient) 
     {
       name: "create_geo_scan",
       description:
-        "Trigger a GEO visibility scan. The scan runs asynchronously and checks every enabled prompt against every configured answer engine; poll get_geo_scan with the returned scanId for status, progress, mentions, and safe failure details. Returns scanId, statusUrl (the API URL to poll) and the organization. Fails while another scan for the project is still running. This uses AI credits.",
+        "Trigger a GEO visibility scan. The scan runs asynchronously and checks every enabled prompt against every configured answer engine, or only the engines in engines; poll get_geo_scan with the returned scanId for status, progress, mentions, and safe failure details. Returns scanId, statusUrl (the API URL to poll) and the organization. Fails while another scan for the project is still running. This uses AI credits.",
       annotations: {
         title: "Create GEO Scan",
         readOnlyHint: false,
@@ -28,14 +28,14 @@ export function registerGeoScanTools(server: ToolRegistry, client: NotraClient) 
       inputSchema: shareJsonSchema(createGeoScanSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createGeoScan")),
     },
-    ({ projectId }) => handleError(() => client.createGeoScan(projectId)),
+    ({ projectId, engines }) => handleError(() => client.createGeoScan(projectId, engines)),
   );
 
   server.tool(
     {
       name: "rescan_geo_prompt",
       description:
-        "Scan a single enabled tracked prompt against the project's answer engines, for example to check whether newly published content changed the answers. Cheaper than create_geo_scan, which checks every prompt. Runs asynchronously; poll get_geo_scan with the returned scanId. Returns scanId, statusUrl (the API URL to poll) and the organization. Fails while another scan is running and shares create_geo_scan's rate limit. This uses AI credits.",
+        "Scan a single enabled tracked prompt against the project's answer engines, or only the engines in engines (one engine is fine), for example to check whether newly published content changed the answers. Cheaper than create_geo_scan, which checks every prompt. Runs asynchronously; poll get_geo_scan with the returned scanId. Returns scanId, statusUrl (the API URL to poll) and the organization. Fails while another scan is running and shares create_geo_scan's rate limit. This uses AI credits.",
       annotations: {
         title: "Rescan GEO Prompt",
         readOnlyHint: false,
@@ -46,7 +46,7 @@ export function registerGeoScanTools(server: ToolRegistry, client: NotraClient) 
       inputSchema: shareJsonSchema(rescanGeoPromptSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("createGeoPromptScan")),
     },
-    ({ projectId, promptId }) => handleError(() => client.rescanGeoPrompt(projectId, promptId)),
+    ({ projectId, promptId, engines }) => handleError(() => client.rescanGeoPrompt(projectId, promptId, engines)),
   );
 
   server.tool(

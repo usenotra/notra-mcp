@@ -48,7 +48,7 @@ export interface GeoWebAnalyticsUtmParams extends GeoTrafficFilterParams {
 
 export interface GeoWebAnalyticsUtmResponse {
   dimension: GeoWebUtmDimension;
-  rows: Array<{ value: string; sessions: number; previousSessions: number; visitors: number }>;
+  rows: Array<{ value: string; sessions: number; previousSessions: number | null; visitors: number }>;
   organization: Organization;
 }
 
@@ -69,13 +69,13 @@ export interface GeoWebAnalyticsBreakdownsResponse {
     source: string;
     aiProduct: string;
     sessions: number;
-    previousSessions: number;
+    previousSessions: number | null;
     visitors: number;
   }>;
   countries: GeoWebBreakdown[];
   devices: GeoWebBreakdown[];
   outcomes: Array<{ source: string; sessions: number; pagesPerSession: number; engagedRate: number }>;
-  outboundLinks: Array<{ url: string; clicks: number; previousClicks: number; visitors: number }>;
+  outboundLinks: Array<{ url: string; clicks: number; previousClicks: number | null; visitors: number }>;
   vitals: Array<{ metric: "lcp" | "inp" | "cls" | "fcp" | "ttfb"; p75: number; samples: number }>;
   errors: Array<{ message: string; source: string; events: number; views: number }>;
   languages: GeoWebBreakdown[];
