@@ -1,8 +1,19 @@
 import * as z from "zod";
-import { geoResourceIdSchema, projectIdSchema } from "./geo-fields.js";
+import { GEO_MAX_ENGINES } from "../constants/geo.js";
+import { geoResourceIdSchema, geoShortTextSchema, projectIdSchema } from "./geo-fields.js";
+
+const scanEnginesSchema = z
+  .array(geoShortTextSchema)
+  .min(1)
+  .max(GEO_MAX_ENGINES)
+  .optional()
+  .describe(
+    'Run only these answer engine IDs from list_geo_engines, for example ["openai/chatgpt"] for a single engine. An engine the project does not track can be tried once. Omit to run every tracked engine.',
+  );
 
 export const createGeoScanSchema = z.object({
   projectId: projectIdSchema,
+  engines: scanEnginesSchema,
 });
 
 export const listGeoScansSchema = z.object({
@@ -26,4 +37,5 @@ export const getGeoScanSchema = z.object({
 export const rescanGeoPromptSchema = z.object({
   projectId: projectIdSchema,
   promptId: geoResourceIdSchema.describe("ID of an enabled tracked prompt, from list_geo_prompts"),
+  engines: scanEnginesSchema,
 });

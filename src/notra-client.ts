@@ -946,14 +946,19 @@ export class NotraClient {
     );
   }
 
-  async createGeoScan(projectId: string): Promise<CreateGeoScanResponse> {
-    return this.request<CreateGeoScanResponse>("POST", this.geoPath(projectId, "/scans"));
+  async createGeoScan(projectId: string, engines?: string[]): Promise<CreateGeoScanResponse> {
+    return this.request<CreateGeoScanResponse, { engines: string[] }>(
+      "POST",
+      this.geoPath(projectId, "/scans"),
+      engines ? { body: { engines } } : undefined,
+    );
   }
 
-  async rescanGeoPrompt(projectId: string, promptId: string): Promise<CreateGeoScanResponse> {
-    return this.request<CreateGeoScanResponse>(
+  async rescanGeoPrompt(projectId: string, promptId: string, engines?: string[]): Promise<CreateGeoScanResponse> {
+    return this.request<CreateGeoScanResponse, { engines: string[] }>(
       "POST",
       this.geoPath(projectId, `/scans/prompts/${encodeURIComponent(promptId)}`),
+      engines ? { body: { engines } } : undefined,
     );
   }
 
