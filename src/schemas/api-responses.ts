@@ -5216,7 +5216,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 "Company behind the AI source, such as openai, anthropic, google or microsoft; the source itself when Notra has no mapping. Empty for non-AI groups.",
             },
             sessions: { type: "integer", description: "Sessions whose first page had this referrer." },
-            previousSessions: { type: "integer" },
+            previousSessions: {
+              type: ["integer", "null"],
+              description:
+                "Sessions in the previous window of the same length. Null when filtered to a path and the previous window starts before the 90 days of visits Notra keeps.",
+            },
             visitors: { type: "integer" },
           },
           required: ["group", "source", "aiProduct", "sessions", "previousSessions", "visitors"],
@@ -5233,7 +5237,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             previousVisitors: {
               type: ["integer", "null"],
               description:
-                "Visitors in the previous window of the same length, immediately before this one. Returned on every row; 0 when there were none.",
+                "Visitors in the previous window of the same length, immediately before this one. Returned on every row; 0 when there were none. Null when the row is read from visits Notra keeps for 90 days (languages, or any breakdown filtered to a path) and the previous window starts before them.",
             },
           },
           required: ["value", "visitors"],
@@ -5250,7 +5254,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             previousVisitors: {
               type: ["integer", "null"],
               description:
-                "Visitors in the previous window of the same length, immediately before this one. Returned on every row; 0 when there were none.",
+                "Visitors in the previous window of the same length, immediately before this one. Returned on every row; 0 when there were none. Null when the row is read from visits Notra keeps for 90 days (languages, or any breakdown filtered to a path) and the previous window starts before them.",
             },
           },
           required: ["value", "visitors"],
@@ -5287,8 +5291,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             url: { type: "string", description: "Destination host and path, without the query." },
             clicks: { type: "integer" },
             previousClicks: {
-              type: "integer",
-              description: "Clicks in the previous window of the same length, immediately before this one.",
+              type: ["integer", "null"],
+              description:
+                "Clicks in the previous window of the same length, immediately before this one. Null when that window starts before the 90 days of clicks Notra keeps.",
             },
             visitors: { type: "integer", description: "Unique visitors who clicked." },
           },
@@ -5337,7 +5342,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             previousVisitors: {
               type: ["integer", "null"],
               description:
-                "Visitors in the previous window of the same length, immediately before this one. Returned on every row; 0 when there were none.",
+                "Visitors in the previous window of the same length, immediately before this one. Returned on every row; 0 when there were none. Null when the row is read from visits Notra keeps for 90 days (languages, or any breakdown filtered to a path) and the previous window starts before them.",
             },
           },
           required: ["value", "visitors"],
@@ -5388,8 +5393,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
             sessions: { type: "integer", description: "Sessions whose first page carried this UTM value." },
             previousSessions: {
-              type: "integer",
-              description: "Sessions in the previous window of the same length, immediately before this one.",
+              type: ["integer", "null"],
+              description:
+                "Sessions in the previous window of the same length, immediately before this one. Null when read from visits Notra keeps for 90 days (term, content, or any parameter filtered to a path) and the previous window starts before them.",
             },
             visitors: { type: "integer" },
           },
@@ -8778,7 +8784,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                     type: "string",
                     enum: ["fetch", "manual"],
                     description:
-                      "manual: a teammate set the status. fetch: written automatically when a scan added the page.",
+                      "manual: a teammate set the status. fetch: Notra read the page after a scan and found the brand there or not.",
                   },
                   excerpt: {
                     type: ["string", "null"],
