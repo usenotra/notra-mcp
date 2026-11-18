@@ -21,3 +21,9 @@ export const SITE_AUTHOR_LINK_FIELDS = [
 
 /** Publishing writes to GitHub; the API gives it up to 60 seconds. */
 export const SITE_PUBLISH_TIMEOUT_MS = 70_000;
+
+/**
+ * The API gives every Sites call up to 60 seconds, so writes wait a bit longer
+ * instead of reporting a failure while the deployment is still being queued.
+ */
+export const SITE_WRITE_TIMEOUT_MS = 70_000;

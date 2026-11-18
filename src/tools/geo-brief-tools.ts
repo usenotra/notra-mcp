@@ -74,7 +74,7 @@ export function registerGeoBriefTools(server: ToolRegistry, client: NotraClient)
     {
       name: "plan_geo_content_brief",
       description:
-        "Research a topic and save a GEO content brief as a draft. Uses billed AI credits and can take a few minutes; confirm with the user first. If an open brief already exists for the same source, it is reused instead. Set autoApprove to also start the article writer, which creates a post. Returns briefId, brief (the outline: target prompt, sections, FAQ, internal links, checklist and research notes), status, runId and postId (null until the writer starts) and the organization. Edit the draft with update_geo_content_brief.",
+        "Research a topic and save a GEO content brief as a draft. Uses billed AI credits and can take a few minutes; confirm with the user first. If an open brief already exists for the same source, it is reused instead. Set autoApprove to also start the article writer, which creates a post. Returns briefId, brief (the outline: target prompt, sections, FAQ, internal links, checklist and research notes), status, runId and postId (null until the writer starts) and the organization. Edit the draft with update_geo_content_brief. If the call times out, the research may still finish; check list_geo_content_briefs before running it again.",
       annotations: {
         title: "Plan GEO Content Brief",
         readOnlyHint: false,

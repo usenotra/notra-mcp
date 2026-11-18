@@ -145,7 +145,7 @@ export function registerGeoPersonaTools(server: ToolRegistry, client: NotraClien
     {
       name: "run_geo_persona",
       description:
-        "Play a GEO persona's conversation now. This uses AI credits at twice the rate of a single prompt check. API-based answer engines run in this call, which can take several minutes; the result reports their checks, mentions and engines. Consumer apps are queued as a background scan instead, named by queuedScanId (null when nothing was queued) with its queuedEngines: poll get_geo_scan, passing queuedScanId as scanId. The organization is also returned. If the call fails with a 409 the run is still finishing on its own; do not run it again, read get_geo_persona_results later.",
+        "Play a GEO persona's conversation now. This uses AI credits at twice the rate of a single prompt check. API-based answer engines run in this call, which can take several minutes; the result reports their checks, mentions and engines. Consumer apps are queued as a background scan instead, named by queuedScanId (null when nothing was queued) with its queuedEngines: poll get_geo_scan, passing queuedScanId as scanId. The organization is also returned. If the call fails with a 409 or times out, the run is still finishing on its own; do not run it again, read get_geo_persona_results later.",
       annotations: {
         title: "Run GEO Persona",
         readOnlyHint: false,

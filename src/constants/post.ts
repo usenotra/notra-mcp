@@ -14,3 +14,6 @@ export const GENERATABLE_CONTENT_TYPE_VALUES = ["changelog", "blog_post", "linke
 export const CREATABLE_CONTENT_TYPE_VALUES = ["blog_post", "changelog", "linkedin_post", "twitter_post"] as const;
 
 export const POST_EXCERPT_LENGTH = 280;
+
+/** The API gives opening a post's pull request up to 150 seconds. */
+export const POST_PULL_REQUEST_TIMEOUT_MS = 160_000;
