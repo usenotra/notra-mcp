@@ -14,6 +14,8 @@ import {
   updateFeedbackSchema,
 } from "../schemas/feedback.js";
 import { handleError } from "../utils/mcp.js";
+import { findRequestAuth } from "../utils/request-scope.js";
+import type { AuthContext } from "../types/auth.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
 /**
@@ -21,9 +23,21 @@ import { apiOutputSchema } from "../utils/output-schema.js";
  * `registerFeedbackTool`, but goes through `MCPServer.tool` directly so the input
  * schema is typed as a zod shape instead of the package's loose `Record<string, unknown>`.
  */
-export function registerFeedbackTools(server: ToolRegistry, options: FeedbackToolOptions) {
-  const handle = createFeedbackToolHandler(options);
+/**
+ * Who sent the feedback, so the Notra team can look up the workspace behind a
+ * report. Identifiers only, never names or emails.
+ */
+function senderMetadata(auth: AuthContext | undefined): Record<string, string> | undefined {
+  if (auth?.kind === "oauth") {
+    return { organizationId: auth.organizationId, userId: auth.userId };
+  }
+  if (auth?.organizationId) {
+    return { organizationId: auth.organizationId };
+  }
+  return undefined;
+}
 
+export function registerFeedbackTools(server: ToolRegistry, options: FeedbackToolOptions) {
   server.tool(
     {
       name: options.toolName ?? "submit_feedback",
@@ -41,6 +55,10 @@ export function registerFeedbackTools(server: ToolRegistry, options: FeedbackToo
     // Spread into a fresh object: the SDK's CallToolResult carries an index signature that
     // the package's FeedbackToolResult interface lacks.
     async (args) => {
+      const handle = createFeedbackToolHandler({
+        ...options,
+        defaults: { ...options.defaults, metadata: senderMetadata(findRequestAuth()) },
+      });
       const { structuredContent, ...result } = await handle(args);
       return structuredContent ? { ...result, structuredContent } : { ...result, isError: true as const };
     },

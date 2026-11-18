@@ -28,6 +28,11 @@ export function getOrganizationScope(): string | undefined {
   return requestScope.getStore()?.organizationScope;
 }
 
+/** The caller's auth, or undefined outside an MCP request. */
+export function findRequestAuth(): AuthContext | undefined {
+  return requestScope.getStore()?.auth;
+}
+
 export function getRequestAuth(): AuthContext {
   const auth = requestScope.getStore()?.auth;
   if (!auth) {
