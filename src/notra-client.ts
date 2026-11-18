@@ -712,10 +712,15 @@ export class NotraClient {
     return this.request<ProjectListResponse>("GET", "/v1/projects");
   }
 
-  async getWorkspaceContext(includePending = false, withoutOrganization = false): Promise<WorkspaceContextResponse> {
+  async getWorkspaceContext(
+    includePending = false,
+    withoutOrganization = false,
+    timeoutMs?: number,
+  ): Promise<WorkspaceContextResponse> {
     return this.request<WorkspaceContextResponse>("GET", "/v1/me/workspaces", {
       params: includePending ? { includePending: true } : undefined,
       withoutOrganization,
+      timeoutMs,
     });
   }
 

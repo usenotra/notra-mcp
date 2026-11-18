@@ -13,15 +13,16 @@ import {
   submitFeedbackSchema,
   updateFeedbackSchema,
 } from "../schemas/feedback.js";
+import { FEEDBACK_SENDER_LOOKUP_TIMEOUT_MS } from "../constants/feedback.js";
 import { handleError } from "../utils/mcp.js";
 import { findRequestAuth } from "../utils/request-scope.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
 /**
  * Who sent the feedback, so the Notra team can look up the workspace behind a
- * report. Identifiers only, never names or emails. A workspace API key used on
- * the unscoped URL only learns its workspace from the API; if that lookup
- * fails, the feedback goes out without a sender.
+ * report. Identifiers only, never names or emails. An API key may name its
+ * workspace by slug or not at all, so the id comes from the API; if that
+ * lookup fails, the selector the caller used is kept as `workspace`.
  */
 async function senderMetadata(client: NotraClient): Promise<Record<string, string> | undefined> {
   const auth = findRequestAuth();
@@ -31,11 +32,13 @@ async function senderMetadata(client: NotraClient): Promise<Record<string, strin
   if (auth.kind === "oauth") {
     return { organizationId: auth.organizationId, userId: auth.userId };
   }
-  if (auth.organizationId) {
-    return { organizationId: auth.organizationId };
+  const context = await client
+    .getWorkspaceContext(false, false, FEEDBACK_SENDER_LOOKUP_TIMEOUT_MS)
+    .catch(() => undefined);
+  if (context) {
+    return { organizationId: context.currentWorkspace.id };
   }
-  const context = await client.getWorkspaceContext().catch(() => undefined);
-  return context ? { organizationId: context.currentWorkspace.id } : undefined;
+  return auth.organizationId ? { workspace: auth.organizationId } : undefined;
 }
 
 /**
