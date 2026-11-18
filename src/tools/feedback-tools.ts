@@ -15,29 +15,35 @@ import {
 } from "../schemas/feedback.js";
 import { handleError } from "../utils/mcp.js";
 import { findRequestAuth } from "../utils/request-scope.js";
-import type { AuthContext } from "../types/auth.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
+
+/**
+ * Who sent the feedback, so the Notra team can look up the workspace behind a
+ * report. Identifiers only, never names or emails. A workspace API key used on
+ * the unscoped URL only learns its workspace from the API; if that lookup
+ * fails, the feedback goes out without a sender.
+ */
+async function senderMetadata(client: NotraClient): Promise<Record<string, string> | undefined> {
+  const auth = findRequestAuth();
+  if (!auth) {
+    return undefined;
+  }
+  if (auth.kind === "oauth") {
+    return { organizationId: auth.organizationId, userId: auth.userId };
+  }
+  if (auth.organizationId) {
+    return { organizationId: auth.organizationId };
+  }
+  const context = await client.getWorkspaceContext().catch(() => undefined);
+  return context ? { organizationId: context.currentWorkspace.id } : undefined;
+}
 
 /**
  * Registers the `submit_feedback` tool from `@usenotra/geo`. Mirrors the package's own
  * `registerFeedbackTool`, but goes through `MCPServer.tool` directly so the input
  * schema is typed as a zod shape instead of the package's loose `Record<string, unknown>`.
  */
-/**
- * Who sent the feedback, so the Notra team can look up the workspace behind a
- * report. Identifiers only, never names or emails.
- */
-function senderMetadata(auth: AuthContext | undefined): Record<string, string> | undefined {
-  if (auth?.kind === "oauth") {
-    return { organizationId: auth.organizationId, userId: auth.userId };
-  }
-  if (auth?.organizationId) {
-    return { organizationId: auth.organizationId };
-  }
-  return undefined;
-}
-
-export function registerFeedbackTools(server: ToolRegistry, options: FeedbackToolOptions) {
+export function registerFeedbackTools(server: ToolRegistry, options: FeedbackToolOptions, client: NotraClient) {
   server.tool(
     {
       name: options.toolName ?? "submit_feedback",
@@ -57,7 +63,7 @@ export function registerFeedbackTools(server: ToolRegistry, options: FeedbackToo
     async (args) => {
       const handle = createFeedbackToolHandler({
         ...options,
-        defaults: { ...options.defaults, metadata: senderMetadata(findRequestAuth()) },
+        defaults: { ...options.defaults, metadata: await senderMetadata(client) },
       });
       const { structuredContent, ...result } = await handle(args);
       return structuredContent ? { ...result, structuredContent } : { ...result, isError: true as const };
