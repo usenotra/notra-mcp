@@ -32,7 +32,7 @@ export function registerFeedbackTools(server: ToolRegistry, options: FeedbackToo
         title: "Submit feedback",
         readOnlyHint: false,
         openWorldHint: false,
-        destructiveHint: true,
+        destructiveHint: false,
         idempotentHint: false,
       },
       inputSchema: shareJsonSchema(submitFeedbackSchema),

@@ -180,7 +180,8 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           tags: {
             type: "array",
             items: { type: "string" },
-            description: "Labels on custom prompts. Always empty for auto prompts.",
+            deprecated: true,
+            description: "Deprecated: prompt tags were removed. Always empty; a future API version drops the field.",
           },
           createdAt: {
             type: ["string", "null"],
@@ -528,7 +529,8 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           tags: {
             type: "array",
             items: { type: "string" },
-            description: "Labels on custom prompts. Always empty for auto prompts.",
+            deprecated: true,
+            description: "Deprecated: prompt tags were removed. Always empty; a future API version drops the field.",
           },
           createdAt: {
             type: ["string", "null"],
@@ -8353,7 +8355,8 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             tags: {
               type: "array",
               items: { type: "string" },
-              description: "Labels on custom prompts. Always empty for auto prompts.",
+              deprecated: true,
+              description: "Deprecated: prompt tags were removed. Always empty; a future API version drops the field.",
             },
             createdAt: {
               type: ["string", "null"],
@@ -11825,7 +11828,8 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           tags: {
             type: "array",
             items: { type: "string" },
-            description: "Labels on custom prompts. Always empty for auto prompts.",
+            deprecated: true,
+            description: "Deprecated: prompt tags were removed. Always empty; a future API version drops the field.",
           },
           createdAt: {
             type: ["string", "null"],

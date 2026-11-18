@@ -1,6 +1,7 @@
 import { GEO_LONG_RUNNING_TIMEOUT_MS } from "./constants/geo.js";
 import { ORGANIZATION_ID_HEADER } from "./constants/organization.js";
-import { SITE_PUBLISH_TIMEOUT_MS } from "./constants/site.js";
+import { POST_PULL_REQUEST_TIMEOUT_MS } from "./constants/post.js";
+import { SITE_PUBLISH_TIMEOUT_MS, SITE_WRITE_TIMEOUT_MS } from "./constants/site.js";
 import type {
   BrandColorDeleteResponse,
   BrandColorListResponse,
@@ -209,9 +210,14 @@ const NOTRA_API_BASE = process.env.NOTRA_API_BASE ?? "https://api.usenotra.com";
  * while reading the response body) to a readable error; returns undefined for
  * any other error so callers can fall through to their own handling.
  */
-function asTimeoutError(error: unknown, timeoutMs: number): Error | undefined {
+function asTimeoutError(error: unknown, timeoutMs: number, method: string): Error | undefined {
   if (error instanceof Error && error.name === "TimeoutError") {
-    return new Error(`Notra API request timed out after ${timeoutMs / 1000}s`);
+    const message = `Notra API request timed out after ${timeoutMs / 1000}s`;
+    // A write that timed out here may still finish on the API, so a blind
+    // retry can do the work twice.
+    return new Error(
+      method === "GET" ? message : `${message}. The change may still complete; check its result before retrying.`,
+    );
   }
   return undefined;
 }
@@ -277,14 +283,14 @@ export class NotraClient {
     try {
       response = await fetch(url.toString(), fetchOptions);
     } catch (error) {
-      throw asTimeoutError(error, timeoutMs) ?? asCancellationError(error) ?? error;
+      throw asTimeoutError(error, timeoutMs, method) ?? asCancellationError(error) ?? error;
     }
 
     let data: unknown;
     try {
       data = await response.json();
     } catch (error) {
-      const timeout = asTimeoutError(error, timeoutMs);
+      const timeout = asTimeoutError(error, timeoutMs, method);
       if (timeout) {
         throw timeout;
       }
@@ -341,13 +347,16 @@ export class NotraClient {
   }
 
   async startSiteDeployment(siteId: string): Promise<StartSiteDeploymentResponse> {
-    return this.request<StartSiteDeploymentResponse>("POST", sitePath(siteId, "/deployments"));
+    return this.request<StartSiteDeploymentResponse>("POST", sitePath(siteId, "/deployments"), {
+      timeoutMs: SITE_WRITE_TIMEOUT_MS,
+    });
   }
 
   async redeploySiteDeployment(siteId: string, deploymentId: string): Promise<StartSiteDeploymentResponse> {
     return this.request<StartSiteDeploymentResponse>(
       "POST",
       sitePath(siteId, `/deployments/${encodeURIComponent(deploymentId)}/redeploy`),
+      { timeoutMs: SITE_WRITE_TIMEOUT_MS },
     );
   }
 
@@ -355,7 +364,7 @@ export class NotraClient {
     return this.request<SitePostPreviewResponse, CreateSitePostPreviewRequest>(
       "POST",
       sitePath(siteId, "/post-previews"),
-      { body },
+      { body, timeoutMs: SITE_WRITE_TIMEOUT_MS },
     );
   }
 
@@ -396,7 +405,7 @@ export class NotraClient {
     return this.request<CreatePostPullRequestResponse, CreatePostPullRequestRequest>(
       "POST",
       `/v1/posts/${encodeURIComponent(postId)}/pull-request`,
-      { body },
+      { body, timeoutMs: POST_PULL_REQUEST_TIMEOUT_MS },
     );
   }
 

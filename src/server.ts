@@ -90,7 +90,7 @@ const SHARED_REGISTRARS: readonly Registrar[] = [
       url: "https://api.usenotra.com/v1/feedback/notra",
       productName: "Notra",
       description:
-        "Send feedback to the Notra team. Only call this when the user explicitly asks to send feedback, and only include content the user wants shared. Do not call it proactively after errors or unsupported requests. Returns the recorded entry's id and deduplicated, which is true when identical feedback was already recorded.",
+        "Send feedback to the Notra team. Only call this when the user explicitly asks to send feedback, and only include content the user wants shared. Do not call it proactively after errors or unsupported requests. Returns the recorded entry's id and deduplicated, which is true when the same feedback was already sent in the last 10 minutes. If a call fails or times out, retry it with the same input within those 10 minutes: the repeat is not filed twice.",
       defaults: { agentClient: "notra-mcp", toolVersion: SERVER_VERSION },
     }),
 ];
