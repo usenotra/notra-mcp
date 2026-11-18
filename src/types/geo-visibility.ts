@@ -86,6 +86,9 @@ export interface GeoPromptResultSummariesResponse {
     sentiment: string | null;
     competitors: string[];
     lastCheckedAt: string;
+    scanId: string;
+    answerExcerpt: string;
+    sourceDomains: string[];
   }>;
   nextCursor: string | null;
   organization: Organization;
