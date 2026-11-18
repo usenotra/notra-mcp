@@ -85,7 +85,7 @@ export function registerPostTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "create_post",
       description:
-        "Create a post directly from your own title and markdown, without AI generation. Omit markdown to create an empty draft to fill in later with update_post. Slugs are only accepted for blog posts and changelogs. Setting status to published can expose the post on a hosted site and request a visibility rescan.",
+        "Create a post directly from your own title and markdown, without AI generation. Omit markdown to create an empty draft to fill in later with update_post. Slugs are only accepted for blog posts and changelogs. Setting status to published can expose the post on a hosted site and request a visibility rescan. Returns the new post in the same shape as get_post, with the organization.",
       annotations: {
         title: "Create Post",
         readOnlyHint: false,
@@ -103,7 +103,7 @@ export function registerPostTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "update_post",
       description:
-        "Update a post's title, slug, markdown, publication status, or credited authors. Changes to title, slug, markdown, or authors also sync a post linked to GitHub: an open pull request gets a new commit, and a repository set to publish directly gets a direct commit when its live branch allows one. Otherwise, including closed or merged pull requests, GitHub is left as is and no new pull request is opened. Publishing can expose content on a hosted site and request a visibility rescan. A sync failure can occur after the post is saved; check the post and linked PR before retrying.",
+        "Update a post's title, slug, markdown, publication status, or credited authors. Changes to title, slug, markdown, or authors also sync a post linked to GitHub: an open pull request gets a new commit, and a repository set to publish directly gets a direct commit when its live branch allows one. Otherwise, including closed or merged pull requests, GitHub is left as is and no new pull request is opened. Publishing can expose content on a hosted site and request a visibility rescan. A sync failure can occur after the post is saved; check the post and linked PR before retrying. Returns the updated post in the same shape as get_post, with the organization.",
       annotations: {
         title: "Update Post",
         readOnlyHint: false,
