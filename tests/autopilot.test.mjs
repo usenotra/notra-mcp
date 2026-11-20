@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { once } from "node:events";
 import { createServer as createHttpServer } from "node:http";
 import { after, before, test } from "node:test";
+import { exportJWK, generateKeyPair, SignJWT } from "jose";
 
 const status = {
   canManage: true,
@@ -26,6 +27,8 @@ const status = {
 };
 const bearer = "Bearer test-account-key";
 const workspace = "workspace-test";
+const authkitDomain = "autopilot-test.authkit.example";
+const resource = "https://notra-mcp.example/mcp";
 const requests = [];
 let upstream;
 let server;
@@ -58,6 +61,8 @@ before(async () => {
   await once(upstream, "listening");
   process.env.NOTRA_API_BASE = `http://127.0.0.1:${upstream.address().port}`;
   delete process.env.NOTRA_MCP_TOOLSETS;
+  process.env.WORKOS_AUTHKIT_DOMAIN = authkitDomain;
+  process.env.NOTRA_MCP_RESOURCE = resource;
 
   const { createServer } = await import("../build/server.js");
   server = createServer();
@@ -188,4 +193,37 @@ test("maps Autopilot OAuth consent without adding write to a read-only grant", a
   assert.deepEqual(extractScopes({ ...workspaceClaim, [permission]: "read" }), ["autopilot.read"]);
   assert.deepEqual(extractScopes({ ...workspaceClaim, [permission]: "write" }), ["autopilot.read", "autopilot.write"]);
   assert.deepEqual(extractScopes(workspaceClaim), []);
+});
+
+test("forwards an OAuth token without letting a workspace header override its consent", async (t) => {
+  const issuer = `https://${authkitDomain}`;
+  const { privateKey, publicKey } = await generateKeyPair("RS256");
+  const key = await exportJWK(publicKey);
+  const fetch = globalThis.fetch;
+  t.mock.method(globalThis, "fetch", (input, options) => {
+    if (String(input) === `${issuer}/oauth2/jwks`) {
+      return Promise.resolve(Response.json({ keys: [key] }));
+    }
+    return fetch(input, options);
+  });
+  const token = await new SignJWT({
+    "urn:notra:workspace": "oauth-workspace",
+    "urn:notra:permission:autopilot": "read",
+  })
+    .setProtectedHeader({ alg: "RS256" })
+    .setIssuer(issuer)
+    .setAudience(resource)
+    .setSubject("test-user")
+    .setExpirationTime("5m")
+    .sign(privateKey);
+  const authorization = `Bearer ${token}`;
+
+  const { result } = await callTool("get_autopilot_status", {}, { authorization });
+  assert.deepEqual(result.structuredContent, status);
+  assert.deepEqual(requests.at(-1), {
+    route: "GET /v1/autopilot/status",
+    authorization,
+    workspace: undefined,
+    body: undefined,
+  });
 });
