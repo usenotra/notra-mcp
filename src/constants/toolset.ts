@@ -1,1 +1,1 @@
-export const TOOLSET_VALUES = ["content", "geo"] as const;
+export const TOOLSET_VALUES = ["content", "geo", "autopilot"] as const;

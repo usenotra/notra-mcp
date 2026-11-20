@@ -37,6 +37,7 @@ export type ApiOperationId =
   | "deleteWebhookEndpoint"
   | "dismissGeoPromptSuggestion"
   | "generateGeoPersonas"
+  | "getAutopilotStatus"
   | "getBrandIdentity"
   | "getBrandIdentityGeneration"
   | "getChat"
@@ -134,8 +135,11 @@ export type ApiOperationId =
   | "runSchedule"
   | "schedulePost"
   | "sendAgentSessionMessage"
+  | "startAutopilotRun"
+  | "startAutopilotWorkflowRun"
   | "startGeoAgentReadinessScan"
   | "startSiteDeployment"
+  | "stopAutopilotRun"
   | "submitFeedback"
   | "submitOrganizationFeedback"
   | "suggestGeoCompetitors"
@@ -1937,6 +1941,112 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["job", "organization"],
     description: "The project's persona generation job and the workspace it belongs to.",
+  },
+  getAutopilotStatus: {
+    type: "object",
+    properties: {
+      canManage: { type: "boolean" },
+      settings: {
+        type: ["object", "null"],
+        properties: {
+          enabled: { type: "boolean" },
+          dailyBrief: { type: "boolean" },
+          briefHour: { type: "integer" },
+          timezone: { type: "string" },
+          jobs: { type: "object", additionalProperties: { type: "boolean" } },
+          repository: { type: ["string", "null"] },
+          slackChannelName: { type: ["string", "null"] },
+          reviewers: { type: "array", items: { type: "string" } },
+          lastRunAt: { type: ["string", "null"], format: "date-time" },
+        },
+        required: [
+          "enabled",
+          "dailyBrief",
+          "briefHour",
+          "timezone",
+          "jobs",
+          "repository",
+          "slackChannelName",
+          "reviewers",
+          "lastRunAt",
+        ],
+      },
+      activeRuns: {
+        type: "array",
+        items: {
+          oneOf: [
+            {
+              type: "object",
+              properties: {
+                runId: { type: "string" },
+                type: { type: "string", enum: ["autopilot"] },
+                trigger: { type: "string", enum: ["manual", "cron", "onboarding", "github", "suggestion"] },
+                workflowKey: { type: ["string", "null"] },
+                startedAt: { type: "string", format: "date-time" },
+              },
+              required: ["runId", "type", "trigger", "workflowKey", "startedAt"],
+            },
+            {
+              type: "object",
+              properties: {
+                runId: { type: "string" },
+                type: { type: "string", enum: ["custom_workflow"] },
+                workflowId: { type: ["string", "null"] },
+                status: { type: "string", enum: ["queued", "running"] },
+              },
+              required: ["runId", "type", "workflowId", "status"],
+            },
+          ],
+        },
+      },
+      workflows: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            name: { type: "string" },
+            enabled: { type: "boolean" },
+            schedule: {
+              type: ["object", "null"],
+              properties: {
+                frequency: { type: "string", enum: ["daily", "weekly", "monthly"] },
+                hour: { type: "integer" },
+                minute: { type: "integer" },
+                dayOfWeek: { type: "integer" },
+                dayOfMonth: { type: "integer" },
+              },
+              required: ["frequency", "hour", "minute"],
+            },
+            lastRunAt: { type: ["string", "null"], format: "date-time" },
+          },
+          required: ["id", "name", "enabled", "schedule", "lastRunAt"],
+        },
+      },
+      openFindings: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            kind: { type: "string" },
+            title: { type: "string" },
+            status: { type: "string", enum: ["suggested", "open", "proposed"] },
+            pullRequestUrl: { type: ["string", "null"] },
+          },
+          required: ["id", "kind", "title", "status", "pullRequestUrl"],
+        },
+      },
+      rules: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { id: { type: "string" }, text: { type: "string" } },
+          required: ["id", "text"],
+        },
+      },
+    },
+    required: ["canManage", "settings", "activeRuns", "workflows", "openFindings", "rules"],
   },
   getBrandIdentity: {
     type: "object",
@@ -12166,6 +12276,12 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     type: "object",
     description: "The agent service's response to the message, passed through unchanged.",
   },
+  startAutopilotRun: {
+    type: "object",
+    properties: { runId: { type: "string" }, alreadyRunning: { type: "boolean" } },
+    required: ["runId", "alreadyRunning"],
+  },
+  startAutopilotWorkflowRun: { type: "object", properties: { runId: { type: "string" } }, required: ["runId"] },
   startGeoAgentReadinessScan: {
     type: "object",
     properties: {
@@ -12351,6 +12467,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["deployment", "organization"],
     description: "The deployment that was queued.",
+  },
+  stopAutopilotRun: {
+    type: "object",
+    properties: { stopped: { type: "string", enum: ["autopilot", "custom_workflow"] } },
+    required: ["stopped"],
   },
   submitFeedback: {
     type: "object",

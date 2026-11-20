@@ -13,6 +13,7 @@
     "start:http": "node build/http.js",
     "prepublishOnly": "pnpm run build",
     "typecheck": "tsc --noEmit && tsc -p views",
+    "test": "pnpm run build && node --test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:api-coverage": "pnpm run build && node scripts/check-api-coverage.mjs",
