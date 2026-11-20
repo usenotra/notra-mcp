@@ -48,7 +48,13 @@ import type {
   UpdateSkillRequest,
 } from "./types/api.js";
 import type { AuthContext } from "./types/auth.js";
-import type { RunAutopilotRequest } from "./types/autopilot.js";
+import type {
+  AutopilotStatusResponse,
+  RunAutopilotRequest,
+  StartAutopilotRunResponse,
+  StartAutopilotWorkflowRunResponse,
+  StopAutopilotRunResponse,
+} from "./types/autopilot.js";
 import type {
   ImportSiteAuthorsRequest,
   ImportSiteAuthorsResponse,
@@ -312,20 +318,23 @@ export class NotraClient {
     return data as T;
   }
 
-  async getAutopilotStatus() {
-    return this.request("GET", "/v1/autopilot/status");
+  async getAutopilotStatus(): Promise<AutopilotStatusResponse> {
+    return this.request<AutopilotStatusResponse>("GET", "/v1/autopilot/status");
   }
 
-  async startAutopilotRun(body: RunAutopilotRequest) {
-    return this.request<unknown, RunAutopilotRequest>("POST", "/v1/autopilot/runs", { body });
+  async startAutopilotRun(body: RunAutopilotRequest): Promise<StartAutopilotRunResponse> {
+    return this.request<StartAutopilotRunResponse, RunAutopilotRequest>("POST", "/v1/autopilot/runs", { body });
   }
 
-  async stopAutopilotRun(runId: string) {
-    return this.request("POST", `/v1/autopilot/runs/${encodeURIComponent(runId)}/stop`);
+  async stopAutopilotRun(runId: string): Promise<StopAutopilotRunResponse> {
+    return this.request<StopAutopilotRunResponse>("POST", `/v1/autopilot/runs/${encodeURIComponent(runId)}/stop`);
   }
 
-  async startAutopilotWorkflowRun(workflowId: string) {
-    return this.request("POST", `/v1/autopilot/workflows/${encodeURIComponent(workflowId)}/run`);
+  async startAutopilotWorkflowRun(workflowId: string): Promise<StartAutopilotWorkflowRunResponse> {
+    return this.request<StartAutopilotWorkflowRunResponse>(
+      "POST",
+      `/v1/autopilot/workflows/${encodeURIComponent(workflowId)}/run`,
+    );
   }
 
   async listPosts(params?: ListPostsParams): Promise<PostListResponse> {
