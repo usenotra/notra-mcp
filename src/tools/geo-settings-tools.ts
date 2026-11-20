@@ -49,7 +49,7 @@ export function registerGeoSettingsTools(server: ToolRegistry, client: NotraClie
     {
       name: "update_geo_settings",
       description:
-        "Change a project's GEO settings. Changing scanIntervalHours or turning enabled back on recalculates nextScanAt from the last finished scan (due right away if that time has passed); other changes keep it. Send only the fields to change; omitted fields keep their stored value. List fields replace the whole list, so include existing entries you want to keep, or they are dropped. Changes are reversible by sending the old values. Recurring scans use billed AI credits, so more engines or languages, or a shorter interval, raise spend. Use engine IDs from list_geo_engines. Returns the saved settings, with the same fields as get_geo_settings, plus configured and the organization.",
+        "Change a project's GEO settings. Changing scanIntervalHours or turning enabled back on recalculates nextScanAt from the last finished scan (due right away if that time has passed), setting enabled to false clears it to null, and other changes keep it. Send only the fields to change; omitted fields keep their stored value. List fields replace the whole list, so include existing entries you want to keep, or they are dropped. Changes are reversible by sending the old values. Recurring scans use billed AI credits, so more engines or languages, or a shorter interval, raise spend. Use engine IDs from list_geo_engines. Returns the saved settings, with the same fields as get_geo_settings, plus configured and the organization.",
       annotations: {
         title: "Update GEO Settings",
         readOnlyHint: false,
