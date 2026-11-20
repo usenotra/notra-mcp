@@ -351,11 +351,11 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 
 ### GEO settings
 
-| Tool                  | Description                                                      |
-| --------------------- | ---------------------------------------------------------------- |
-| `get_geo_settings`    | Get tracked company, aliases, languages, engines and scan config |
-| `list_geo_engines`    | List the engine IDs a project can track                          |
-| `update_geo_settings` | Change only the given settings and restart the scan cycle        |
+| Tool                  | Description                                                                              |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| `get_geo_settings`    | Get tracked company, aliases, languages, engines, scan config and the next scan time     |
+| `list_geo_engines`    | List the engine IDs a project can track                                                  |
+| `update_geo_settings` | Change only the given settings; a new interval or re-enabling recalculates the next scan |
 
 ### GEO prompts and sequences
 
