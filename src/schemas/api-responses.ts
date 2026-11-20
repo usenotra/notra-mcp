@@ -4069,7 +4069,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           totalChecks: {
             type: "integer",
             description:
-              "Answers to tracked prompts in the project's prompt language. Sequence and persona answers are not counted.",
+              "Answers in the window across every tracked language, including sequences and personas. A multi-turn conversation counts once, with the sentiment of its first turn that mentions the brand.",
           },
           mentions: { type: "integer", description: "Answers that mentioned the tracked brand." },
           positive: { type: "integer", description: "Mentions classified as positive." },
@@ -4136,7 +4136,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             totalChecks: {
               type: "integer",
               description:
-                "Answers to tracked prompts in the project's prompt language. Sequence and persona answers are not counted.",
+                "Answers in the window across every tracked language, including sequences and personas. A multi-turn conversation counts once, with the sentiment of its first turn that mentions the brand.",
             },
             mentions: { type: "integer", description: "Answers that mentioned the tracked brand." },
             positive: { type: "integer", description: "Mentions classified as positive." },
@@ -4206,7 +4206,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             totalChecks: {
               type: "integer",
               description:
-                "Answers to tracked prompts in the project's prompt language. Sequence and persona answers are not counted.",
+                "Answers in the window across every tracked language, including sequences and personas. A multi-turn conversation counts once, with the sentiment of its first turn that mentions the brand.",
             },
             mentions: { type: "integer", description: "Answers that mentioned the tracked brand." },
             positive: { type: "integer", description: "Mentions classified as positive." },
@@ -4295,7 +4295,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               totalChecks: {
                 type: "integer",
                 description:
-                  "Answers to tracked prompts in the project's prompt language. Sequence and persona answers are not counted.",
+                  "Answers in the window across every tracked language, including sequences and personas. A multi-turn conversation counts once, with the sentiment of its first turn that mentions the brand.",
               },
               mentions: { type: "integer", description: "Answers that mentioned the tracked brand." },
               positive: { type: "integer", description: "Mentions classified as positive." },
@@ -4362,7 +4362,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 totalChecks: {
                   type: "integer",
                   description:
-                    "Answers to tracked prompts in the project's prompt language. Sequence and persona answers are not counted.",
+                    "Answers in the window across every tracked language, including sequences and personas. A multi-turn conversation counts once, with the sentiment of its first turn that mentions the brand.",
                 },
                 mentions: { type: "integer", description: "Answers that mentioned the tracked brand." },
                 positive: { type: "integer", description: "Mentions classified as positive." },
@@ -7543,140 +7543,122 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     description: "Counts of imported, skipped and rejected prompt rows.",
   },
   importSiteAuthors: {
-    allOf: [
-      {
+    type: "object",
+    properties: {
+      site: {
         type: "object",
         properties: {
-          site: {
-            type: "object",
-            properties: {
-              id: { type: "string", description: "The Site's ID." },
-              name: { type: "string", description: "Display name of the Site." },
-            },
-            required: ["id", "name"],
-            description: "The Site the request applied to.",
-          },
-          authors: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                id: {
-                  type: "string",
-                  description:
-                    "The author's id in blog.json. Posts name the author with it and its author page lives at {blogMount}/author/{id}.",
-                },
-                ref: {
-                  type: "string",
-                  description:
-                    "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
-                },
-                name: { type: "string", description: "The author's display name." },
-                title: {
-                  type: ["string", "null"],
-                  description: "The author's role or job title, or null when not set.",
-                },
-                bio: {
-                  type: ["string", "null"],
-                  description: "Short biography shown on the author page, or null when not set.",
-                },
-                avatar: {
-                  type: ["string", "null"],
-                  description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
-                },
-                avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
-                url: {
-                  type: ["string", "null"],
-                  description: "The author's personal website as an https URL, or null when not set.",
-                },
-                x: { type: ["string", "null"], description: "The author's X profile URL, or null when not set." },
-                linkedin: {
-                  type: ["string", "null"],
-                  description: "The author's LinkedIn profile URL, or null when not set.",
-                },
-                github: {
-                  type: ["string", "null"],
-                  description: "The author's GitHub profile URL, or null when not set.",
-                },
-                youtube: {
-                  type: ["string", "null"],
-                  description: "The author's YouTube channel URL, or null when not set.",
-                },
-                bluesky: {
-                  type: ["string", "null"],
-                  description: "The author's Bluesky profile URL, or null when not set.",
-                },
-                mastodon: {
-                  type: ["string", "null"],
-                  description: "The author's Mastodon profile URL, or null when not set.",
-                },
-                threads: {
-                  type: ["string", "null"],
-                  description: "The author's Threads profile URL, or null when not set.",
-                },
-                instagram: {
-                  type: ["string", "null"],
-                  description: "The author's Instagram profile URL, or null when not set.",
-                },
-                live: {
-                  type: "boolean",
-                  description:
-                    "The author is in the published blog.json. False while it only exists in unpublished changes.",
-                },
-                posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
-              },
-              required: [
-                "id",
-                "ref",
-                "name",
-                "title",
-                "bio",
-                "avatar",
-                "avatarUrl",
-                "url",
-                "x",
-                "linkedin",
-                "github",
-                "youtube",
-                "bluesky",
-                "mastodon",
-                "threads",
-                "instagram",
-                "live",
-                "posts",
-              ],
-            },
-            description: "Authors in blog.json order, including unpublished changes.",
-          },
-          authorPage: {
-            type: "string",
-            enum: ["inline", "stacked"],
-            description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
-          },
-          hasUnpublishedChanges: {
-            type: "boolean",
-            description:
-              "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
-          },
+          id: { type: "string", description: "The Site's ID." },
+          name: { type: "string", description: "Display name of the Site." },
         },
-        required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+        required: ["id", "name"],
+        description: "The Site the request applied to.",
+      },
+      authors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description:
+                "The author's id in blog.json. Posts name the author with it and its author page lives at {blogMount}/author/{id}.",
+            },
+            ref: {
+              type: "string",
+              description:
+                "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
+            },
+            name: { type: "string", description: "The author's display name." },
+            title: { type: ["string", "null"], description: "The author's role or job title, or null when not set." },
+            bio: {
+              type: ["string", "null"],
+              description: "Short biography shown on the author page, or null when not set.",
+            },
+            avatar: {
+              type: ["string", "null"],
+              description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
+            },
+            avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+            url: {
+              type: ["string", "null"],
+              description: "The author's personal website as an https URL, or null when not set.",
+            },
+            x: { type: ["string", "null"], description: "The author's X profile URL, or null when not set." },
+            linkedin: {
+              type: ["string", "null"],
+              description: "The author's LinkedIn profile URL, or null when not set.",
+            },
+            github: { type: ["string", "null"], description: "The author's GitHub profile URL, or null when not set." },
+            youtube: {
+              type: ["string", "null"],
+              description: "The author's YouTube channel URL, or null when not set.",
+            },
+            bluesky: {
+              type: ["string", "null"],
+              description: "The author's Bluesky profile URL, or null when not set.",
+            },
+            mastodon: {
+              type: ["string", "null"],
+              description: "The author's Mastodon profile URL, or null when not set.",
+            },
+            threads: {
+              type: ["string", "null"],
+              description: "The author's Threads profile URL, or null when not set.",
+            },
+            instagram: {
+              type: ["string", "null"],
+              description: "The author's Instagram profile URL, or null when not set.",
+            },
+            live: {
+              type: "boolean",
+              description:
+                "The author is in the published blog.json. False while it only exists in unpublished changes.",
+            },
+            posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
+          },
+          required: [
+            "id",
+            "ref",
+            "name",
+            "title",
+            "bio",
+            "avatar",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+            "live",
+            "posts",
+          ],
+        },
+        description: "Authors in blog.json order, including unpublished changes.",
+      },
+      authorPage: {
+        type: "string",
+        enum: ["inline", "stacked"],
+        description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+      },
+      hasUnpublishedChanges: {
+        type: "boolean",
         description:
-          "The Site's authors and author page layout in blog.json after the request, including unpublished changes.",
+          "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
       },
-      {
-        type: "object",
-        properties: {
-          imported: { type: "array", items: { type: "string" }, description: "Ids written to blog.json." },
-          avatarsSkipped: {
-            type: "array",
-            items: { type: "string" },
-            description:
-              "Ids whose avatar was a dashboard upload, which only the dashboard import can copy into the site. Set their avatar with PUT afterwards.",
-          },
-        },
-        required: ["imported", "avatarsSkipped"],
+      imported: { type: "array", items: { type: "string" }, description: "Ids written to blog.json." },
+      avatarsSkipped: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Ids whose avatar was a dashboard upload, which only the dashboard import can copy into the site. Set their avatar with PUT afterwards.",
       },
-    ],
+    },
+    required: ["site", "authors", "authorPage", "hasUnpublishedChanges", "imported", "avatarsSkipped"],
     description:
       "The Site's authors after the import, with the ids that were written and those whose avatar was skipped.",
   },
@@ -9671,7 +9653,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             promptId: {
               type: "string",
               description:
-                "Prompt the answer belongs to: `custom-` plus the prompt id for custom prompts, the slug for auto prompts.",
+                "Prompt the answer belongs to: `custom-` plus the prompt id for custom prompts, the slug for auto prompts, `sequence-` plus the sequence id for sequences and `persona-` plus the persona id for personas.",
             },
             prompt: { type: "string", description: "Prompt text." },
             engine: { type: "string", description: "Answer engine id, as listed by listGeoEngines." },
@@ -9685,7 +9667,8 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           },
           required: ["id", "scanId", "promptId", "prompt", "engine", "language", "capturedAt", "answer", "excerpt"],
         },
-        description: "Answers to tracked prompts that mentioned the brand negatively, newest first, 25 per page.",
+        description:
+          "Answers that mentioned the brand negatively, newest first, 25 per page. Covers every tracked language, sequences and personas, with one answer per conversation: its first turn that mentions the brand.",
       },
       nextCursor: {
         type: ["string", "null"],
