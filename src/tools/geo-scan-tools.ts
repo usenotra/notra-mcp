@@ -17,7 +17,7 @@ export function registerGeoScanTools(server: ToolRegistry, client: NotraClient) 
     {
       name: "create_geo_scan",
       description:
-        "Trigger a GEO visibility scan. The scan runs asynchronously and checks every enabled prompt against every configured answer engine, or only the engines in engines; poll get_geo_scan with the returned scanId for status, progress, mentions, and safe failure details. Returns scanId, statusUrl (the API URL to poll) and the organization. Fails while another scan for the project is still running. This uses AI credits.",
+        "Trigger a GEO visibility scan. The scan runs asynchronously and checks every enabled prompt against every configured answer engine, or only the engines in engines; poll get_geo_scan with the returned scanId for status, progress, mentions, and safe failure details. Returns scanId, statusUrl (the API URL to poll) and the organization. Fails while another scan for the project is still running. A manual scan does not move the automatic schedule; nextScanAt from get_geo_settings stays the same. This uses AI credits.",
       annotations: {
         title: "Create GEO Scan",
         readOnlyHint: false,

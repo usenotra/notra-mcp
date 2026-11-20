@@ -4640,7 +4640,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 description: "Ids of auto-generated prompts removed from tracking.",
               },
               enabled: { type: "boolean", description: "Whether recurring scans run." },
-              scanIntervalHours: { type: "integer", description: "Hours between automatic scans, in whole days." },
+              scanIntervalHours: {
+                type: "integer",
+                description:
+                  "Hours between automatic scans, in whole days. Scheduled scans repeat on a fixed cadence from the first one, so a daily scan keeps the same time of day. Manual scans do not move the schedule.",
+              },
+              nextScanAt: {
+                type: ["string", "null"],
+                description:
+                  "When the next automatic scan is due, as an ISO 8601 timestamp in UTC. The scheduler checks every 10 minutes, so the scan starts within 10 minutes after this time. A time in the past means the scan is due and starts on the next check. Saving settings with a new interval, or turning automatic scans back on, recalculates it from the last finished scan. Null while automatic scans are off.",
+              },
               scanStartedAt: {
                 type: ["string", "null"],
                 description: "When the scan in progress started. Usually cleared when it finishes.",
@@ -4678,6 +4687,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               "removedAutoPromptIds",
               "enabled",
               "scanIntervalHours",
+              "nextScanAt",
               "scanStartedAt",
               "lastScanAt",
               "isScanning",
@@ -13497,7 +13507,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 description: "Ids of auto-generated prompts removed from tracking.",
               },
               enabled: { type: "boolean", description: "Whether recurring scans run." },
-              scanIntervalHours: { type: "integer", description: "Hours between automatic scans, in whole days." },
+              scanIntervalHours: {
+                type: "integer",
+                description:
+                  "Hours between automatic scans, in whole days. Scheduled scans repeat on a fixed cadence from the first one, so a daily scan keeps the same time of day. Manual scans do not move the schedule.",
+              },
+              nextScanAt: {
+                type: ["string", "null"],
+                description:
+                  "When the next automatic scan is due, as an ISO 8601 timestamp in UTC. The scheduler checks every 10 minutes, so the scan starts within 10 minutes after this time. A time in the past means the scan is due and starts on the next check. Saving settings with a new interval, or turning automatic scans back on, recalculates it from the last finished scan. Null while automatic scans are off.",
+              },
               scanStartedAt: {
                 type: ["string", "null"],
                 description: "When the scan in progress started. Usually cleared when it finishes.",
@@ -13535,6 +13554,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               "removedAutoPromptIds",
               "enabled",
               "scanIntervalHours",
+              "nextScanAt",
               "scanStartedAt",
               "lastScanAt",
               "isScanning",
