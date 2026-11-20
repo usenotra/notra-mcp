@@ -22,6 +22,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run typecheck
       - run: pnpm run format:check
+      - run: pnpm test
   api-coverage:
     runs-on: ubuntu-latest
     timeout-minutes: 10

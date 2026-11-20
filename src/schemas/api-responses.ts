@@ -37,6 +37,7 @@ export type ApiOperationId =
   | "deleteWebhookEndpoint"
   | "dismissGeoPromptSuggestion"
   | "generateGeoPersonas"
+  | "getAutopilotStatus"
   | "getBrandIdentity"
   | "getBrandIdentityGeneration"
   | "getChat"
@@ -134,8 +135,11 @@ export type ApiOperationId =
   | "runSchedule"
   | "schedulePost"
   | "sendAgentSessionMessage"
+  | "startAutopilotRun"
+  | "startAutopilotWorkflowRun"
   | "startGeoAgentReadinessScan"
   | "startSiteDeployment"
+  | "stopAutopilotRun"
   | "submitFeedback"
   | "submitOrganizationFeedback"
   | "suggestGeoCompetitors"
@@ -1937,6 +1941,112 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["job", "organization"],
     description: "The project's persona generation job and the workspace it belongs to.",
+  },
+  getAutopilotStatus: {
+    type: "object",
+    properties: {
+      canManage: { type: "boolean" },
+      settings: {
+        type: ["object", "null"],
+        properties: {
+          enabled: { type: "boolean" },
+          dailyBrief: { type: "boolean" },
+          briefHour: { type: "integer" },
+          timezone: { type: "string" },
+          jobs: { type: "object", additionalProperties: { type: "boolean" } },
+          repository: { type: ["string", "null"] },
+          slackChannelName: { type: ["string", "null"] },
+          reviewers: { type: "array", items: { type: "string" } },
+          lastRunAt: { type: ["string", "null"], format: "date-time" },
+        },
+        required: [
+          "enabled",
+          "dailyBrief",
+          "briefHour",
+          "timezone",
+          "jobs",
+          "repository",
+          "slackChannelName",
+          "reviewers",
+          "lastRunAt",
+        ],
+      },
+      activeRuns: {
+        type: "array",
+        items: {
+          oneOf: [
+            {
+              type: "object",
+              properties: {
+                runId: { type: "string" },
+                type: { type: "string", enum: ["autopilot"] },
+                trigger: { type: "string", enum: ["manual", "cron", "onboarding", "github", "suggestion"] },
+                workflowKey: { type: ["string", "null"] },
+                startedAt: { type: "string", format: "date-time" },
+              },
+              required: ["runId", "type", "trigger", "workflowKey", "startedAt"],
+            },
+            {
+              type: "object",
+              properties: {
+                runId: { type: "string" },
+                type: { type: "string", enum: ["custom_workflow"] },
+                workflowId: { type: ["string", "null"] },
+                status: { type: "string", enum: ["queued", "running"] },
+              },
+              required: ["runId", "type", "workflowId", "status"],
+            },
+          ],
+        },
+      },
+      workflows: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            name: { type: "string" },
+            enabled: { type: "boolean" },
+            schedule: {
+              type: ["object", "null"],
+              properties: {
+                frequency: { type: "string", enum: ["daily", "weekly", "monthly"] },
+                hour: { type: "integer" },
+                minute: { type: "integer" },
+                dayOfWeek: { type: "integer" },
+                dayOfMonth: { type: "integer" },
+              },
+              required: ["frequency", "hour", "minute"],
+            },
+            lastRunAt: { type: ["string", "null"], format: "date-time" },
+          },
+          required: ["id", "name", "enabled", "schedule", "lastRunAt"],
+        },
+      },
+      openFindings: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            kind: { type: "string" },
+            title: { type: "string" },
+            status: { type: "string", enum: ["suggested", "open", "proposed"] },
+            pullRequestUrl: { type: ["string", "null"] },
+          },
+          required: ["id", "kind", "title", "status", "pullRequestUrl"],
+        },
+      },
+      rules: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { id: { type: "string" }, text: { type: "string" } },
+          required: ["id", "text"],
+        },
+      },
+    },
+    required: ["canManage", "settings", "activeRuns", "workflows", "openFindings", "rules"],
   },
   getBrandIdentity: {
     type: "object",
@@ -4069,7 +4179,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           totalChecks: {
             type: "integer",
             description:
-              "Answers to tracked prompts in the project's prompt language. Sequence and persona answers are not counted.",
+              "Answers in the window across every tracked language, including sequences and personas. A multi-turn conversation counts once, with the sentiment of its first turn that mentions the brand.",
           },
           mentions: { type: "integer", description: "Answers that mentioned the tracked brand." },
           positive: { type: "integer", description: "Mentions classified as positive." },
@@ -4136,7 +4246,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             totalChecks: {
               type: "integer",
               description:
-                "Answers to tracked prompts in the project's prompt language. Sequence and persona answers are not counted.",
+                "Answers in the window across every tracked language, including sequences and personas. A multi-turn conversation counts once, with the sentiment of its first turn that mentions the brand.",
             },
             mentions: { type: "integer", description: "Answers that mentioned the tracked brand." },
             positive: { type: "integer", description: "Mentions classified as positive." },
@@ -4206,7 +4316,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             totalChecks: {
               type: "integer",
               description:
-                "Answers to tracked prompts in the project's prompt language. Sequence and persona answers are not counted.",
+                "Answers in the window across every tracked language, including sequences and personas. A multi-turn conversation counts once, with the sentiment of its first turn that mentions the brand.",
             },
             mentions: { type: "integer", description: "Answers that mentioned the tracked brand." },
             positive: { type: "integer", description: "Mentions classified as positive." },
@@ -4295,7 +4405,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               totalChecks: {
                 type: "integer",
                 description:
-                  "Answers to tracked prompts in the project's prompt language. Sequence and persona answers are not counted.",
+                  "Answers in the window across every tracked language, including sequences and personas. A multi-turn conversation counts once, with the sentiment of its first turn that mentions the brand.",
               },
               mentions: { type: "integer", description: "Answers that mentioned the tracked brand." },
               positive: { type: "integer", description: "Mentions classified as positive." },
@@ -4362,7 +4472,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 totalChecks: {
                   type: "integer",
                   description:
-                    "Answers to tracked prompts in the project's prompt language. Sequence and persona answers are not counted.",
+                    "Answers in the window across every tracked language, including sequences and personas. A multi-turn conversation counts once, with the sentiment of its first turn that mentions the brand.",
                 },
                 mentions: { type: "integer", description: "Answers that mentioned the tracked brand." },
                 positive: { type: "integer", description: "Mentions classified as positive." },
@@ -4640,7 +4750,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 description: "Ids of auto-generated prompts removed from tracking.",
               },
               enabled: { type: "boolean", description: "Whether recurring scans run." },
-              scanIntervalHours: { type: "integer", description: "Hours between automatic scans, in whole days." },
+              scanIntervalHours: {
+                type: "integer",
+                description:
+                  "Hours between automatic scans, in whole days. Scheduled scans repeat on a fixed cadence from the first one, so a daily scan keeps the same time of day. Manual scans do not move the schedule.",
+              },
+              nextScanAt: {
+                type: ["string", "null"],
+                description:
+                  "When the next automatic scan is due, as an ISO 8601 timestamp in UTC. The scheduler checks every 10 minutes, so the scan starts within 10 minutes after this time. A time in the past means the scan is due and starts on the next check. Saving settings with a new interval, or turning automatic scans back on, recalculates it from the last finished scan. Null while automatic scans are off.",
+              },
               scanStartedAt: {
                 type: ["string", "null"],
                 description: "When the scan in progress started. Usually cleared when it finishes.",
@@ -4678,6 +4797,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               "removedAutoPromptIds",
               "enabled",
               "scanIntervalHours",
+              "nextScanAt",
               "scanStartedAt",
               "lastScanAt",
               "isScanning",
@@ -7533,140 +7653,122 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     description: "Counts of imported, skipped and rejected prompt rows.",
   },
   importSiteAuthors: {
-    allOf: [
-      {
+    type: "object",
+    properties: {
+      site: {
         type: "object",
         properties: {
-          site: {
-            type: "object",
-            properties: {
-              id: { type: "string", description: "The Site's ID." },
-              name: { type: "string", description: "Display name of the Site." },
-            },
-            required: ["id", "name"],
-            description: "The Site the request applied to.",
-          },
-          authors: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                id: {
-                  type: "string",
-                  description:
-                    "The author's id in blog.json. Posts name the author with it and its author page lives at {blogMount}/author/{id}.",
-                },
-                ref: {
-                  type: "string",
-                  description:
-                    "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
-                },
-                name: { type: "string", description: "The author's display name." },
-                title: {
-                  type: ["string", "null"],
-                  description: "The author's role or job title, or null when not set.",
-                },
-                bio: {
-                  type: ["string", "null"],
-                  description: "Short biography shown on the author page, or null when not set.",
-                },
-                avatar: {
-                  type: ["string", "null"],
-                  description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
-                },
-                avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
-                url: {
-                  type: ["string", "null"],
-                  description: "The author's personal website as an https URL, or null when not set.",
-                },
-                x: { type: ["string", "null"], description: "The author's X profile URL, or null when not set." },
-                linkedin: {
-                  type: ["string", "null"],
-                  description: "The author's LinkedIn profile URL, or null when not set.",
-                },
-                github: {
-                  type: ["string", "null"],
-                  description: "The author's GitHub profile URL, or null when not set.",
-                },
-                youtube: {
-                  type: ["string", "null"],
-                  description: "The author's YouTube channel URL, or null when not set.",
-                },
-                bluesky: {
-                  type: ["string", "null"],
-                  description: "The author's Bluesky profile URL, or null when not set.",
-                },
-                mastodon: {
-                  type: ["string", "null"],
-                  description: "The author's Mastodon profile URL, or null when not set.",
-                },
-                threads: {
-                  type: ["string", "null"],
-                  description: "The author's Threads profile URL, or null when not set.",
-                },
-                instagram: {
-                  type: ["string", "null"],
-                  description: "The author's Instagram profile URL, or null when not set.",
-                },
-                live: {
-                  type: "boolean",
-                  description:
-                    "The author is in the published blog.json. False while it only exists in unpublished changes.",
-                },
-                posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
-              },
-              required: [
-                "id",
-                "ref",
-                "name",
-                "title",
-                "bio",
-                "avatar",
-                "avatarUrl",
-                "url",
-                "x",
-                "linkedin",
-                "github",
-                "youtube",
-                "bluesky",
-                "mastodon",
-                "threads",
-                "instagram",
-                "live",
-                "posts",
-              ],
-            },
-            description: "Authors in blog.json order, including unpublished changes.",
-          },
-          authorPage: {
-            type: "string",
-            enum: ["inline", "stacked"],
-            description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
-          },
-          hasUnpublishedChanges: {
-            type: "boolean",
-            description:
-              "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
-          },
+          id: { type: "string", description: "The Site's ID." },
+          name: { type: "string", description: "Display name of the Site." },
         },
-        required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
+        required: ["id", "name"],
+        description: "The Site the request applied to.",
+      },
+      authors: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description:
+                "The author's id in blog.json. Posts name the author with it and its author page lives at {blogMount}/author/{id}.",
+            },
+            ref: {
+              type: "string",
+              description:
+                "Pass this in metadata.authorIds of PATCH /v1/posts/{postId} to credit the author on a blog post that publishes to this site.",
+            },
+            name: { type: "string", description: "The author's display name." },
+            title: { type: ["string", "null"], description: "The author's role or job title, or null when not set." },
+            bio: {
+              type: ["string", "null"],
+              description: "Short biography shown on the author page, or null when not set.",
+            },
+            avatar: {
+              type: ["string", "null"],
+              description: "As written in blog.json: a site path such as /images/jane.png or an https URL.",
+            },
+            avatarUrl: { type: ["string", "null"], description: "The avatar as a full URL on the live site." },
+            url: {
+              type: ["string", "null"],
+              description: "The author's personal website as an https URL, or null when not set.",
+            },
+            x: { type: ["string", "null"], description: "The author's X profile URL, or null when not set." },
+            linkedin: {
+              type: ["string", "null"],
+              description: "The author's LinkedIn profile URL, or null when not set.",
+            },
+            github: { type: ["string", "null"], description: "The author's GitHub profile URL, or null when not set." },
+            youtube: {
+              type: ["string", "null"],
+              description: "The author's YouTube channel URL, or null when not set.",
+            },
+            bluesky: {
+              type: ["string", "null"],
+              description: "The author's Bluesky profile URL, or null when not set.",
+            },
+            mastodon: {
+              type: ["string", "null"],
+              description: "The author's Mastodon profile URL, or null when not set.",
+            },
+            threads: {
+              type: ["string", "null"],
+              description: "The author's Threads profile URL, or null when not set.",
+            },
+            instagram: {
+              type: ["string", "null"],
+              description: "The author's Instagram profile URL, or null when not set.",
+            },
+            live: {
+              type: "boolean",
+              description:
+                "The author is in the published blog.json. False while it only exists in unpublished changes.",
+            },
+            posts: { type: "integer", description: "Notra blog posts on this site that credit the author." },
+          },
+          required: [
+            "id",
+            "ref",
+            "name",
+            "title",
+            "bio",
+            "avatar",
+            "avatarUrl",
+            "url",
+            "x",
+            "linkedin",
+            "github",
+            "youtube",
+            "bluesky",
+            "mastodon",
+            "threads",
+            "instagram",
+            "live",
+            "posts",
+          ],
+        },
+        description: "Authors in blog.json order, including unpublished changes.",
+      },
+      authorPage: {
+        type: "string",
+        enum: ["inline", "stacked"],
+        description: "Layout of every author page: inline puts the avatar beside the name, stacked puts it above.",
+      },
+      hasUnpublishedChanges: {
+        type: "boolean",
         description:
-          "The Site's authors and author page layout in blog.json after the request, including unpublished changes.",
+          "blog.json has staged Design changes that are not live yet. Publish them with POST /v1/sites/{siteId}/publish or from the dashboard.",
       },
-      {
-        type: "object",
-        properties: {
-          imported: { type: "array", items: { type: "string" }, description: "Ids written to blog.json." },
-          avatarsSkipped: {
-            type: "array",
-            items: { type: "string" },
-            description:
-              "Ids whose avatar was a dashboard upload, which only the dashboard import can copy into the site. Set their avatar with PUT afterwards.",
-          },
-        },
-        required: ["imported", "avatarsSkipped"],
+      imported: { type: "array", items: { type: "string" }, description: "Ids written to blog.json." },
+      avatarsSkipped: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Ids whose avatar was a dashboard upload, which only the dashboard import can copy into the site. Set their avatar with PUT afterwards.",
       },
-    ],
+    },
+    required: ["site", "authors", "authorPage", "hasUnpublishedChanges", "imported", "avatarsSkipped"],
     description:
       "The Site's authors after the import, with the ids that were written and those whose avatar was skipped.",
   },
@@ -9661,7 +9763,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             promptId: {
               type: "string",
               description:
-                "Prompt the answer belongs to: `custom-` plus the prompt id for custom prompts, the slug for auto prompts.",
+                "Prompt the answer belongs to: `custom-` plus the prompt id for custom prompts, the slug for auto prompts, `sequence-` plus the sequence id for sequences and `persona-` plus the persona id for personas.",
             },
             prompt: { type: "string", description: "Prompt text." },
             engine: { type: "string", description: "Answer engine id, as listed by listGeoEngines." },
@@ -9675,7 +9777,8 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           },
           required: ["id", "scanId", "promptId", "prompt", "engine", "language", "capturedAt", "answer", "excerpt"],
         },
-        description: "Answers to tracked prompts that mentioned the brand negatively, newest first, 25 per page.",
+        description:
+          "Answers that mentioned the brand negatively, newest first, 25 per page. Covers every tracked language, sequences and personas, with one answer per conversation: its first turn that mentions the brand.",
       },
       nextCursor: {
         type: ["string", "null"],
@@ -12173,6 +12276,12 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     type: "object",
     description: "The agent service's response to the message, passed through unchanged.",
   },
+  startAutopilotRun: {
+    type: "object",
+    properties: { runId: { type: "string" }, alreadyRunning: { type: "boolean" } },
+    required: ["runId", "alreadyRunning"],
+  },
+  startAutopilotWorkflowRun: { type: "object", properties: { runId: { type: "string" } }, required: ["runId"] },
   startGeoAgentReadinessScan: {
     type: "object",
     properties: {
@@ -12358,6 +12467,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["deployment", "organization"],
     description: "The deployment that was queued.",
+  },
+  stopAutopilotRun: {
+    type: "object",
+    properties: { stopped: { type: "string", enum: ["autopilot", "custom_workflow"] } },
+    required: ["stopped"],
   },
   submitFeedback: {
     type: "object",
@@ -13497,7 +13611,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 description: "Ids of auto-generated prompts removed from tracking.",
               },
               enabled: { type: "boolean", description: "Whether recurring scans run." },
-              scanIntervalHours: { type: "integer", description: "Hours between automatic scans, in whole days." },
+              scanIntervalHours: {
+                type: "integer",
+                description:
+                  "Hours between automatic scans, in whole days. Scheduled scans repeat on a fixed cadence from the first one, so a daily scan keeps the same time of day. Manual scans do not move the schedule.",
+              },
+              nextScanAt: {
+                type: ["string", "null"],
+                description:
+                  "When the next automatic scan is due, as an ISO 8601 timestamp in UTC. The scheduler checks every 10 minutes, so the scan starts within 10 minutes after this time. A time in the past means the scan is due and starts on the next check. Saving settings with a new interval, or turning automatic scans back on, recalculates it from the last finished scan. Null while automatic scans are off.",
+              },
               scanStartedAt: {
                 type: ["string", "null"],
                 description: "When the scan in progress started. Usually cleared when it finishes.",
@@ -13535,6 +13658,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               "removedAutoPromptIds",
               "enabled",
               "scanIntervalHours",
+              "nextScanAt",
               "scanStartedAt",
               "lastScanAt",
               "isScanning",
