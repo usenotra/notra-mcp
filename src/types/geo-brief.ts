@@ -17,6 +17,11 @@ export interface GeoBriefRef {
   workingTitle: string | null;
 }
 
+export interface GeoContentClaimRef {
+  agent: string;
+  expiresAt: string;
+}
+
 export interface GeoContentGapsResponse {
   promptGaps: Array<{
     id: string;
@@ -28,6 +33,7 @@ export interface GeoContentGapsResponse {
     engineCoverage: number;
     opportunity: number;
     brief: GeoBriefRef | null;
+    claim?: GeoContentClaimRef | null;
   }>;
   searchGaps: Array<{
     id: string;
@@ -35,6 +41,7 @@ export interface GeoContentGapsResponse {
     title: string | null;
     impressions: number | null;
     brief: GeoBriefRef | null;
+    claim?: GeoContentClaimRef | null;
   }>;
   hasScanData: boolean;
   snapshotReady: boolean;
@@ -113,6 +120,7 @@ export interface GeoContentBriefResponse {
     createdAt: string;
     updatedAt: string;
     completedAt: string | null;
+    claim?: GeoContentClaimRef | null;
   };
   organization: Organization;
 }
