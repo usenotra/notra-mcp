@@ -107,6 +107,7 @@ import type {
   SuggestGeoCompetitorsResponse,
   UpsertGeoCompetitorRequest,
 } from "./types/geo-competitor.js";
+import type { AddGeoNameCollisionRequest, GeoNameCollisionListResponse } from "./types/geo-name-collision.js";
 import type {
   GenerateGeoPersonasRequest,
   GeoPersonaActivityResponse,
@@ -921,6 +922,35 @@ export class NotraClient {
 
   async getGeoPersonaGeneration(projectId: string): Promise<GeoPersonaGenerationResponse> {
     return this.request<GeoPersonaGenerationResponse>("GET", this.geoPath(projectId, "/personas/generation"));
+  }
+
+  async listGeoNameCollisions(projectId: string): Promise<GeoNameCollisionListResponse> {
+    return this.request<GeoNameCollisionListResponse>("GET", this.geoPath(projectId, "/name-collisions"));
+  }
+
+  async addGeoNameCollision(
+    projectId: string,
+    body: AddGeoNameCollisionRequest,
+  ): Promise<GeoNameCollisionListResponse> {
+    return this.request<GeoNameCollisionListResponse, AddGeoNameCollisionRequest>(
+      "POST",
+      this.geoPath(projectId, "/name-collisions"),
+      { body },
+    );
+  }
+
+  async acceptGeoNameCollision(projectId: string, collisionId: string): Promise<GeoNameCollisionListResponse> {
+    return this.request<GeoNameCollisionListResponse>(
+      "POST",
+      this.geoPath(projectId, `/name-collisions/${encodeURIComponent(collisionId)}/accept`),
+    );
+  }
+
+  async dismissGeoNameCollision(projectId: string, collisionId: string): Promise<GeoNameCollisionListResponse> {
+    return this.request<GeoNameCollisionListResponse>(
+      "POST",
+      this.geoPath(projectId, `/name-collisions/${encodeURIComponent(collisionId)}/dismiss`),
+    );
   }
 
   async listGeoCompetitors(projectId: string): Promise<GeoCompetitorListResponse> {
