@@ -1,6 +1,11 @@
 export const GEO_COMPETITOR_KIND_VALUES = ["direct", "indirect"] as const;
 export const GEO_CONTENT_SUBTYPE_VALUES = ["guide", "comparison", "listicle", "how-to", "faq", "alternatives"] as const;
 export const GEO_BRIEF_SOURCE_KIND_VALUES = ["manual", "gap", "prompt", "search_console"] as const;
+export const GEO_CLAIM_SOURCE_KIND_VALUES = ["gap", "prompt", "search_console", "ai_search"] as const;
+export const GEO_CLAIM_DEFAULT_TTL_MINUTES = 30;
+export const GEO_CLAIM_MAX_TTL_MINUTES = 240;
+export const GEO_CLAIM_AGENT_MAX_LENGTH = 80;
+export const GEO_CLAIM_REASON_MAX_LENGTH = 1000;
 export const GEO_TRAFFIC_VISITOR_TYPE_VALUES = ["crawler", "ai_referral"] as const;
 export const GEO_TRAFFIC_CATEGORY_VALUES = ["training-crawler", "search-index", "assistant-browse"] as const;
 export const GEO_TRAFFIC_SITES_VALUES = ["exclude"] as const;

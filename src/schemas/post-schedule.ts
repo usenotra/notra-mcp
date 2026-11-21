@@ -5,6 +5,15 @@ export const postScheduleParamsSchema = z.object({
   postId: geoResourceIdSchema.describe("The existing post ID (see list_posts)"),
 });
 
+export const cancelPostScheduleSchema = postScheduleParamsSchema.extend({
+  withdraw: z
+    .boolean()
+    .optional()
+    .describe(
+      "Set to true to also close the post's open GitHub pull request. Without it, a post with an open pull request returns 409 and nothing is canceled.",
+    ),
+});
+
 export const schedulePostRequestSchema = z.object({
   scheduledAt: z.iso
     .datetime({ offset: true })

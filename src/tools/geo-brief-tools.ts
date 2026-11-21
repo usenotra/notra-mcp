@@ -4,6 +4,9 @@ import {
   planGeoContentBriefSchema,
   getGeoContentBriefSchema,
   approveGeoContentBriefSchema,
+  claimGeoContentSchema,
+  releaseGeoContentClaimSchema,
+  reportGeoContentAgentFailureSchema,
   updateGeoContentBriefSchema,
   updateGeoContentGapSchema,
 } from "../schemas/geo-brief.js";
@@ -128,7 +131,7 @@ export function registerGeoBriefTools(server: ToolRegistry, client: NotraClient)
     {
       name: "approve_geo_content_brief",
       description:
-        "Approve a GEO content brief and start the article writer, which uses billed AI credits; confirm with the user first. Only briefs in draft or failed status can be approved. Returns runId (the writer run) and the organization. Poll get_geo_content_brief for writer progress; the finished article appears as a post.",
+        "Approve a GEO content brief and start the article writer, which uses billed AI credits; confirm with the user first. Only briefs in draft or failed status can be approved. Returns 409 while another agent holds a claim on the brief or its gap; if you hold the claim yourself, approving hands the writing to Notra and releases it. Returns runId (the writer run) and the organization. Poll get_geo_content_brief for writer progress; the finished article appears as a post.",
       annotations: {
         title: "Approve GEO Content Brief",
         readOnlyHint: false,
@@ -140,5 +143,59 @@ export function registerGeoBriefTools(server: ToolRegistry, client: NotraClient)
       outputSchema: shareJsonSchema(apiOutputSchema("approveGeoContentBrief")),
     },
     ({ projectId, briefId }) => handleError(() => client.approveGeoContentBrief(projectId, briefId)),
+  );
+
+  server.tool(
+    {
+      name: "claim_geo_content",
+      description:
+        "Claim a GEO content gap or brief before your own agent writes the article, so Notra's writer, Autopilot and other agents leave it alone. Send briefId, or sourceKind with the gap's sourceId from list_geo_content_gaps, plus your agent's name. Returns 409 while another agent holds the claim or Notra is already writing the brief. Calling it again with the same credentials renews the claim. Saving the brief's draft post with update_post releases it; otherwise call release_geo_content_claim when done, or report_geo_content_agent_failure if you cannot finish. Returns sourceKind, sourceId, agent, expiresAt and the organization.",
+      annotations: {
+        title: "Claim GEO Content",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(claimGeoContentSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("claimGeoContent")),
+    },
+    ({ projectId, ...body }) => handleError(() => client.claimGeoContent(projectId, body)),
+  );
+
+  server.tool(
+    {
+      name: "release_geo_content_claim",
+      description:
+        "Release your claim on a GEO content gap or brief so Notra or another agent can write it. Send the same briefId or sourceKind and sourceId you claimed. Returns released, false when there was no claim to release, and 409 when someone else holds it.",
+      annotations: {
+        title: "Release GEO Content Claim",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(releaseGeoContentClaimSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("releaseGeoContentClaim")),
+    },
+    ({ projectId, ...body }) => handleError(() => client.releaseGeoContentClaim(projectId, body)),
+  );
+
+  server.tool(
+    {
+      name: "report_geo_content_agent_failure",
+      description:
+        "Tell Notra your agent could not write a claimed GEO article. Releases your claim and saves the reason as the error on the gap's open brief, so the team sees why. Returns released and 409 when someone else holds the claim.",
+      annotations: {
+        title: "Report GEO Content Agent Failure",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+      },
+      inputSchema: shareJsonSchema(reportGeoContentAgentFailureSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("reportGeoContentAgentFailure")),
+    },
+    ({ projectId, ...body }) => handleError(() => client.reportGeoContentAgentFailure(projectId, body)),
   );
 }

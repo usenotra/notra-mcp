@@ -1,6 +1,6 @@
 import type { ToolRegistry } from "../types/server.js";
 import type { NotraClient } from "../notra-client.js";
-import { postScheduleParamsSchema, schedulePostSchema } from "../schemas/post-schedule.js";
+import { cancelPostScheduleSchema, postScheduleParamsSchema, schedulePostSchema } from "../schemas/post-schedule.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
@@ -46,7 +46,7 @@ export function registerPostScheduleTools(server: ToolRegistry, client: NotraCli
     {
       name: "cancel_post_schedule",
       description:
-        "Cancel a post's pending publishing destinations and clear failed ones. Returns the organization, canceled, the number of destinations that were canceled or cleared, and inProgress, which is true when a destination was already publishing; those cannot be interrupted and finish on their own.",
+        "Cancel a post's pending publishing destinations and clear failed ones. When the post has an open GitHub pull request, from scheduling, create_post_pull_request or publish_post_to_site, this returns 409 and changes nothing unless withdraw is true; with withdraw it also closes that pull request, so confirm with the user first. Returns the organization, canceled, the number of destinations that were canceled or cleared, inProgress, which is true when a destination was already publishing and finishes on its own, and withdrawn, the pull request that was closed or null.",
       annotations: {
         title: "Cancel Post Schedule",
         readOnlyHint: false,
@@ -54,9 +54,9 @@ export function registerPostScheduleTools(server: ToolRegistry, client: NotraCli
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: shareJsonSchema(postScheduleParamsSchema),
+      inputSchema: shareJsonSchema(cancelPostScheduleSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("cancelPostSchedule")),
     },
-    ({ postId }) => handleError(() => client.cancelPostSchedule(postId)),
+    ({ postId, withdraw }) => handleError(() => client.cancelPostSchedule(postId, withdraw)),
   );
 }
