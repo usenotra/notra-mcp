@@ -185,7 +185,7 @@ export function registerGeoBriefTools(server: ToolRegistry, client: NotraClient)
     {
       name: "report_geo_content_agent_failure",
       description:
-        "Tell Notra your agent could not write a claimed GEO article. Releases your claim and saves the reason as the error on the gap's open brief, so the team sees why. Returns released and 409 when someone else holds the claim.",
+        "Tell Notra your agent could not write a claimed GEO article. Releases your claim and saves the reason as the error on the gap's open brief, if it has one, so the team sees why. Returns released and 409 when someone else holds the claim.",
       annotations: {
         title: "Report GEO Content Agent Failure",
         readOnlyHint: false,
