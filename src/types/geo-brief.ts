@@ -1,8 +1,13 @@
-import type { GEO_BRIEF_SOURCE_KIND_VALUES, GEO_CONTENT_SUBTYPE_VALUES } from "../constants/geo.js";
+import type {
+  GEO_BRIEF_SOURCE_KIND_VALUES,
+  GEO_CLAIM_SOURCE_KIND_VALUES,
+  GEO_CONTENT_SUBTYPE_VALUES,
+} from "../constants/geo.js";
 import type { Organization } from "./api.js";
 
 export type GeoContentSubtype = (typeof GEO_CONTENT_SUBTYPE_VALUES)[number];
 export type GeoBriefSourceKind = (typeof GEO_BRIEF_SOURCE_KIND_VALUES)[number];
+export type GeoClaimSourceKind = (typeof GEO_CLAIM_SOURCE_KIND_VALUES)[number];
 export type GeoBriefStatus = "draft" | "approved" | "writing" | "completed" | "failed";
 
 export interface GeoBriefRef {
@@ -10,6 +15,11 @@ export interface GeoBriefRef {
   status: GeoBriefStatus;
   postId: string | null;
   workingTitle: string | null;
+}
+
+export interface GeoContentClaimRef {
+  agent: string;
+  expiresAt: string;
 }
 
 export interface GeoContentGapsResponse {
@@ -23,6 +33,7 @@ export interface GeoContentGapsResponse {
     engineCoverage: number;
     opportunity: number;
     brief: GeoBriefRef | null;
+    claim?: GeoContentClaimRef | null;
   }>;
   searchGaps: Array<{
     id: string;
@@ -30,6 +41,7 @@ export interface GeoContentGapsResponse {
     title: string | null;
     impressions: number | null;
     brief: GeoBriefRef | null;
+    claim?: GeoContentClaimRef | null;
   }>;
   hasScanData: boolean;
   snapshotReady: boolean;
@@ -108,6 +120,7 @@ export interface GeoContentBriefResponse {
     createdAt: string;
     updatedAt: string;
     completedAt: string | null;
+    claim?: GeoContentClaimRef | null;
   };
   organization: Organization;
 }
@@ -120,5 +133,35 @@ export interface ApproveGeoContentBriefResponse {
 export interface UpdateGeoContentGapResponse {
   promptId: string;
   ignored: boolean;
+  organization: Organization;
+}
+
+export interface GeoContentClaimTarget {
+  briefId?: string;
+  sourceKind?: GeoClaimSourceKind;
+  sourceId?: string;
+}
+
+export interface ClaimGeoContentRequest extends GeoContentClaimTarget {
+  agent: string;
+  ttlMinutes?: number;
+}
+
+export interface ReportGeoContentAgentFailureRequest extends GeoContentClaimTarget {
+  reason: string;
+}
+
+export interface ClaimGeoContentResponse {
+  sourceKind: GeoBriefSourceKind | "ai_search";
+  sourceId: string;
+  agent: string;
+  expiresAt: string;
+  organization: Organization;
+}
+
+export interface ReleaseGeoContentClaimResponse {
+  sourceKind: GeoBriefSourceKind | "ai_search";
+  sourceId: string;
+  released: boolean;
   organization: Organization;
 }

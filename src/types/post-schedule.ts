@@ -35,4 +35,9 @@ export interface CancelPostScheduleResponse {
   organization: Organization;
   canceled: number;
   inProgress: boolean;
+  withdrawn: {
+    pullRequestNumber: number;
+    pullRequestUrl: string;
+    merged: boolean;
+  } | null;
 }

@@ -196,7 +196,7 @@ Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS 
 
 ## Toolsets
 
-All 144 tools are exposed by default, which costs roughly 23k tokens of agent context (about 12k for `geo` alone, 11k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All 147 tools are exposed by default, which costs roughly 23k tokens of agent context (about 13k for `geo` alone, 11k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset   | Tools                                                                                                     |
 | --------- | --------------------------------------------------------------------------------------------------------- |
@@ -239,7 +239,7 @@ Each MCP connection operates in the workspace bound to its bearer token, or for 
 | `create_post_pull_request`   | Open a draft GitHub pull request for a saved blog post or changelog                                         |
 | `get_post_schedule`          | Get a post's publishing schedule and per-destination status                                                 |
 | `schedule_post`              | Schedule an existing post for publishing in Notra and optionally GitHub, X, or LinkedIn                     |
-| `cancel_post_schedule`       | Cancel pending publishing destinations; already-publishing destinations finish on their own                 |
+| `cancel_post_schedule`       | Cancel pending publishing destinations; pass `withdraw` to also close the post's open pull request          |
 
 To turn a pull request into a post, call `generate_post` with `pullRequest` (`owner`, `repo`, `number`) and optionally a `brief`, poll `get_post_generation_status` for the `postId`, then call `create_post_pull_request` to open a draft pull request with the post. Calling it again updates that pull request. A `brief` also works on its own to say what a post from recent activity should cover.
 
@@ -424,15 +424,18 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 
 ### GEO content briefs
 
-| Tool                        | Description                                                   |
-| --------------------------- | ------------------------------------------------------------- |
-| `list_geo_content_gaps`     | Prompts where competitors are mentioned and this brand is not |
-| `update_geo_content_gap`    | Ignore a prompt gap or restore it                             |
-| `list_geo_content_briefs`   | List content briefs and their statuses                        |
-| `plan_geo_content_brief`    | Research a topic and plan a brief (billed, can take minutes)  |
-| `get_geo_content_brief`     | Get a brief with the full document and writer status          |
-| `update_geo_content_brief`  | Edit a draft brief's outline and planning fields              |
-| `approve_geo_content_brief` | Approve a brief and start the article writer                  |
+| Tool                               | Description                                                   |
+| ---------------------------------- | ------------------------------------------------------------- |
+| `list_geo_content_gaps`            | Prompts where competitors are mentioned and this brand is not |
+| `update_geo_content_gap`           | Ignore a prompt gap or restore it                             |
+| `list_geo_content_briefs`          | List content briefs and their statuses                        |
+| `plan_geo_content_brief`           | Research a topic and plan a brief (billed, can take minutes)  |
+| `get_geo_content_brief`            | Get a brief with the full document and writer status          |
+| `update_geo_content_brief`         | Edit a draft brief's outline and planning fields              |
+| `approve_geo_content_brief`        | Approve a brief and start the article writer                  |
+| `claim_geo_content`                | Claim a gap or brief before your own agent writes it          |
+| `release_geo_content_claim`        | Release your claim on a gap or brief                          |
+| `report_geo_content_agent_failure` | Release your claim and record why your agent could not finish |
 
 ### Agent readiness
 

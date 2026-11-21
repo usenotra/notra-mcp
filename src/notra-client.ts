@@ -83,6 +83,11 @@ import type {
 } from "./types/feedback.js";
 import type {
   ApproveGeoContentBriefResponse,
+  ClaimGeoContentRequest,
+  ClaimGeoContentResponse,
+  GeoContentClaimTarget,
+  ReleaseGeoContentClaimResponse,
+  ReportGeoContentAgentFailureRequest,
   GeoContentBriefListResponse,
   GeoContentBriefResponse,
   GeoContentGapsResponse,
@@ -425,8 +430,10 @@ export class NotraClient {
     );
   }
 
-  async cancelPostSchedule(postId: string): Promise<CancelPostScheduleResponse> {
-    return this.request<CancelPostScheduleResponse>("DELETE", `/v1/posts/${encodeURIComponent(postId)}/schedule`);
+  async cancelPostSchedule(postId: string, withdraw?: boolean): Promise<CancelPostScheduleResponse> {
+    return this.request<CancelPostScheduleResponse>("DELETE", `/v1/posts/${encodeURIComponent(postId)}/schedule`, {
+      params: { withdraw },
+    });
   }
 
   async listBrandIdentities(): Promise<BrandIdentityListResponse> {
@@ -1154,6 +1161,34 @@ export class NotraClient {
     return this.request<ApproveGeoContentBriefResponse>(
       "POST",
       this.geoPath(projectId, `/briefs/${encodeURIComponent(briefId)}/approve`),
+    );
+  }
+
+  async claimGeoContent(projectId: string, body: ClaimGeoContentRequest): Promise<ClaimGeoContentResponse> {
+    return this.request<ClaimGeoContentResponse, ClaimGeoContentRequest>("POST", this.geoPath(projectId, "/claims"), {
+      body,
+    });
+  }
+
+  async releaseGeoContentClaim(
+    projectId: string,
+    body: GeoContentClaimTarget,
+  ): Promise<ReleaseGeoContentClaimResponse> {
+    return this.request<ReleaseGeoContentClaimResponse, GeoContentClaimTarget>(
+      "POST",
+      this.geoPath(projectId, "/claims/release"),
+      { body },
+    );
+  }
+
+  async reportGeoContentAgentFailure(
+    projectId: string,
+    body: ReportGeoContentAgentFailureRequest,
+  ): Promise<ReleaseGeoContentClaimResponse> {
+    return this.request<ReleaseGeoContentClaimResponse, ReportGeoContentAgentFailureRequest>(
+      "POST",
+      this.geoPath(projectId, "/claims/failure"),
+      { body },
     );
   }
 

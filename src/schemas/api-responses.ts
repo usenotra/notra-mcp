@@ -5,6 +5,7 @@ export type ApiOperationId =
   | "approveGeoContentBrief"
   | "archiveGeoPersona"
   | "cancelPostSchedule"
+  | "claimGeoContent"
   | "createAgentSession"
   | "createBrandColor"
   | "createBrandIdentity"
@@ -37,6 +38,7 @@ export type ApiOperationId =
   | "deleteWebhookEndpoint"
   | "dismissGeoPromptSuggestion"
   | "generateGeoPersonas"
+  | "getAutopilotStatus"
   | "getBrandIdentity"
   | "getBrandIdentityGeneration"
   | "getChat"
@@ -75,6 +77,7 @@ export type ApiOperationId =
   | "getPostAgentReach"
   | "getPostGeneration"
   | "getPostSchedule"
+  | "getPricingQuote"
   | "getProject"
   | "getPublicApiStatus"
   | "getSite"
@@ -126,6 +129,8 @@ export type ApiOperationId =
   | "publishPostToSite"
   | "publishSite"
   | "redeploySiteDeployment"
+  | "releaseGeoContentClaim"
+  | "reportGeoContentAgentFailure"
   | "restoreGeoPersona"
   | "retryWebhookDelivery"
   | "rotateGeoIngestToken"
@@ -134,8 +139,11 @@ export type ApiOperationId =
   | "runSchedule"
   | "schedulePost"
   | "sendAgentSessionMessage"
+  | "startAutopilotRun"
+  | "startAutopilotWorkflowRun"
   | "startGeoAgentReadinessScan"
   | "startSiteDeployment"
+  | "stopAutopilotRun"
   | "submitFeedback"
   | "submitOrganizationFeedback"
   | "suggestGeoCompetitors"
@@ -273,14 +281,56 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         required: ["id", "slug", "name", "logo"],
         description: "Workspace the request ran in.",
       },
+      withdrawn: {
+        type: ["object", "null"],
+        properties: {
+          pullRequestNumber: { type: "integer", description: "Number of the pull request that was closed." },
+          pullRequestUrl: { type: "string", description: "URL of the pull request that was closed." },
+          merged: {
+            type: "boolean",
+            description:
+              "True when the pull request had already been merged, so it stayed merged and could not be withdrawn.",
+          },
+        },
+        required: ["pullRequestNumber", "pullRequestUrl", "merged"],
+        description: "The pull request closed because withdraw was true. Null when the post had no open pull request.",
+      },
       canceled: { type: "integer", description: "Destinations that were canceled or cleared." },
       inProgress: {
         type: "boolean",
         description: "True when a destination was already publishing; it cannot be stopped and finishes on its own.",
       },
     },
-    required: ["organization", "canceled", "inProgress"],
+    required: ["organization", "withdrawn", "canceled", "inProgress"],
     description: "Result of canceling the post's schedule.",
+  },
+  claimGeoContent: {
+    type: "object",
+    properties: {
+      sourceKind: {
+        type: "string",
+        enum: ["manual", "gap", "prompt", "search_console", "ai_search"],
+        description: "Kind of the claimed item. manual means a brief that was not planned from a gap.",
+      },
+      sourceId: { type: "string", description: "Gap id, or the brief id when sourceKind is manual." },
+      agent: { type: "string", description: "Agent holding the claim." },
+      expiresAt: { type: "string", description: "ISO timestamp when the claim lapses unless renewed." },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["sourceKind", "sourceId", "agent", "expiresAt", "organization"],
   },
   createAgentSession: {
     type: "object",
@@ -1938,6 +1988,112 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["job", "organization"],
     description: "The project's persona generation job and the workspace it belongs to.",
   },
+  getAutopilotStatus: {
+    type: "object",
+    properties: {
+      canManage: { type: "boolean" },
+      settings: {
+        type: ["object", "null"],
+        properties: {
+          enabled: { type: "boolean" },
+          dailyBrief: { type: "boolean" },
+          briefHour: { type: "integer" },
+          timezone: { type: "string" },
+          jobs: { type: "object", additionalProperties: { type: "boolean" } },
+          repository: { type: ["string", "null"] },
+          slackChannelName: { type: ["string", "null"] },
+          reviewers: { type: "array", items: { type: "string" } },
+          lastRunAt: { type: ["string", "null"], format: "date-time" },
+        },
+        required: [
+          "enabled",
+          "dailyBrief",
+          "briefHour",
+          "timezone",
+          "jobs",
+          "repository",
+          "slackChannelName",
+          "reviewers",
+          "lastRunAt",
+        ],
+      },
+      activeRuns: {
+        type: "array",
+        items: {
+          oneOf: [
+            {
+              type: "object",
+              properties: {
+                runId: { type: "string" },
+                type: { type: "string", enum: ["autopilot"] },
+                trigger: { type: "string", enum: ["manual", "cron", "onboarding", "github", "suggestion"] },
+                workflowKey: { type: ["string", "null"] },
+                startedAt: { type: "string", format: "date-time" },
+              },
+              required: ["runId", "type", "trigger", "workflowKey", "startedAt"],
+            },
+            {
+              type: "object",
+              properties: {
+                runId: { type: "string" },
+                type: { type: "string", enum: ["custom_workflow"] },
+                workflowId: { type: ["string", "null"] },
+                status: { type: "string", enum: ["queued", "running"] },
+              },
+              required: ["runId", "type", "workflowId", "status"],
+            },
+          ],
+        },
+      },
+      workflows: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            name: { type: "string" },
+            enabled: { type: "boolean" },
+            schedule: {
+              type: ["object", "null"],
+              properties: {
+                frequency: { type: "string", enum: ["daily", "weekly", "monthly"] },
+                hour: { type: "integer" },
+                minute: { type: "integer" },
+                dayOfWeek: { type: "integer" },
+                dayOfMonth: { type: "integer" },
+              },
+              required: ["frequency", "hour", "minute"],
+            },
+            lastRunAt: { type: ["string", "null"], format: "date-time" },
+          },
+          required: ["id", "name", "enabled", "schedule", "lastRunAt"],
+        },
+      },
+      openFindings: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            kind: { type: "string" },
+            title: { type: "string" },
+            status: { type: "string", enum: ["suggested", "open", "proposed"] },
+            pullRequestUrl: { type: ["string", "null"] },
+          },
+          required: ["id", "kind", "title", "status", "pullRequestUrl"],
+        },
+      },
+      rules: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { id: { type: "string" }, text: { type: "string" } },
+          required: ["id", "text"],
+        },
+      },
+    },
+    required: ["canManage", "settings", "activeRuns", "workflows", "openFindings", "rules"],
+  },
   getBrandIdentity: {
     type: "object",
     properties: {
@@ -3040,6 +3196,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             type: ["string", "null"],
             description:
               "ISO timestamp of when the last writer run finished or failed. Null while writing or before approval.",
+          },
+          claim: {
+            type: ["object", "null"],
+            properties: {
+              agent: { type: "string", description: "Name of the agent writing the article." },
+              expiresAt: { type: "string", description: "ISO timestamp when the claim lapses unless renewed." },
+            },
+            required: ["agent", "expiresAt"],
+            description:
+              "Set while an agent holds a claim on it with claimGeoContent. Notra's writer and Autopilot leave it alone until the claim is released or expires. Null when unclaimed.",
           },
         },
         required: [
@@ -6705,6 +6871,61 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["organization", "schedule"],
     description: "The post's current schedule, if any.",
   },
+  getPricingQuote: {
+    type: "object",
+    properties: {
+      scansPerMonth: { type: "number", description: "Scans per month, 30 divided by the scan interval." },
+      promptAnswersPerScan: { type: "integer", description: "AI answers used by prompts in one scan." },
+      personaAnswersPerScan: {
+        type: "integer",
+        description: "Upper bound of AI answers used by persona conversations in one scan. Persona turns count double.",
+      },
+      answersPerScan: { type: "integer", description: "Total AI answers in one scan." },
+      answersPerMonth: { type: "integer", description: "Total AI answers per month, rounded up." },
+      plan: {
+        type: ["object", "null"],
+        properties: {
+          id: {
+            type: "string",
+            enum: ["starter", "growth", "scale", "agency_starter", "agency_growth", "agency_scale"],
+            description: "Plan id, matching the plan ids used at checkout.",
+          },
+          aiAnswersPerMonth: { type: "integer", description: "AI answers included per month." },
+        },
+        required: ["id", "aiAnswersPerMonth"],
+        description:
+          "Smallest plan whose monthly AI answers cover the estimate. `null` when it needs Enterprise or Partner.",
+      },
+      plans: {
+        type: "array",
+        items: {
+          type: ["object", "null"],
+          properties: {
+            id: {
+              type: "string",
+              enum: ["starter", "growth", "scale", "agency_starter", "agency_growth", "agency_scale"],
+              description: "Plan id, matching the plan ids used at checkout.",
+            },
+            aiAnswersPerMonth: { type: "integer", description: "AI answers included per month." },
+          },
+          required: ["id", "aiAnswersPerMonth"],
+          description:
+            "Smallest plan whose monthly AI answers cover the estimate. `null` when it needs Enterprise or Partner.",
+        },
+        description: "Every plan in the chosen family, smallest first.",
+      },
+    },
+    required: [
+      "scansPerMonth",
+      "promptAnswersPerScan",
+      "personaAnswersPerScan",
+      "answersPerScan",
+      "answersPerMonth",
+      "plan",
+      "plans",
+    ],
+    description: "Monthly AI answer estimate and the plan that fits, from Notra's plan limits.",
+  },
   getProject: {
     type: "object",
     properties: {
@@ -8748,6 +8969,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               required: ["briefId", "status", "postId", "workingTitle", "publishedAt", "baseline", "rescanned"],
               description: "The most recently updated brief planned from this gap. Null when none exists.",
             },
+            claim: {
+              type: ["object", "null"],
+              properties: {
+                agent: { type: "string", description: "Name of the agent writing the article." },
+                expiresAt: { type: "string", description: "ISO timestamp when the claim lapses unless renewed." },
+              },
+              required: ["agent", "expiresAt"],
+              description:
+                "Set while an agent holds a claim on it with claimGeoContent. Notra's writer and Autopilot leave it alone until the claim is released or expires. Null when unclaimed.",
+            },
             recommendation: {
               type: "object",
               properties: {
@@ -8906,6 +9137,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               required: ["briefId", "status", "postId", "workingTitle", "publishedAt", "baseline", "rescanned"],
               description: "The most recently updated brief planned from this gap. Null when none exists.",
             },
+            claim: {
+              type: ["object", "null"],
+              properties: {
+                agent: { type: "string", description: "Name of the agent writing the article." },
+                expiresAt: { type: "string", description: "ISO timestamp when the claim lapses unless renewed." },
+              },
+              required: ["agent", "expiresAt"],
+              description:
+                "Set while an agent holds a claim on it with claimGeoContent. Notra's writer and Autopilot leave it alone until the claim is released or expires. Null when unclaimed.",
+            },
             recommendation: {
               type: "object",
               properties: {
@@ -9058,6 +9299,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               },
               required: ["briefId", "status", "postId", "workingTitle", "publishedAt", "baseline", "rescanned"],
               description: "The most recently updated brief planned from this gap. Null when none exists.",
+            },
+            claim: {
+              type: ["object", "null"],
+              properties: {
+                agent: { type: "string", description: "Name of the agent writing the article." },
+                expiresAt: { type: "string", description: "ISO timestamp when the claim lapses unless renewed." },
+              },
+              required: ["agent", "expiresAt"],
+              description:
+                "Set while an agent holds a claim on it with claimGeoContent. Notra's writer and Autopilot leave it alone until the claim is released or expires. Null when unclaimed.",
             },
           },
           required: [
@@ -11673,6 +11924,66 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["deployment", "organization"],
     description: "The deployment that was queued.",
   },
+  releaseGeoContentClaim: {
+    type: "object",
+    properties: {
+      sourceKind: {
+        type: "string",
+        enum: ["manual", "gap", "prompt", "search_console", "ai_search"],
+        description: "Kind of the claimed item. manual means a brief that was not planned from a gap.",
+      },
+      sourceId: { type: "string", description: "Gap id, or the brief id when sourceKind is manual." },
+      released: {
+        type: "boolean",
+        description: "True when your claim was removed; false when there was none to release.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["sourceKind", "sourceId", "released", "organization"],
+  },
+  reportGeoContentAgentFailure: {
+    type: "object",
+    properties: {
+      sourceKind: {
+        type: "string",
+        enum: ["manual", "gap", "prompt", "search_console", "ai_search"],
+        description: "Kind of the claimed item. manual means a brief that was not planned from a gap.",
+      },
+      sourceId: { type: "string", description: "Gap id, or the brief id when sourceKind is manual." },
+      released: {
+        type: "boolean",
+        description: "True when your claim was removed; false when there was none to release.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["sourceKind", "sourceId", "released", "organization"],
+  },
   restoreGeoPersona: {
     type: "object",
     properties: {
@@ -12166,6 +12477,12 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     type: "object",
     description: "The agent service's response to the message, passed through unchanged.",
   },
+  startAutopilotRun: {
+    type: "object",
+    properties: { runId: { type: "string" }, alreadyRunning: { type: "boolean" } },
+    required: ["runId", "alreadyRunning"],
+  },
+  startAutopilotWorkflowRun: { type: "object", properties: { runId: { type: "string" } }, required: ["runId"] },
   startGeoAgentReadinessScan: {
     type: "object",
     properties: {
@@ -12351,6 +12668,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["deployment", "organization"],
     description: "The deployment that was queued.",
+  },
+  stopAutopilotRun: {
+    type: "object",
+    properties: { stopped: { type: "string", enum: ["autopilot", "custom_workflow"] } },
+    required: ["stopped"],
   },
   submitFeedback: {
     type: "object",
@@ -13163,6 +13485,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             type: ["string", "null"],
             description:
               "ISO timestamp of when the last writer run finished or failed. Null while writing or before approval.",
+          },
+          claim: {
+            type: ["object", "null"],
+            properties: {
+              agent: { type: "string", description: "Name of the agent writing the article." },
+              expiresAt: { type: "string", description: "ISO timestamp when the claim lapses unless renewed." },
+            },
+            required: ["agent", "expiresAt"],
+            description:
+              "Set while an agent holds a claim on it with claimGeoContent. Notra's writer and Autopilot leave it alone until the claim is released or expires. Null when unclaimed.",
           },
         },
         required: [
