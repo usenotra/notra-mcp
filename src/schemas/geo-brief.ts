@@ -1,5 +1,14 @@
 import * as z from "zod";
-import { GEO_BRIEF_SOURCE_KIND_VALUES, GEO_CONTENT_SUBTYPE_VALUES, GEO_MAX_COMPETITORS } from "../constants/geo.js";
+import {
+  GEO_BRIEF_SOURCE_KIND_VALUES,
+  GEO_CLAIM_AGENT_MAX_LENGTH,
+  GEO_CLAIM_DEFAULT_TTL_MINUTES,
+  GEO_CLAIM_MAX_TTL_MINUTES,
+  GEO_CLAIM_REASON_MAX_LENGTH,
+  GEO_CLAIM_SOURCE_KIND_VALUES,
+  GEO_CONTENT_SUBTYPE_VALUES,
+  GEO_MAX_COMPETITORS,
+} from "../constants/geo.js";
 import { geoResourceIdSchema, projectIdSchema } from "./geo-fields.js";
 
 export const listGeoContentGapsSchema = z.object({
@@ -137,3 +146,60 @@ export const approveGeoContentBriefSchema = z.object({
     "ID of a draft or failed brief, from plan_geo_content_brief or list_geo_content_briefs",
   ),
 });
+
+const geoClaimTargetShape = {
+  projectId: projectIdSchema,
+  briefId: geoResourceIdSchema
+    .optional()
+    .describe(
+      "ID of the brief to claim. A brief planned from a gap shares that gap's claim. Send this or sourceKind with sourceId.",
+    ),
+  sourceKind: z
+    .enum(GEO_CLAIM_SOURCE_KIND_VALUES)
+    .optional()
+    .describe(
+      "Kind of gap: gap for a promptGaps row, search_console for a searchGaps row, ai_search for an aiSearchGaps row, prompt for a tracked prompt. gap and prompt share one claim.",
+    ),
+  sourceId: z.string().min(1).optional().describe("The gap's id from list_geo_content_gaps. Send with sourceKind."),
+};
+
+function hasOneClaimTarget(value: { briefId?: string; sourceKind?: string; sourceId?: string }) {
+  return value.briefId ? !(value.sourceKind || value.sourceId) : Boolean(value.sourceKind && value.sourceId);
+}
+
+const claimTargetMessage = "Send either briefId, or sourceKind with sourceId";
+
+export const claimGeoContentSchema = z
+  .object({
+    ...geoClaimTargetShape,
+    agent: z
+      .string()
+      .trim()
+      .min(1)
+      .max(GEO_CLAIM_AGENT_MAX_LENGTH)
+      .describe('Name of your agent, shown in Notra while the claim is held, for example "Claude Code"'),
+    ttlMinutes: z
+      .number()
+      .int()
+      .min(1)
+      .max(GEO_CLAIM_MAX_TTL_MINUTES)
+      .optional()
+      .describe(`Minutes until the claim lapses unless renewed. Defaults to ${GEO_CLAIM_DEFAULT_TTL_MINUTES}.`),
+  })
+  .refine(hasOneClaimTarget, { message: claimTargetMessage });
+
+export const releaseGeoContentClaimSchema = z
+  .object(geoClaimTargetShape)
+  .refine(hasOneClaimTarget, { message: claimTargetMessage });
+
+export const reportGeoContentAgentFailureSchema = z
+  .object({
+    ...geoClaimTargetShape,
+    reason: z
+      .string()
+      .trim()
+      .min(1)
+      .max(GEO_CLAIM_REASON_MAX_LENGTH)
+      .describe("Why your agent could not finish. Saved as the error on the gap's open brief, if it has one."),
+  })
+  .refine(hasOneClaimTarget, { message: claimTargetMessage });

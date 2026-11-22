@@ -13,7 +13,7 @@ export function registerGeoSettingsTools(server: ToolRegistry, client: NotraClie
     {
       name: "get_geo_settings",
       description:
-        "Get a project's GEO settings: tracked company name, aliases, domains, conversion paths, languages, answer engines and the recurring scan configuration. Returns configured (whether the analytics backend is configured), settings (companyName, aliases, domains, conversionPaths, competitors, languages, engines, the zero-data-retention options enforceZdr and nonZdrApprovedEngines, trackWithoutSearch, pausedAutoPromptIds, removedAutoPromptIds, enabled, scanIntervalHours, scanStartedAt, lastScanAt, isScanning and timestamps; may be null), and the organization.",
+        "Get a project's GEO settings: tracked company name, aliases, domains, conversion paths, languages, answer engines and the recurring scan configuration. Returns configured (whether the analytics backend is configured), settings (companyName, aliases, domains, conversionPaths, competitors, languages, engines, the zero-data-retention options enforceZdr and nonZdrApprovedEngines, trackWithoutSearch, pausedAutoPromptIds, removedAutoPromptIds, enabled, scanIntervalHours, nextScanAt, scanStartedAt, lastScanAt, isScanning and timestamps; may be null), and the organization. nextScanAt is the exact UTC time the next automatic scan is due (it starts within 10 minutes after it, keeps the same time of day on every interval, and is null while automatic scans are off); manual scans never move it.",
       annotations: {
         title: "Get GEO Settings",
         readOnlyHint: true,
@@ -49,7 +49,7 @@ export function registerGeoSettingsTools(server: ToolRegistry, client: NotraClie
     {
       name: "update_geo_settings",
       description:
-        "Change a project's GEO settings and restart the recurring scan schedule. Send only the fields to change; omitted fields keep their stored value. List fields replace the whole list, so include existing entries you want to keep, or they are dropped. Changes are reversible by sending the old values. Recurring scans use billed AI credits, so more engines or languages, or a shorter interval, raise spend. Use engine IDs from list_geo_engines. Returns the saved settings, with the same fields as get_geo_settings, plus configured and the organization.",
+        "Change a project's GEO settings. Changing scanIntervalHours or turning enabled back on recalculates nextScanAt from the last finished scan (due right away if that time has passed), setting enabled to false clears it to null, and other changes keep it. Send only the fields to change; omitted fields keep their stored value. List fields replace the whole list, so include existing entries you want to keep, or they are dropped. Changes are reversible by sending the old values. Recurring scans use billed AI credits, so more engines or languages, or a shorter interval, raise spend. Use engine IDs from list_geo_engines. Returns the saved settings, with the same fields as get_geo_settings, plus configured and the organization.",
       annotations: {
         title: "Update GEO Settings",
         readOnlyHint: false,

@@ -18,6 +18,7 @@ export interface GeoSettings {
   removedAutoPromptIds: string[];
   enabled: boolean;
   scanIntervalHours: number;
+  nextScanAt: string | null;
   scanStartedAt: string | null;
   lastScanAt: string | null;
   isScanning: boolean;
