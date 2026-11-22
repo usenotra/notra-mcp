@@ -4,8 +4,13 @@ import type { Context, HonoRequest, Next } from "hono";
 import type { OAuthAuthInfo } from "mcp-use/oauth";
 import type { AuthContext } from "../types/auth.js";
 import type { NotraMcpServer } from "../types/server.js";
+import { createUsageSessions } from "./usage-session.js";
 
 const CLIENT_INFO_META_KEY = "io.modelcontextprotocol/clientInfo";
+
+// Shared by `instrumentMcpUsage` and `trackInitialize`, so a 2025-era client's
+// handshake lands in the same session as the calls that follow it.
+const resolveSession = createUsageSessions();
 
 type UsageRequest = {
   method: string;
@@ -61,7 +66,13 @@ async function track<T>(
 ): Promise<T> {
   const client = request.client ?? metaClient(request.params);
   const protocolVersion = request.headers?.get("mcp-protocol-version") ?? undefined;
-  const sink: McpTransportLike = { onmessage: () => {}, send: async () => {} };
+  // Each request gets a fresh tracked transport, so without a session id the
+  // SDK would give every request its own random session.
+  const sink: McpTransportLike = {
+    sessionId: resolveSession(request.headers),
+    onmessage: () => {},
+    send: async () => {},
+  };
   const transport = trackMcpTransport(sink, {
     ...options,
     beforeSend: (event) =>
@@ -138,7 +149,7 @@ export function trackInitialize(serverInfo: McpPeerInfo) {
     const params = (message.params ?? {}) as { protocolVersion?: unknown };
     return track(
       options,
-      { method: "initialize", params },
+      { method: "initialize", params, headers: c.req.raw.headers },
       async () => {
         await next();
         if (!c.res.ok) throw new Error(`HTTP ${c.res.status}`);
