@@ -1,7 +1,9 @@
 import type { JSONSchema } from "zod/v4/core";
 
 export type ApiOperationId =
+  | "acceptGeoNameCollision"
   | "acceptGeoPromptSuggestion"
+  | "addGeoNameCollision"
   | "approveGeoContentBrief"
   | "archiveGeoPersona"
   | "cancelPostSchedule"
@@ -36,6 +38,7 @@ export type ApiOperationId =
   | "deleteSiteAuthor"
   | "deleteSkill"
   | "deleteWebhookEndpoint"
+  | "dismissGeoNameCollision"
   | "dismissGeoPromptSuggestion"
   | "generateGeoPersonas"
   | "getAutopilotStatus"
@@ -102,6 +105,7 @@ export type ApiOperationId =
   | "listGeoContentBriefs"
   | "listGeoContentGaps"
   | "listGeoEngines"
+  | "listGeoNameCollisions"
   | "listGeoPersonas"
   | "listGeoPromptResultSummaries"
   | "listGeoPrompts"
@@ -166,6 +170,91 @@ export type ApiOperationId =
   | "upsertSiteAuthor";
 
 export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema> = {
+  acceptGeoNameCollision: {
+    type: "object",
+    properties: {
+      notConfusedWith: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Entry id." },
+            name: { type: "string", description: "Name of the other product, usually the same as yours." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
+            status: {
+              type: "string",
+              enum: ["pending", "accepted", "dismissed"],
+              description:
+                "`accepted` entries are applied to mention detection; `pending` ones are suggestions waiting for review.",
+            },
+            source: {
+              type: "string",
+              enum: ["manual", "scan"],
+              description: "`manual` when added by hand, `scan` when a scan suggested it from cited sources.",
+            },
+            evidenceUrl: {
+              type: ["string", "null"],
+              description: "Cited page that made a scan suggest the entry, or `null` for manual entries.",
+            },
+            createdAt: { type: "string", description: "When the entry was created, as an ISO 8601 timestamp." },
+          },
+          required: ["id", "name", "domain", "status", "source", "evidenceUrl", "createdAt"],
+          description:
+            "A different product that shares your brand's name. Answers about it don't count as mentions of you.",
+        },
+        description:
+          "Accepted entries. Answers that name your brand but are about one of these products are not counted as mentions.",
+      },
+      suggestions: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Entry id." },
+            name: { type: "string", description: "Name of the other product, usually the same as yours." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
+            status: {
+              type: "string",
+              enum: ["pending", "accepted", "dismissed"],
+              description:
+                "`accepted` entries are applied to mention detection; `pending` ones are suggestions waiting for review.",
+            },
+            source: {
+              type: "string",
+              enum: ["manual", "scan"],
+              description: "`manual` when added by hand, `scan` when a scan suggested it from cited sources.",
+            },
+            evidenceUrl: {
+              type: ["string", "null"],
+              description: "Cited page that made a scan suggest the entry, or `null` for manual entries.",
+            },
+            createdAt: { type: "string", description: "When the entry was created, as an ISO 8601 timestamp." },
+          },
+          required: ["id", "name", "domain", "status", "source", "evidenceUrl", "createdAt"],
+          description:
+            "A different product that shares your brand's name. Answers about it don't count as mentions of you.",
+        },
+        description:
+          "Same-named products that scan answers cited on other domains, waiting to be accepted or dismissed.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["notConfusedWith", "suggestions", "organization"],
+    description: "The project's not-confused-with list and its suggestions.",
+  },
   acceptGeoPromptSuggestion: {
     type: "object",
     properties: {
@@ -216,6 +305,91 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["prompt", "organization"],
     description: "The created, updated or accepted prompt and the workspace it belongs to.",
+  },
+  addGeoNameCollision: {
+    type: "object",
+    properties: {
+      notConfusedWith: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Entry id." },
+            name: { type: "string", description: "Name of the other product, usually the same as yours." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
+            status: {
+              type: "string",
+              enum: ["pending", "accepted", "dismissed"],
+              description:
+                "`accepted` entries are applied to mention detection; `pending` ones are suggestions waiting for review.",
+            },
+            source: {
+              type: "string",
+              enum: ["manual", "scan"],
+              description: "`manual` when added by hand, `scan` when a scan suggested it from cited sources.",
+            },
+            evidenceUrl: {
+              type: ["string", "null"],
+              description: "Cited page that made a scan suggest the entry, or `null` for manual entries.",
+            },
+            createdAt: { type: "string", description: "When the entry was created, as an ISO 8601 timestamp." },
+          },
+          required: ["id", "name", "domain", "status", "source", "evidenceUrl", "createdAt"],
+          description:
+            "A different product that shares your brand's name. Answers about it don't count as mentions of you.",
+        },
+        description:
+          "Accepted entries. Answers that name your brand but are about one of these products are not counted as mentions.",
+      },
+      suggestions: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Entry id." },
+            name: { type: "string", description: "Name of the other product, usually the same as yours." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
+            status: {
+              type: "string",
+              enum: ["pending", "accepted", "dismissed"],
+              description:
+                "`accepted` entries are applied to mention detection; `pending` ones are suggestions waiting for review.",
+            },
+            source: {
+              type: "string",
+              enum: ["manual", "scan"],
+              description: "`manual` when added by hand, `scan` when a scan suggested it from cited sources.",
+            },
+            evidenceUrl: {
+              type: ["string", "null"],
+              description: "Cited page that made a scan suggest the entry, or `null` for manual entries.",
+            },
+            createdAt: { type: "string", description: "When the entry was created, as an ISO 8601 timestamp." },
+          },
+          required: ["id", "name", "domain", "status", "source", "evidenceUrl", "createdAt"],
+          description:
+            "A different product that shares your brand's name. Answers about it don't count as mentions of you.",
+        },
+        description:
+          "Same-named products that scan answers cited on other domains, waiting to be accepted or dismissed.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["notConfusedWith", "suggestions", "organization"],
+    description: "The project's not-confused-with list and its suggestions.",
   },
   approveGeoContentBrief: {
     type: "object",
@@ -1917,6 +2091,91 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["id"],
     description: "Confirms which resource the request acted on.",
+  },
+  dismissGeoNameCollision: {
+    type: "object",
+    properties: {
+      notConfusedWith: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Entry id." },
+            name: { type: "string", description: "Name of the other product, usually the same as yours." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
+            status: {
+              type: "string",
+              enum: ["pending", "accepted", "dismissed"],
+              description:
+                "`accepted` entries are applied to mention detection; `pending` ones are suggestions waiting for review.",
+            },
+            source: {
+              type: "string",
+              enum: ["manual", "scan"],
+              description: "`manual` when added by hand, `scan` when a scan suggested it from cited sources.",
+            },
+            evidenceUrl: {
+              type: ["string", "null"],
+              description: "Cited page that made a scan suggest the entry, or `null` for manual entries.",
+            },
+            createdAt: { type: "string", description: "When the entry was created, as an ISO 8601 timestamp." },
+          },
+          required: ["id", "name", "domain", "status", "source", "evidenceUrl", "createdAt"],
+          description:
+            "A different product that shares your brand's name. Answers about it don't count as mentions of you.",
+        },
+        description:
+          "Accepted entries. Answers that name your brand but are about one of these products are not counted as mentions.",
+      },
+      suggestions: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Entry id." },
+            name: { type: "string", description: "Name of the other product, usually the same as yours." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
+            status: {
+              type: "string",
+              enum: ["pending", "accepted", "dismissed"],
+              description:
+                "`accepted` entries are applied to mention detection; `pending` ones are suggestions waiting for review.",
+            },
+            source: {
+              type: "string",
+              enum: ["manual", "scan"],
+              description: "`manual` when added by hand, `scan` when a scan suggested it from cited sources.",
+            },
+            evidenceUrl: {
+              type: ["string", "null"],
+              description: "Cited page that made a scan suggest the entry, or `null` for manual entries.",
+            },
+            createdAt: { type: "string", description: "When the entry was created, as an ISO 8601 timestamp." },
+          },
+          required: ["id", "name", "domain", "status", "source", "evidenceUrl", "createdAt"],
+          description:
+            "A different product that shares your brand's name. Answers about it don't count as mentions of you.",
+        },
+        description:
+          "Same-named products that scan answers cited on other domains, waiting to be accepted or dismissed.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["notConfusedWith", "suggestions", "organization"],
+    description: "The project's not-confused-with list and its suggestions.",
   },
   dismissGeoPromptSuggestion: {
     type: "object",
@@ -9400,6 +9659,91 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["engines", "organization"],
     description: "AI engines the organization can track and the workspace they belong to.",
+  },
+  listGeoNameCollisions: {
+    type: "object",
+    properties: {
+      notConfusedWith: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Entry id." },
+            name: { type: "string", description: "Name of the other product, usually the same as yours." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
+            status: {
+              type: "string",
+              enum: ["pending", "accepted", "dismissed"],
+              description:
+                "`accepted` entries are applied to mention detection; `pending` ones are suggestions waiting for review.",
+            },
+            source: {
+              type: "string",
+              enum: ["manual", "scan"],
+              description: "`manual` when added by hand, `scan` when a scan suggested it from cited sources.",
+            },
+            evidenceUrl: {
+              type: ["string", "null"],
+              description: "Cited page that made a scan suggest the entry, or `null` for manual entries.",
+            },
+            createdAt: { type: "string", description: "When the entry was created, as an ISO 8601 timestamp." },
+          },
+          required: ["id", "name", "domain", "status", "source", "evidenceUrl", "createdAt"],
+          description:
+            "A different product that shares your brand's name. Answers about it don't count as mentions of you.",
+        },
+        description:
+          "Accepted entries. Answers that name your brand but are about one of these products are not counted as mentions.",
+      },
+      suggestions: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Entry id." },
+            name: { type: "string", description: "Name of the other product, usually the same as yours." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
+            status: {
+              type: "string",
+              enum: ["pending", "accepted", "dismissed"],
+              description:
+                "`accepted` entries are applied to mention detection; `pending` ones are suggestions waiting for review.",
+            },
+            source: {
+              type: "string",
+              enum: ["manual", "scan"],
+              description: "`manual` when added by hand, `scan` when a scan suggested it from cited sources.",
+            },
+            evidenceUrl: {
+              type: ["string", "null"],
+              description: "Cited page that made a scan suggest the entry, or `null` for manual entries.",
+            },
+            createdAt: { type: "string", description: "When the entry was created, as an ISO 8601 timestamp." },
+          },
+          required: ["id", "name", "domain", "status", "source", "evidenceUrl", "createdAt"],
+          description:
+            "A different product that shares your brand's name. Answers about it don't count as mentions of you.",
+        },
+        description:
+          "Same-named products that scan answers cited on other domains, waiting to be accepted or dismissed.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["notConfusedWith", "suggestions", "organization"],
+    description: "The project's not-confused-with list and its suggestions.",
   },
   listGeoPersonas: {
     type: "object",

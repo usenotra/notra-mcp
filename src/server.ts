@@ -19,6 +19,7 @@ import { registerFeedbackInboxTools, registerFeedbackTools } from "./tools/feedb
 import { registerGeoAgentReadinessTools } from "./tools/geo-agent-readiness-tools.js";
 import { registerGeoBriefTools } from "./tools/geo-brief-tools.js";
 import { registerGeoCompetitorTools } from "./tools/geo-competitor-tools.js";
+import { registerGeoNameCollisionTools } from "./tools/geo-name-collision-tools.js";
 import { registerGeoDiagnosticTools } from "./tools/geo-diagnostic-tools.js";
 import { registerGeoPersonaTools } from "./tools/geo-persona-tools.js";
 import { registerGeoPromptTools } from "./tools/geo-prompt-tools.js";
@@ -74,6 +75,7 @@ const GEO_REGISTRARS: readonly Registrar[] = [
   registerGeoSequenceTools,
   registerGeoPersonaTools,
   registerGeoCompetitorTools,
+  registerGeoNameCollisionTools,
   registerGeoDiagnosticTools,
   registerGeoScanTools,
   registerGeoVisibilityTools,

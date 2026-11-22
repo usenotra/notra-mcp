@@ -411,6 +411,15 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `delete_geo_competitor`   | Stop tracking a competitor                  |
 | `import_geo_competitors`  | Bulk import competitors from rows or CSV    |
 
+### GEO name collisions
+
+| Tool                         | Description                                             |
+| ---------------------------- | ------------------------------------------------------- |
+| `list_geo_name_collisions`   | List accepted exclusions and citation-based suggestions |
+| `add_geo_name_collision`     | Add a same-named product by name and domain             |
+| `accept_geo_name_collision`  | Accept a name collision suggested from scan citations   |
+| `dismiss_geo_name_collision` | Dismiss a suggestion or remove an entry                 |
+
 ### GEO scans and visibility
 
 | Tool                               | Description                                                 |
