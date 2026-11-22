@@ -12,6 +12,7 @@ import {
   SERVER_WEBSITE_URL,
 } from "./constants/server.js";
 import { NotraClient } from "./notra-client.js";
+import { registerAutopilotTools } from "./tools/autopilot-tools.js";
 import { registerBrandIdentityTools } from "./tools/brand-identity-tools.js";
 import { registerEventTriggerTools } from "./tools/event-trigger-tools.js";
 import { registerFeedbackInboxTools, registerFeedbackTools } from "./tools/feedback-tools.js";
@@ -148,6 +149,7 @@ export function createServer(options: CreateServerOptions = {}): NotraMcpServer 
 
   register(CONTENT_REGISTRARS, "content");
   register(GEO_REGISTRARS, "geo");
+  register([registerAutopilotTools], "autopilot");
   register(SHARED_REGISTRARS);
 
   const views = options.withoutViews ? undefined : loadViewsManifest();

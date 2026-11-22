@@ -1,6 +1,6 @@
 # Notra MCP Server
 
-An MCP (Model Context Protocol) server for the [Notra API](https://www.usenotra.com/docs). It manages posts, brand identities, integrations, schedules, GEO visibility scans, competitors, content briefs, and AI traffic analytics.
+An MCP (Model Context Protocol) server for the [Notra API](https://www.usenotra.com/docs). It manages posts, brand identities, integrations, schedules, Autopilot runs, GEO visibility scans, competitors, content briefs, and AI traffic analytics.
 
 ## Install from a directory
 
@@ -196,17 +196,18 @@ Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS 
 
 ## Toolsets
 
-All 147 tools are exposed by default, which costs roughly 23k tokens of agent context (about 13k for `geo` alone, 11k for `content`). To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All tools are exposed by default. The `geo` and `content` toolsets use about 13k and 11k tokens of agent context, respectively. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
-| Toolset   | Tools                                                                                                     |
-| --------- | --------------------------------------------------------------------------------------------------------- |
-| `content` | Posts, Sites, brand identities, integrations, schedules, event triggers, webhooks, skills, feedback inbox |
-| `geo`     | Projects and every GEO tool                                                                               |
+| Toolset     | Tools                                                                                                     |
+| ----------- | --------------------------------------------------------------------------------------------------------- |
+| `content`   | Posts, Sites, brand identities, integrations, schedules, event triggers, webhooks, skills, feedback inbox |
+| `geo`       | Projects and every GEO tool                                                                               |
+| `autopilot` | Autopilot status, findings and run controls                                                               |
 
 Workspace tools and `submit_feedback` are always available.
 
 ```bash
-NOTRA_MCP_TOOLSETS=content npx -y @usenotra/mcp
+NOTRA_MCP_TOOLSETS=autopilot npx -y @usenotra/mcp
 ```
 
 ```text
@@ -223,6 +224,17 @@ https://mcp.usenotra.com/mcp?toolsets=geo
 | `list_workspaces` | List accepted and pending workspaces available to the authenticated account |
 
 Each MCP connection operates in the workspace bound to its bearer token, or for account API keys the workspace selected with `NOTRA_ORGANIZATION_ID` or the `X-Notra-Organization-Id` header. To act in another workspace, authorize or configure a separate connection for that workspace; `list_workspaces` discovers access but does not switch workspaces.
+
+### Autopilot
+
+| Tool                     | Description                                                                       |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| `get_autopilot_status`   | Inspect settings, active runs, open findings, custom workflows and standing rules |
+| `run_autopilot`          | Start a full run or one built-in automation                                       |
+| `stop_autopilot_run`     | Stop an active run without undoing completed work                                 |
+| `run_autopilot_workflow` | Start a saved custom workflow                                                     |
+
+Use OAuth or an account API key; organization API keys are not supported. Reading status requires `autopilot.read`; run controls require `autopilot.write` and a current workspace owner or admin. Confirm before starting or stopping a run. Runs can use AI credits and open or merge pull requests under the workspace's approval settings.
 
 ### Posts
 
