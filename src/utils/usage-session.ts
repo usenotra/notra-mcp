@@ -1,21 +1,24 @@
 import { createHash, randomUUID } from "node:crypto";
-import { decodeJwt } from "jose";
 import { USAGE_SESSION_IDLE_MS, USAGE_SESSION_MAX_ENTRIES } from "../constants/usage.js";
-import { parseBearerToken } from "./auth.js";
+import type { AuthContext } from "../types/auth.js";
+import { selectRequestOrganization } from "./organization.js";
 import { getOrganizationScope } from "./request-scope.js";
 
 type SessionEntry = { id: string; lastSeen: number };
 
-function callerIdentity(token: string): string {
-  // Read without verification: the value only groups requests for analytics,
-  // and authentication still verifies the token before any tool runs.
-  try {
-    const { sub } = decodeJwt(token);
-    if (typeof sub === "string" && sub.length > 0) return `sub:${sub}`;
-  } catch {
-    // Not a JWT, so it is an API key.
-  }
-  return `key:${createHash("sha256").update(token).digest("hex")}`;
+function sha256(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+/**
+ * The caller and the workspace the request acts on, read from verified auth:
+ * an OAuth token's user and consent workspace, or an API key's hash and the
+ * workspace picked the same way `requestAuth` picks it for tools.
+ */
+function callerKey(auth: AuthContext, headers: Headers | undefined): [string, string] {
+  if (auth.kind === "oauth") return [`oauth:${auth.userId}`, auth.organizationId];
+  const workspace = selectRequestOrganization(getOrganizationScope(), headers ?? new Headers());
+  return [`key:${sha256(auth.token)}`, workspace ?? ""];
 }
 
 /**
@@ -28,15 +31,10 @@ function callerIdentity(token: string): string {
 export function createUsageSessions(idleMs = USAGE_SESSION_IDLE_MS, maxEntries = USAGE_SESSION_MAX_ENTRIES) {
   const sessions = new Map<string, SessionEntry>();
 
-  return (headers: Headers | undefined, now = Date.now()): string | undefined => {
-    const token = parseBearerToken(headers?.get("authorization") ?? undefined);
-    if (!token) return undefined;
+  return (auth: AuthContext | undefined, headers: Headers | undefined, now = Date.now()): string | undefined => {
+    if (!auth) return undefined;
 
-    const workspace = getOrganizationScope() ?? headers?.get("x-notra-organization-id") ?? "";
-    const key = createHash("sha256")
-      .update(JSON.stringify([callerIdentity(token), workspace, headers?.get("user-agent") ?? ""]))
-      .digest("hex");
-
+    const key = sha256(JSON.stringify([...callerKey(auth, headers), headers?.get("user-agent") ?? ""]));
     const existing = sessions.get(key);
     sessions.delete(key);
     const entry =
