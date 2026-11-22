@@ -16,7 +16,7 @@ export function registerGeoNameCollisionTools(server: ToolRegistry, client: Notr
     {
       name: "list_geo_name_collisions",
       description:
-        "List the project's not-confused-with list: other products that share the brand's name (such as Jam at jam.dev). Answers that name the brand but are about one of these products don't count as mentions. Returns notConfusedWith (accepted entries) and suggestions (same-named products that scan answers cited on other domains, waiting for review), each with id, name, domain, status, source, evidenceUrl and createdAt, plus the organization. Accept or dismiss suggestions with accept_geo_name_collision or dismiss_geo_name_collision.",
+        "List the project's not-confused-with list: other products that share the brand's name (such as Acme at acme.io). Answers that name the brand but are about one of these products don't count as mentions. Returns notConfusedWith (accepted entries) and suggestions (same-named products that scan answers cited on other domains, waiting for review), each with id, name, domain, status, source, evidenceUrl and createdAt, plus the organization. Accept or dismiss suggestions with accept_geo_name_collision or dismiss_geo_name_collision.",
       annotations: {
         title: "List GEO Name Collisions",
         readOnlyHint: true,

@@ -172,7 +172,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           properties: {
             id: { type: "string", description: "Entry id." },
             name: { type: "string", description: "Name of the other product, usually the same as yours." },
-            domain: { type: "string", description: "Domain of the other product, such as `jam.dev`." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
             status: {
               type: "string",
               enum: ["pending", "accepted", "dismissed"],
@@ -204,7 +204,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           properties: {
             id: { type: "string", description: "Entry id." },
             name: { type: "string", description: "Name of the other product, usually the same as yours." },
-            domain: { type: "string", description: "Domain of the other product, such as `jam.dev`." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
             status: {
               type: "string",
               enum: ["pending", "accepted", "dismissed"],
@@ -308,7 +308,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           properties: {
             id: { type: "string", description: "Entry id." },
             name: { type: "string", description: "Name of the other product, usually the same as yours." },
-            domain: { type: "string", description: "Domain of the other product, such as `jam.dev`." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
             status: {
               type: "string",
               enum: ["pending", "accepted", "dismissed"],
@@ -340,7 +340,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           properties: {
             id: { type: "string", description: "Entry id." },
             name: { type: "string", description: "Name of the other product, usually the same as yours." },
-            domain: { type: "string", description: "Domain of the other product, such as `jam.dev`." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
             status: {
               type: "string",
               enum: ["pending", "accepted", "dismissed"],
@@ -2052,7 +2052,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           properties: {
             id: { type: "string", description: "Entry id." },
             name: { type: "string", description: "Name of the other product, usually the same as yours." },
-            domain: { type: "string", description: "Domain of the other product, such as `jam.dev`." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
             status: {
               type: "string",
               enum: ["pending", "accepted", "dismissed"],
@@ -2084,7 +2084,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           properties: {
             id: { type: "string", description: "Entry id." },
             name: { type: "string", description: "Name of the other product, usually the same as yours." },
-            domain: { type: "string", description: "Domain of the other product, such as `jam.dev`." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
             status: {
               type: "string",
               enum: ["pending", "accepted", "dismissed"],
@@ -9419,7 +9419,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           properties: {
             id: { type: "string", description: "Entry id." },
             name: { type: "string", description: "Name of the other product, usually the same as yours." },
-            domain: { type: "string", description: "Domain of the other product, such as `jam.dev`." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
             status: {
               type: "string",
               enum: ["pending", "accepted", "dismissed"],
@@ -9451,7 +9451,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           properties: {
             id: { type: "string", description: "Entry id." },
             name: { type: "string", description: "Name of the other product, usually the same as yours." },
-            domain: { type: "string", description: "Domain of the other product, such as `jam.dev`." },
+            domain: { type: "string", description: "Domain of the other product, such as `acme.io`." },
             status: {
               type: "string",
               enum: ["pending", "accepted", "dismissed"],
