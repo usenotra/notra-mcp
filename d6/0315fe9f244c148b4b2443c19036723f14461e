@@ -1,0 +1,19 @@
+tests/post-comments.test.mjs
+  s_f0b53d5b196d44::t_bad197dde16e08 1-183
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "d60315fe9f244c148b4b2443c19036723f14461e",
+  "prompts": {},
+  "sessions": {
+    "s_f0b53d5b196d44": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4527ca9b-a020-4c17-9225-24d8be9b3ce8",
+        "model": "unknown"
+      },
+      "human_author": "Jan Burzinski <156842394+janburzinski@users.noreply.github.com>"
+    }
+  }
+}
