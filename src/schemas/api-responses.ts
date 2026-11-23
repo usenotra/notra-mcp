@@ -1551,7 +1551,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 type: "boolean",
                 description: "People outside the workspace can open it with a password.",
               },
-              url: { type: "string", description: "The post's page on the preview." },
+              url: {
+                type: "string",
+                description:
+                  "The post's page on the preview. Opens it for readers outside the workspace with the password, or for anyone when the site allows that.",
+              },
+              reviewUrl: {
+                type: "string",
+                description:
+                  "The link to give teammates: it signs them in with Notra and opens the page with the review toolbar, where they can comment.",
+              },
             },
             required: [
               "status",
@@ -1563,6 +1572,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               "lifetime",
               "hasPassword",
               "url",
+              "reviewUrl",
             ],
           },
           { type: "null" },
@@ -7694,7 +7704,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 type: "boolean",
                 description: "People outside the workspace can open it with a password.",
               },
-              url: { type: "string", description: "The post's page on the preview." },
+              url: {
+                type: "string",
+                description:
+                  "The post's page on the preview. Opens it for readers outside the workspace with the password, or for anyone when the site allows that.",
+              },
+              reviewUrl: {
+                type: "string",
+                description:
+                  "The link to give teammates: it signs them in with Notra and opens the page with the review toolbar, where they can comment.",
+              },
             },
             required: [
               "status",
@@ -7706,6 +7725,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               "lifetime",
               "hasPassword",
               "url",
+              "reviewUrl",
             ],
           },
           { type: "null" },

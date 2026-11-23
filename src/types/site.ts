@@ -146,6 +146,8 @@ export interface SitePostPreview {
   expiresAt: string;
   hasPassword: boolean;
   url: string;
+  /** For teammates: signs them in, so they see the comment toolbar. */
+  reviewUrl: string;
 }
 
 export interface GetSiteResponse {

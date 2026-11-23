@@ -35,6 +35,7 @@ const preview = {
   siteVisibility: "protected",
   pagePath: "/blog/launch",
   url: "https://post-post-1-abc--acme.notra.site/blog/launch",
+  reviewUrl: "https://app.usenotra.com/sites/preview-access?site=site-1&preview=post-post-1-abc&next=%2Fblog%2Flaunch",
 };
 const bearer = "Bearer test-account-key";
 const requests = [];
