@@ -57,12 +57,10 @@ const MANUAL_COVERAGE = {
 
 /** Client routes the production API has not shipped yet. Remove entries once they appear in the spec. */
 const PENDING_API_ROUTES = {
-  "GET /v1/projects/{projectId}/geo/name-collisions": "ships in usenotra/notra#2830; remove once deployed",
-  "POST /v1/projects/{projectId}/geo/name-collisions": "ships in usenotra/notra#2830; remove once deployed",
-  "POST /v1/projects/{projectId}/geo/name-collisions/{collisionId}/accept":
-    "ships in usenotra/notra#2830; remove once deployed",
-  "POST /v1/projects/{projectId}/geo/name-collisions/{collisionId}/dismiss":
-    "ships in usenotra/notra#2830; remove once deployed",
+  "GET /v1/post-comments": "ships in usenotra/notra#2862; remove once deployed",
+  "GET /v1/posts/{postId}/comments": "ships in usenotra/notra#2862; remove once deployed",
+  "POST /v1/posts/{postId}/comments/resolve": "ships in usenotra/notra#2862; remove once deployed",
+  "POST /v1/posts/{postId}/comments/{threadId}/replies": "ships in usenotra/notra#2862; remove once deployed",
 };
 
 function normalizeSpecPath(specPath) {

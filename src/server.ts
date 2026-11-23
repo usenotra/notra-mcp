@@ -30,6 +30,7 @@ import { registerGeoTrafficTools } from "./tools/geo-traffic-tools.js";
 import { registerGeoVisibilityTools } from "./tools/geo-visibility-tools.js";
 import { registerGeoWebAnalyticsTools } from "./tools/geo-web-analytics-tools.js";
 import { registerIntegrationTools } from "./tools/integration-tools.js";
+import { registerPostCommentTools } from "./tools/post-comment-tools.js";
 import { registerPostTools } from "./tools/post-tools.js";
 import { registerPostScheduleTools } from "./tools/post-schedule-tools.js";
 import { registerProjectTools } from "./tools/project-tools.js";
@@ -57,6 +58,7 @@ type Registrar = (server: ToolRegistry, client: NotraClient) => void;
 
 const CONTENT_REGISTRARS: readonly Registrar[] = [
   registerPostTools,
+  registerPostCommentTools,
   registerPostScheduleTools,
   registerSiteTools,
   registerBrandIdentityTools,

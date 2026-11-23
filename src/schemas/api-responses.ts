@@ -97,6 +97,7 @@ export type ApiOperationId =
   | "listBrandColors"
   | "listBrandIdentities"
   | "listChats"
+  | "listCommentedPosts"
   | "listEventTriggers"
   | "listFeedback"
   | "listGeoAnalyticsImports"
@@ -118,6 +119,7 @@ export type ApiOperationId =
   | "listGeoTrafficPages"
   | "listIntegrations"
   | "listPostAuthors"
+  | "listPostComments"
   | "listPosts"
   | "listProjects"
   | "listScheduleRuns"
@@ -134,7 +136,9 @@ export type ApiOperationId =
   | "publishSite"
   | "redeploySiteDeployment"
   | "releaseGeoContentClaim"
+  | "replyToPostComment"
   | "reportGeoContentAgentFailure"
+  | "resolvePostComments"
   | "restoreGeoPersona"
   | "retryWebhookDelivery"
   | "rotateGeoIngestToken"
@@ -1528,13 +1532,19 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               deleting: { type: "boolean", description: "The preview is being removed." },
               errorMessage: { type: ["string", "null"], description: "Why the latest build failed or stopped." },
               expiresAt: { type: "string", description: "When the preview stops being served." },
+              lifetime: {
+                type: "string",
+                enum: ["1h", "1d", "3d", "7d"],
+                description:
+                  "How long the preview stays open after each build; rebuilds keep it unless a new one is passed.",
+              },
               hasPassword: {
                 type: "boolean",
                 description: "People outside the workspace can open it with a password.",
               },
               url: { type: "string", description: "The post's page on the preview." },
             },
-            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "lifetime", "hasPassword", "url"],
           },
           { type: "null" },
         ],
@@ -7646,13 +7656,19 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               deleting: { type: "boolean", description: "The preview is being removed." },
               errorMessage: { type: ["string", "null"], description: "Why the latest build failed or stopped." },
               expiresAt: { type: "string", description: "When the preview stops being served." },
+              lifetime: {
+                type: "string",
+                enum: ["1h", "1d", "3d", "7d"],
+                description:
+                  "How long the preview stays open after each build; rebuilds keep it unless a new one is passed.",
+              },
               hasPassword: {
                 type: "boolean",
                 description: "People outside the workspace can open it with a password.",
               },
               url: { type: "string", description: "The post's page on the preview." },
             },
-            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "lifetime", "hasPassword", "url"],
           },
           { type: "null" },
         ],
@@ -8472,6 +8488,39 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["chats"],
     description: "The organization's chat sessions, without their messages.",
+  },
+  listCommentedPosts: {
+    type: "object",
+    properties: {
+      posts: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            postId: { type: "string" },
+            title: { type: "string" },
+            openThreads: { type: "integer", description: "Unresolved threads on the post" },
+            lastCommentAt: { type: ["string", "null"], description: "When the newest open thread was started" },
+          },
+          required: ["postId", "title", "openThreads", "lastCommentAt"],
+        },
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["posts", "organization"],
   },
   listEventTriggers: {
     type: "object",
@@ -10885,6 +10934,64 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["organization", "authors"],
     description: "Authors that can be credited on posts.",
   },
+  listPostComments: {
+    type: "object",
+    properties: {
+      threads: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Thread ID, used to reply and resolve" },
+            quote: { type: ["string", "null"], description: "The passage of the post the thread is about" },
+            author: { type: "string" },
+            body: { type: "string" },
+            leftOn: {
+              type: "string",
+              enum: ["preview", "editor"],
+              description: "Whether it was left on the post's Notra Sites preview or in the editor",
+            },
+            resolved: { type: "boolean" },
+            deleted: {
+              type: "boolean",
+              description: "The thread's first comment was deleted; only its replies remain",
+            },
+            createdAt: { type: "string" },
+            replies: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  author: { type: "string" },
+                  body: { type: "string" },
+                  createdAt: { type: "string" },
+                },
+                required: ["id", "author", "body", "createdAt"],
+              },
+            },
+          },
+          required: ["id", "quote", "author", "body", "leftOn", "resolved", "deleted", "createdAt", "replies"],
+        },
+      },
+      openThreads: { type: "integer" },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["threads", "openThreads", "organization"],
+  },
   listPosts: {
     type: "object",
     properties: {
@@ -12298,6 +12405,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["sourceKind", "sourceId", "released", "organization"],
   },
+  replyToPostComment: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
   reportGeoContentAgentFailure: {
     type: "object",
     properties: {
@@ -12327,6 +12435,18 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["sourceKind", "sourceId", "released", "organization"],
+  },
+  resolvePostComments: {
+    type: "object",
+    properties: {
+      resolved: { type: "array", items: { type: "string" } },
+      skipped: {
+        type: "array",
+        items: { type: "string" },
+        description: "Threads that were already resolved, replies or not on this post",
+      },
+    },
+    required: ["resolved", "skipped"],
   },
   restoreGeoPersona: {
     type: "object",
