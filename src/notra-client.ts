@@ -56,6 +56,18 @@ import type {
   StopAutopilotRunResponse,
 } from "./types/autopilot.js";
 import type {
+  DeleteOutreachPitchResponse,
+  DisconnectOutreachMailboxResponse,
+  EditOutreachPitchRequest,
+  ListOutreachPitchesParams,
+  OutreachMailboxResponse,
+  OutreachPitchListResponse,
+  OutreachPitchResponse,
+  SendOutreachPitchRequest,
+  SendOutreachPitchResponse,
+  UpdateOutreachPitchDetailsRequest,
+} from "./types/autopilot-outreach.js";
+import type {
   ImportSiteAuthorsRequest,
   ImportSiteAuthorsResponse,
   PublishSiteDesignRequest,
@@ -212,6 +224,10 @@ import { appendQueryParams } from "./utils/query-params.js";
 import { describeOrganizationError } from "./utils/organization.js";
 import { createRequestSignal } from "./utils/request-scope.js";
 
+function outreachPitchPath(pitchId: string, suffix: string): string {
+  return `/v1/autopilot/outreach/pitches/${encodeURIComponent(pitchId)}${suffix}`;
+}
+
 function sitePath(siteId: string, suffix: string): string {
   return `/v1/sites/${encodeURIComponent(siteId)}${suffix}`;
 }
@@ -341,6 +357,63 @@ export class NotraClient {
       "POST",
       `/v1/autopilot/workflows/${encodeURIComponent(workflowId)}/run`,
     );
+  }
+
+  async listOutreachPitches(params?: ListOutreachPitchesParams): Promise<OutreachPitchListResponse> {
+    return this.request<OutreachPitchListResponse>("GET", "/v1/autopilot/outreach/pitches", { params });
+  }
+
+  async getOutreachPitch(pitchId: string): Promise<OutreachPitchResponse> {
+    return this.request<OutreachPitchResponse>("GET", outreachPitchPath(pitchId, ""));
+  }
+
+  async editOutreachPitch(pitchId: string, body: EditOutreachPitchRequest): Promise<OutreachPitchResponse> {
+    return this.request<OutreachPitchResponse, EditOutreachPitchRequest>("PATCH", outreachPitchPath(pitchId, ""), {
+      body,
+    });
+  }
+
+  async deleteOutreachPitch(pitchId: string): Promise<DeleteOutreachPitchResponse> {
+    return this.request<DeleteOutreachPitchResponse>("DELETE", outreachPitchPath(pitchId, ""));
+  }
+
+  async sendOutreachPitch(pitchId: string, body: SendOutreachPitchRequest): Promise<SendOutreachPitchResponse> {
+    return this.request<SendOutreachPitchResponse, SendOutreachPitchRequest>(
+      "POST",
+      outreachPitchPath(pitchId, "/send"),
+      { body },
+    );
+  }
+
+  async cancelOutreachPitch(pitchId: string): Promise<OutreachPitchResponse> {
+    return this.request<OutreachPitchResponse>("POST", outreachPitchPath(pitchId, "/cancel"));
+  }
+
+  async markOutreachPitchSent(pitchId: string): Promise<OutreachPitchResponse> {
+    return this.request<OutreachPitchResponse>("POST", outreachPitchPath(pitchId, "/mark-sent"));
+  }
+
+  async markOutreachPitchListed(pitchId: string): Promise<OutreachPitchResponse> {
+    return this.request<OutreachPitchResponse>("POST", outreachPitchPath(pitchId, "/mark-listed"));
+  }
+
+  async updateOutreachPitchDetails(
+    pitchId: string,
+    body: UpdateOutreachPitchDetailsRequest,
+  ): Promise<OutreachPitchResponse> {
+    return this.request<OutreachPitchResponse, UpdateOutreachPitchDetailsRequest>(
+      "PATCH",
+      outreachPitchPath(pitchId, "/details"),
+      { body },
+    );
+  }
+
+  async getOutreachMailbox(): Promise<OutreachMailboxResponse> {
+    return this.request<OutreachMailboxResponse>("GET", "/v1/autopilot/outreach/mailbox");
+  }
+
+  async disconnectOutreachMailbox(): Promise<DisconnectOutreachMailboxResponse> {
+    return this.request<DisconnectOutreachMailboxResponse>("DELETE", "/v1/autopilot/outreach/mailbox");
   }
 
   async listPosts(params?: ListPostsParams): Promise<PostListResponse> {

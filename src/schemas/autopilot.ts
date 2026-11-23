@@ -1,6 +1,6 @@
 import * as z from "zod";
 
-const autopilotIdSchema = z
+export const autopilotIdSchema = z
   .string()
   .trim()
   .min(1)

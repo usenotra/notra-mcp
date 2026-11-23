@@ -1,6 +1,6 @@
 # Notra MCP Server
 
-An MCP (Model Context Protocol) server for the [Notra API](https://www.usenotra.com/docs). It manages posts, brand identities, integrations, schedules, Autopilot runs, GEO visibility scans, competitors, content briefs, and AI traffic analytics.
+An MCP (Model Context Protocol) server for the [Notra API](https://www.usenotra.com/docs). It manages posts, brand identities, integrations, schedules, Autopilot runs and outreach, GEO visibility scans, competitors, content briefs, and AI traffic analytics.
 
 ## Install from a directory
 
@@ -202,7 +202,7 @@ All tools are exposed by default. The `geo` and `content` toolsets use about 13k
 | ----------- | --------------------------------------------------------------------------------------------------------- |
 | `content`   | Posts, Sites, brand identities, integrations, schedules, event triggers, webhooks, skills, feedback inbox |
 | `geo`       | Projects and every GEO tool                                                                               |
-| `autopilot` | Autopilot status, findings and run controls                                                               |
+| `autopilot` | Autopilot status, findings, run controls and outreach pitches                                             |
 
 Workspace tools and `submit_feedback` are always available.
 
@@ -235,6 +235,26 @@ Each MCP connection operates in the workspace bound to its bearer token, or for 
 | `run_autopilot_workflow` | Start a saved custom workflow                                                     |
 
 Use OAuth or an account API key; organization API keys are not supported. Reading status requires `autopilot.read`; run controls require `autopilot.write` and a current workspace owner or admin. Confirm before starting or stopping a run. Runs can use AI credits and open or merge pull requests under the workspace's approval settings.
+
+#### Outreach
+
+Autopilot drafts pitches to pages that AI answers cite without your brand. Pitches go out from the workspace's own Gmail or Outlook mailbox.
+
+| Tool                            | Description                                                                      |
+| ------------------------------- | -------------------------------------------------------------------------------- |
+| `list_outreach_pitches`         | List pitches with optional status, stage, follow-up-due and search filters       |
+| `get_outreach_pitch`            | Get one pitch with its email, why the page was picked, contact routes and thread |
+| `edit_outreach_pitch`           | Change a draft's recipient, subject or body                                      |
+| `send_outreach_pitch`           | Send a draft now or schedule it                                                  |
+| `cancel_outreach_pitch`         | Take back a scheduled pitch; it becomes a draft again                            |
+| `mark_outreach_pitch_sent`      | Record a pitch sent by hand through a form or another mail app                   |
+| `mark_outreach_pitch_listed`    | Record that the page now lists the brand                                         |
+| `update_outreach_pitch_details` | Correct the stage, follow-up time or deal                                        |
+| `delete_outreach_pitch`         | Drop a pitch; the page isn't pitched again                                       |
+| `get_outreach_mailbox`          | Show the connected mailbox and the link to connect one in a browser              |
+| `disconnect_outreach_mailbox`   | Stop sending from the connected mailbox; scheduled pitches go back to drafts     |
+
+Same access rules as the other Autopilot tools: reads need `autopilot.read`, changes need `autopilot.write` and a workspace owner or admin. `send_outreach_pitch` emails a real person; confirm the draft with the user first, as with deleting a pitch or disconnecting the mailbox. Connecting a mailbox needs its owner to sign in through `connectUrl` in a browser.
 
 ### Posts
 
