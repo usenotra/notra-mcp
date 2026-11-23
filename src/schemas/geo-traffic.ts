@@ -2,6 +2,28 @@ import * as z from "zod";
 import { GEO_TRAFFIC_CATEGORY_VALUES, GEO_TRAFFIC_VISITOR_TYPE_VALUES } from "../constants/geo.js";
 import { GEO_ANALYTICS_PATH_MAX_LENGTH, GEO_TRAFFIC_SITES_VALUES } from "../constants/geo.js";
 import { geoResourceIdSchema, geoShortTextSchema, geoWindowShape, projectIdSchema } from "./geo-fields.js";
+import { apiObjectOutputSchema } from "../utils/output-schema.js";
+
+export const trafficClassificationSchema = z.object({
+  totalRequests: z.number().int(),
+  unknownRequests: z.number().int(),
+  classifiedShare: z
+    .number()
+    .min(0)
+    .max(1)
+    .nullable()
+    .describe(
+      "Fraction of captured requests classified as crawler, AI referral or human in this window. Null with no requests.",
+    ),
+});
+
+export const geoTrafficOverviewOutputSchema = apiObjectOutputSchema("getGeoTrafficOverview").extend({
+  classification: trafficClassificationSchema,
+});
+
+export const geoMcpAnalyticsOutputSchema = apiObjectOutputSchema("getGeoMcpAnalytics").extend({
+  reportingStatus: z.enum(["not_configured", "no_requests_in_window", "reporting"]),
+});
 
 const geoTrafficWindowShape = {
   ...geoWindowShape,

@@ -1,4 +1,5 @@
 import type { Organization } from "./api.js";
+import type { trafficClassification } from "../utils/traffic-classification.js";
 import type { GeoAgentReadinessReport } from "./geo-agent-readiness.js";
 import type { GeoContentGapsResponse } from "./geo-brief.js";
 import type { GeoWindowParams } from "./geo-common.js";
@@ -171,6 +172,7 @@ export interface GeoSnapshotResponse {
   } | null;
   traffic: {
     configured: boolean;
+    classification: ReturnType<typeof trafficClassification>;
     totals: GeoTrafficOverviewResponse["totals"];
     topSources: GeoTrafficOverviewResponse["sources"];
   } | null;
