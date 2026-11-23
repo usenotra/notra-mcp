@@ -1528,7 +1528,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             type: "object",
             properties: {
               status: { type: "string", description: "Status of the preview's latest build." },
-              live: { type: "boolean", description: "The preview is being served and has not expired." },
+              live: {
+                type: "boolean",
+                description:
+                  "The preview is being served and has not expired. During a rebuild this is the previous build.",
+              },
+              latestLive: {
+                type: "boolean",
+                description:
+                  "The latest build is the one being served: the url shows the saved post. Share the link once this is true.",
+              },
               deleting: { type: "boolean", description: "The preview is being removed." },
               errorMessage: { type: ["string", "null"], description: "Why the latest build failed or stopped." },
               expiresAt: { type: "string", description: "When the preview stops being served." },
@@ -1544,7 +1553,17 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               },
               url: { type: "string", description: "The post's page on the preview." },
             },
-            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "lifetime", "hasPassword", "url"],
+            required: [
+              "status",
+              "live",
+              "latestLive",
+              "deleting",
+              "errorMessage",
+              "expiresAt",
+              "lifetime",
+              "hasPassword",
+              "url",
+            ],
           },
           { type: "null" },
         ],
@@ -7652,7 +7671,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             type: "object",
             properties: {
               status: { type: "string", description: "Status of the preview's latest build." },
-              live: { type: "boolean", description: "The preview is being served and has not expired." },
+              live: {
+                type: "boolean",
+                description:
+                  "The preview is being served and has not expired. During a rebuild this is the previous build.",
+              },
+              latestLive: {
+                type: "boolean",
+                description:
+                  "The latest build is the one being served: the url shows the saved post. Share the link once this is true.",
+              },
               deleting: { type: "boolean", description: "The preview is being removed." },
               errorMessage: { type: ["string", "null"], description: "Why the latest build failed or stopped." },
               expiresAt: { type: "string", description: "When the preview stops being served." },
@@ -7668,7 +7696,17 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               },
               url: { type: "string", description: "The post's page on the preview." },
             },
-            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "lifetime", "hasPassword", "url"],
+            required: [
+              "status",
+              "live",
+              "latestLive",
+              "deleting",
+              "errorMessage",
+              "expiresAt",
+              "lifetime",
+              "hasPassword",
+              "url",
+            ],
           },
           { type: "null" },
         ],
@@ -8501,6 +8539,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             title: { type: "string" },
             openThreads: { type: "integer", description: "Unresolved threads on the post" },
             lastCommentAt: { type: ["string", "null"], description: "When the newest open thread was started" },
+            siteId: {
+              type: "string",
+              description:
+                "The Site a preview link belongs to, to rebuild that preview after revising the post. Only set when looking up a preview link.",
+            },
           },
           required: ["postId", "title", "openThreads", "lastCommentAt"],
         },

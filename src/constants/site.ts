@@ -27,3 +27,9 @@ export const SITE_PUBLISH_TIMEOUT_MS = 70_000;
  * instead of reporting a failure while the deployment is still being queued.
  */
 export const SITE_WRITE_TIMEOUT_MS = 70_000;
+
+/** get_site_post_preview waits at most this long, below common MCP client timeouts. */
+export const POST_PREVIEW_MAX_WAIT_SECONDS = 45;
+export const POST_PREVIEW_POLL_MS = 3_000;
+/** A preview build that ended without going live. */
+export const POST_PREVIEW_STOPPED_STATUSES = new Set(["failed", "canceled", "expired", "superseded", "skipped"]);

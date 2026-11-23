@@ -11,6 +11,7 @@ import {
 import type { ToolRegistry } from "../types/server.js";
 import {
   createSitePostPreviewSchema,
+  getSitePostPreviewSchema,
   listSiteDeploymentsSchema,
   siteDeploymentSchema,
   sitePostSchema,
@@ -20,6 +21,7 @@ import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 import { handleError } from "../utils/mcp.js";
+import { waitForPostPreview } from "../utils/post-preview.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
 const STAGED =
@@ -248,7 +250,7 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "preview_post_on_site",
       description:
-        "Build a private preview of a Site with a saved blog post or changelog added, without changing the repository or the live site, and without a branch or pull request. Returns preview (status, live, errorMessage, expiresAt, hasPassword, url) and the organization. Poll get_site_post_preview every few seconds until live is true, then give the user the url to share; if status becomes failed or canceled, stop and tell the user errorMessage (for example a <script> in the post, which sites don't allow). Save the post first: the preview builds the saved version, so unsaved edits are not in it. By default only workspace members open it, after signing in with Notra, and they can comment on the page; set a password only when the user wants to share it outside the workspace (those readers can't comment). Call it again after revising the post to rebuild the same preview; lifetime and password stay as they are unless you pass new ones. Read the team's comments with list_post_comments.",
+        "Build a private preview of a Site with a saved blog post or changelog added, without changing the repository or the live site, and without a branch or pull request. Save the post first: the preview builds the saved version. Returns preview (status, live, latestLive, errorMessage, expiresAt, hasPassword, url) and the organization. Then call get_site_post_preview with waitSeconds 45, repeating while it is still building, until latestLive is true, and only then give the user the url (live alone can be the previous build). If status becomes failed or canceled, stop and tell the user errorMessage (for example a <script> in the post, which sites don't allow). The url is private: don't fetch it yourself, it needs a Notra sign-in. By default only workspace members open it, and they can comment on the page; set a password only when the user wants to share it outside the workspace (those readers can't comment). Call it again after revising the post to rebuild the same preview; lifetime and password stay as they are unless you pass new ones. Read the team's comments with list_post_comments.",
       annotations: {
         title: "Preview Post on Site",
         readOnlyHint: false,
@@ -266,12 +268,13 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "get_site_post_preview",
       description:
-        "Get a post's preview on a Site: build status, whether it is live, any build error, expiry time, password protection and URL. Returns preview (status, live, deleting, errorMessage, expiresAt, hasPassword, url) and the organization; preview is null when the post has no preview there.",
+        "Get a post's preview on a Site: build status, whether the latest build is live, any build error, expiry time, password protection and URL. Pass waitSeconds to wait for a build in this call instead of polling. Returns preview (status, live, latestLive, deleting, errorMessage, expiresAt, hasPassword, url) and the organization; preview is null when the post has no preview there. Share the url once latestLive is true; live alone means an earlier build is still being served.",
       annotations: { title: "Get Site Post Preview", ...SITE_READ_ANNOTATIONS },
-      inputSchema: shareJsonSchema(sitePostSchema),
+      inputSchema: shareJsonSchema(getSitePostPreviewSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("getSitePostPreview")),
     },
-    ({ siteId, postId }) => handleError(() => client.getSitePostPreview(siteId, postId)),
+    ({ siteId, postId, waitSeconds }) =>
+      handleError(() => waitForPostPreview(() => client.getSitePostPreview(siteId, postId), waitSeconds ?? 0)),
   );
 
   server.tool(

@@ -140,6 +140,7 @@ export interface SiteDeployment {
 export interface SitePostPreview {
   status: string;
   live: boolean;
+  latestLive: boolean;
   deleting: boolean;
   errorMessage: string | null;
   expiresAt: string;

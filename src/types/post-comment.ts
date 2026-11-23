@@ -5,6 +5,8 @@ export interface CommentedPost {
   title: string;
   openThreads: number;
   lastCommentAt: string | null;
+  /** Set when looking up a preview link: the Site to rebuild the preview on. */
+  siteId?: string;
 }
 
 export interface CommentedPostsResponse {

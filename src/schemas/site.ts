@@ -1,5 +1,6 @@
 import * as z from "zod";
 import {
+  POST_PREVIEW_MAX_WAIT_SECONDS,
   SITE_AUTHOR_AVATAR_PATTERN,
   SITE_AUTHOR_ID_PATTERN,
   SITE_AUTHOR_PAGE_LAYOUT_VALUES,
@@ -180,3 +181,15 @@ export const createSitePostPreviewSchema = z.object({
 });
 
 export const sitePostSchema = z.object({ siteId: siteIdSchema, postId: postIdSchema });
+
+export const getSitePostPreviewSchema = sitePostSchema.extend({
+  waitSeconds: z
+    .number()
+    .int()
+    .min(0)
+    .max(POST_PREVIEW_MAX_WAIT_SECONDS)
+    .optional()
+    .describe(
+      `Wait up to this many seconds (max ${POST_PREVIEW_MAX_WAIT_SECONDS}) for the build to go live or fail before returning. Use 45 right after preview_post_on_site; builds usually take under a minute.`,
+    ),
+});

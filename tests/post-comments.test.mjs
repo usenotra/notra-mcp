@@ -28,6 +28,7 @@ const preview = {
   errorMessage: null,
   createdAt: "2026-11-22T09:01:00.000Z",
   live: false,
+  latestLive: false,
   lifetime: "7d",
   expiresAt: "2026-11-29T09:01:00.000Z",
   hasPassword: false,
