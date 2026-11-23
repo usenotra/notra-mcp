@@ -29,6 +29,13 @@ test("stops at a failed build or a missing preview", async () => {
   assert.equal(none.calls(), 1);
 });
 
+test("a wait shorter than the poll interval still reads again at its deadline", async () => {
+  const { read, calls } = reader(preview("building"), preview("ready", true));
+  const result = await waitForPostPreview(read, 0.05, 3_000);
+  assert.equal(result.preview.latestLive, true);
+  assert.equal(calls(), 2);
+});
+
 test("returns the current state when the wait runs out, and reads once without one", async () => {
   const slow = reader(preview("building"));
   const started = Date.now();

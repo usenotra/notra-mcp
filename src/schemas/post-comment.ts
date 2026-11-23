@@ -8,6 +8,7 @@ const postIdSchema = z
 export const listCommentedPostsSchema = z.object({
   link: z
     .string()
+    .trim()
     .max(2000)
     .optional()
     .describe(

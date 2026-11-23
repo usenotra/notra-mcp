@@ -141,6 +141,7 @@ test("walks the review loop: find the post, read, answer, resolve, rebuild", asy
       undefined,
     ],
     ["list_commented_posts", {}, "GET /v1/post-comments", undefined],
+    ["list_commented_posts", { link: "  " }, "GET /v1/post-comments", undefined],
     ["list_commented_posts", { page: 2 }, "GET /v1/post-comments?page=2", undefined],
     ["list_post_comments", { postId: "post-1" }, "GET /v1/posts/post-1/comments", undefined],
     ["list_post_comments", { postId: "post-1", status: "all" }, "GET /v1/posts/post-1/comments?status=all", undefined],

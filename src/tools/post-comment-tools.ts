@@ -32,7 +32,8 @@ export function registerPostCommentTools(server: ToolRegistry, client: NotraClie
       inputSchema: shareJsonSchema(listCommentedPostsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listCommentedPosts")),
     },
-    ({ link, page }) => handleError(() => client.listCommentedPosts({ link, page })),
+    // An empty link means none, not a filter that matches nothing.
+    ({ link, page }) => handleError(() => client.listCommentedPosts({ link: link || undefined, page })),
   );
 
   server.tool(

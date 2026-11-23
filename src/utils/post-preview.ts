@@ -18,9 +18,11 @@ export async function waitForPostPreview(
   const deadline = Date.now() + waitSeconds * 1000;
   for (;;) {
     const result = await read();
-    if (postPreviewSettled(result.preview) || Date.now() + pollMs > deadline) {
+    const remaining = deadline - Date.now();
+    if (postPreviewSettled(result.preview) || remaining <= 0) {
       return result;
     }
-    await new Promise((resolve) => setTimeout(resolve, pollMs));
+    // A short wait still gets its read at the deadline.
+    await new Promise((resolve) => setTimeout(resolve, Math.min(pollMs, remaining)));
   }
 }
