@@ -406,10 +406,8 @@ export class NotraClient {
     );
   }
 
-  async listCommentedPosts(link?: string): Promise<CommentedPostsResponse> {
-    return this.request<CommentedPostsResponse>("GET", "/v1/post-comments", {
-      params: link ? { link } : undefined,
-    });
+  async listCommentedPosts(params: { link?: string; page?: number }): Promise<CommentedPostsResponse> {
+    return this.request<CommentedPostsResponse>("GET", "/v1/post-comments", { params });
   }
 
   async listPostComments(postId: string, status?: "open" | "all"): Promise<PostCommentsResponse> {

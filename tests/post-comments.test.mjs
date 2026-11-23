@@ -50,10 +50,11 @@ before(async () => {
     const route = `${req.method} ${req.url}`;
     requests.push({ route, body: body ? JSON.parse(body) : undefined });
     const routes = {
-      "GET /v1/post-comments": [200, { posts: [commented], organization }],
+      "GET /v1/post-comments": [200, { posts: [commented], hasMore: false, organization }],
+      "GET /v1/post-comments?page=2": [200, { posts: [], hasMore: false, organization }],
       "GET /v1/post-comments?link=https%3A%2F%2Fpost-post-1-abc--acme.notra.site%2Fblog%2Flaunch": [
         200,
-        { posts: [commented], organization },
+        { posts: [commented], hasMore: false, organization },
       ],
       "GET /v1/posts/post-1/comments": [200, { threads: [thread], openThreads: 1, organization }],
       "GET /v1/posts/post-1/comments?status=all": [200, { threads: [thread], openThreads: 1, organization }],
@@ -140,6 +141,7 @@ test("walks the review loop: find the post, read, answer, resolve, rebuild", asy
       undefined,
     ],
     ["list_commented_posts", {}, "GET /v1/post-comments", undefined],
+    ["list_commented_posts", { page: 2 }, "GET /v1/post-comments?page=2", undefined],
     ["list_post_comments", { postId: "post-1" }, "GET /v1/posts/post-1/comments", undefined],
     ["list_post_comments", { postId: "post-1", status: "all" }, "GET /v1/posts/post-1/comments?status=all", undefined],
     [

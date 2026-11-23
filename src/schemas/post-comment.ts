@@ -11,7 +11,15 @@ export const listCommentedPostsSchema = z.object({
     .max(2000)
     .optional()
     .describe(
-      "A post's Notra Sites preview link or its link in Notra, as the user pasted it. Leave out to list every post with open comments.",
+      "A post's Notra Sites preview link or its link in Notra, as the user pasted it. Leave out to list the posts with open comments.",
+    ),
+  page: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe(
+      "Page of posts with open comments, 20 per page, starting at 1. Ask for the next one when hasMore is true.",
     ),
 });
 

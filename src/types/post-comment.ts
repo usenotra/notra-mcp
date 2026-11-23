@@ -11,6 +11,7 @@ export interface CommentedPost {
 
 export interface CommentedPostsResponse {
   posts: CommentedPost[];
+  hasMore: boolean;
   organization: Organization;
 }
 
