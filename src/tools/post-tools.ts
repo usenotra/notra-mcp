@@ -10,6 +10,7 @@ import {
   createPostPullRequestSchema,
   postSummaryListOutputSchema,
 } from "../schemas/post.js";
+import { POST_STATUS_VALUES } from "../constants/post.js";
 import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
@@ -25,7 +26,7 @@ export function registerPostTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "list_posts",
       description:
-        "List post summaries from Notra with optional filters for sorting, pagination, status, content type, and brand identity. Returns posts (id, title, slug, excerpt, imageUrl, contentType, status, createdAt, updatedAt), pagination (currentPage, nextPage, previousPage, totalPages, totalItems) and the organization. Use get_post for full content.",
+        "List post summaries from Notra, drafts and published posts alike unless status narrows it, with optional filters for sorting, pagination, content type, and brand identity. Returns posts (id, title, slug, excerpt, imageUrl, contentType, status, createdAt, updatedAt), pagination (currentPage, nextPage, previousPage, totalPages, totalItems) and the organization. Use get_post for full content.",
       annotations: {
         title: "List Posts",
         readOnlyHint: true,
@@ -36,7 +37,12 @@ export function registerPostTools(server: ToolRegistry, client: NotraClient) {
       inputSchema: shareJsonSchema(listPostsSchema),
       outputSchema: shareJsonSchema(postSummaryListOutputSchema),
     },
-    (params) => handleError(async () => toPostSummaryList(await client.listPosts(params))),
+    // The API lists only published posts without a status; agents mostly
+    // work on drafts, and the filter says omitting it includes every status.
+    ({ status, ...params }) =>
+      handleError(async () =>
+        toPostSummaryList(await client.listPosts({ ...params, status: status ?? [...POST_STATUS_VALUES] })),
+      ),
   );
 
   server.tool(

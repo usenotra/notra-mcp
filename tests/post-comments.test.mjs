@@ -182,3 +182,10 @@ test("rejects invalid input before calling the API", async () => {
   }
   assert.equal(requests.length, before);
 });
+
+test("list_posts includes drafts unless a status is given", async () => {
+  await callTool("list_posts", {});
+  assert.equal(requests.at(-1).route, "GET /v1/posts?status=draft%2Cpublished");
+  await callTool("list_posts", { status: ["published"] });
+  assert.equal(requests.at(-1).route, "GET /v1/posts?status=published");
+});
