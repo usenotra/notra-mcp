@@ -1,5 +1,6 @@
 import * as z from "zod";
 import { apiResponsePropertySchema } from "../utils/output-schema.js";
+import { trafficClassificationSchema } from "./geo-traffic.js";
 import { geoResourceIdSchema, geoWindowShape, projectIdSchema } from "./geo-fields.js";
 
 export const getGeoSnapshotSchema = z.object({
@@ -94,6 +95,7 @@ export const geoSnapshotOutputSchema = z.object({
   traffic: z
     .object({
       configured: z.boolean(),
+      classification: trafficClassificationSchema,
       totals: apiResponsePropertySchema("getGeoTrafficOverview", "totals"),
       topSources: apiResponsePropertySchema("getGeoTrafficOverview", "sources"),
     })

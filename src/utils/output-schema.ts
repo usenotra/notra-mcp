@@ -17,6 +17,12 @@ export function apiOutputSchema(operationId: ApiOperationId): z.ZodType {
   return memoize(operationId, () => z.fromJSONSchema(API_RESPONSE_SCHEMAS[operationId]));
 }
 
+export function apiObjectOutputSchema(operationId: ApiOperationId) {
+  const schema = apiOutputSchema(operationId);
+  if (!(schema instanceof z.ZodObject)) throw new Error(`Expected an object response for ${operationId}`);
+  return schema;
+}
+
 function apiResponseProperty(operationId: ApiOperationId, ...path: string[]): JSONSchema.BaseSchema {
   let schema: JSONSchema.BaseSchema = API_RESPONSE_SCHEMAS[operationId];
   for (const property of path) {

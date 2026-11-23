@@ -2,6 +2,7 @@ import { GEO_SNAPSHOT_OPTIONAL_TIMEOUT_MS } from "../constants/geo.js";
 import type { NotraClient } from "../notra-client.js";
 import type { GeoWindowParams } from "../types/geo-common.js";
 import type { GeoNextAction, GeoSnapshotResponse } from "../types/geo-diagnostics.js";
+import { trafficClassification } from "./traffic-classification.js";
 
 const SNAPSHOT_ITEM_LIMIT = 5;
 
@@ -89,6 +90,7 @@ export async function loadGeoSnapshot(
     trafficResult.status === "fulfilled"
       ? {
           configured: trafficResult.value.configured,
+          classification: trafficClassification(trafficResult.value.points),
           totals: trafficResult.value.totals,
           topSources: [...trafficResult.value.sources]
             .sort((left, right) => right.visits - left.visits)
