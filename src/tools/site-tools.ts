@@ -248,7 +248,7 @@ export function registerSiteTools(server: ToolRegistry, client: NotraClient) {
     {
       name: "preview_post_on_site",
       description:
-        "Build a private preview of a Site with a saved blog post or changelog added, without changing the repository or the live site. Returns preview (status, live, errorMessage, expiresAt, hasPassword, url) and the organization. Workspace members open it after signing in; password-protected sharing is set up in the dashboard. Poll get_site_post_preview until live is true before sharing the link.",
+        "Build a private preview of a Site with a saved blog post or changelog added, without changing the repository or the live site, and without a branch or pull request. Returns preview (status, live, errorMessage, expiresAt, hasPassword, url) and the organization. Poll get_site_post_preview every few seconds until live is true, then give the user the url to share; if status becomes failed or canceled, stop and tell the user errorMessage (for example a <script> in the post, which sites don't allow). Save the post first: the preview builds the saved version, so unsaved edits are not in it. By default only workspace members open it, after signing in with Notra, and they can comment on the page; set a password only when the user wants to share it outside the workspace (those readers can't comment). Call it again after revising the post to rebuild the same preview; lifetime and password stay as they are unless you pass new ones. Read the team's comments with list_post_comments.",
       annotations: {
         title: "Preview Post on Site",
         readOnlyHint: false,

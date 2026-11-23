@@ -165,7 +165,18 @@ export const createSitePostPreviewSchema = z.object({
   lifetime: z
     .enum(["1h", "1d", "3d", "7d"])
     .optional()
-    .describe("How long the preview stays available before it expires. Defaults to 1d."),
+    .describe(
+      "How long the preview stays available. Leave out to keep the current preview's lifetime when rebuilding, or 1d for a first preview.",
+    ),
+  password: z
+    .string()
+    .min(8)
+    .max(128)
+    .nullable()
+    .optional()
+    .describe(
+      "Only when the user wants to share the preview outside the workspace: people with the password can read it but not comment. null removes the password. Leave out to keep the current protection.",
+    ),
 });
 
 export const sitePostSchema = z.object({ siteId: siteIdSchema, postId: postIdSchema });
