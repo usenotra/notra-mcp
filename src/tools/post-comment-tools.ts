@@ -27,7 +27,7 @@ export function registerPostCommentTools(server: ToolRegistry, client: NotraClie
     {
       name: "list_commented_posts",
       description:
-        'Find the posts teammates left open comments on, newest first. Use it when the user asks to "fix the comments" or "work in the feedback" without naming a post: pass the preview or post link they gave as link, or leave it out to see every post with open comments (work on the only one, ask which if several). Returns posts (postId, title, openThreads, lastCommentAt, and siteId for a preview link: pass it to preview_post_on_site to rebuild; otherwise find the site with list_sites), hasMore (another page follows) and the organization.',
+        'Find the posts teammates left open comments on, newest first. Use it when the user asks to "fix the comments" or "work in the feedback" without naming a post: pass the preview or post link they gave as link, or leave it out to see every post with open comments (work on the only one, ask which if several). Returns posts (postId, title, openThreads, lastCommentAt, and siteId for a preview link: pass it to preview_post_on_site to rebuild; otherwise find the site with list_sites), hasMore (another page follows), total (posts with open comments across all pages: use it when asked how many) and the organization.',
       annotations: { title: "List Commented Posts", ...READ },
       inputSchema: shareJsonSchema(listCommentedPostsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listCommentedPosts")),

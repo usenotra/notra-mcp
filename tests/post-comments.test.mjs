@@ -50,11 +50,11 @@ before(async () => {
     const route = `${req.method} ${req.url}`;
     requests.push({ route, body: body ? JSON.parse(body) : undefined });
     const routes = {
-      "GET /v1/post-comments": [200, { posts: [commented], hasMore: false, organization }],
-      "GET /v1/post-comments?page=2": [200, { posts: [], hasMore: false, organization }],
+      "GET /v1/post-comments": [200, { posts: [commented], hasMore: false, total: 1, organization }],
+      "GET /v1/post-comments?page=2": [200, { posts: [], hasMore: false, total: 1, organization }],
       "GET /v1/post-comments?link=https%3A%2F%2Fpost-post-1-abc--acme.notra.site%2Fblog%2Flaunch": [
         200,
-        { posts: [commented], hasMore: false, organization },
+        { posts: [commented], hasMore: false, total: 1, organization },
       ],
       "GET /v1/posts/post-1/comments": [200, { threads: [thread], openThreads: 1, organization }],
       "GET /v1/posts/post-1/comments?status=all": [200, { threads: [thread], openThreads: 1, organization }],

@@ -8549,6 +8549,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         },
       },
       hasMore: { type: "boolean", description: "More posts with open comments are on the next page." },
+      total: { type: "integer", description: "Posts with open comments across all pages; 1 when looking up a link." },
       organization: {
         type: "object",
         properties: {
@@ -8564,7 +8565,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
         description: "Workspace the request ran in.",
       },
     },
-    required: ["posts", "hasMore", "organization"],
+    required: ["posts", "hasMore", "total", "organization"],
   },
   listEventTriggers: {
     type: "object",

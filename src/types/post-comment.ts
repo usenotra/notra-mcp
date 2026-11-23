@@ -12,6 +12,8 @@ export interface CommentedPost {
 export interface CommentedPostsResponse {
   posts: CommentedPost[];
   hasMore: boolean;
+  /** Posts with open comments across all pages. */
+  total: number;
   organization: Organization;
 }
 
