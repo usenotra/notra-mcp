@@ -7,7 +7,12 @@ import {
   SITE_PATH_PATTERN,
 } from "../constants/site.js";
 
-const siteIdSchema = z.string().min(1).describe("ID of the Notra Site, as returned by list_sites");
+const siteIdSchema = z
+  .string()
+  .min(1)
+  .describe(
+    "ID of the Notra Site: the siteId list_commented_posts returned for a preview link (no need to look it up again), otherwise from list_sites",
+  );
 
 const siteAuthorIdSchema = z
   .string()
