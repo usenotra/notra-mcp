@@ -1,12 +1,14 @@
+import * as z from "zod";
+
 import { getGeoSettingsSchema, listGeoEnginesSchema, updateGeoSettingsSchema } from "../schemas/geo-settings.js";
 import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 
 import type { NotraClient } from "../notra-client.js";
 
-import { mergeGeoSettings } from "../utils/geo-settings.js";
+import { hasNormalizedWwwDomain, mergeGeoSettings } from "../utils/geo-settings.js";
 import { handleError } from "../utils/mcp.js";
-import { apiOutputSchema } from "../utils/output-schema.js";
+import { apiObjectOutputSchema, apiOutputSchema } from "../utils/output-schema.js";
 
 export function registerGeoSettingsTools(server: ToolRegistry, client: NotraClient) {
   server.tool(
@@ -49,7 +51,7 @@ export function registerGeoSettingsTools(server: ToolRegistry, client: NotraClie
     {
       name: "update_geo_settings",
       description:
-        "Change a project's GEO settings. Changing scanIntervalHours or turning enabled back on recalculates nextScanAt from the last finished scan (due right away if that time has passed), setting enabled to false clears it to null, and other changes keep it. Send only the fields to change; omitted fields keep their stored value. List fields replace the whole list, so include existing entries you want to keep, or they are dropped. Changes are reversible by sending the old values. Recurring scans use billed AI credits, so more engines or languages, or a shorter interval, raise spend. Use engine IDs from list_geo_engines. Returns the saved settings, with the same fields as get_geo_settings, plus configured and the organization.",
+        "Change a project's GEO settings. Changing scanIntervalHours or turning enabled back on recalculates nextScanAt from the last finished scan (due right away if that time has passed), setting enabled to false clears it to null, and other changes keep it. Send only the fields to change; omitted fields keep their stored value. List fields replace the whole list, so include existing entries you want to keep, or they are dropped. Tracked domains drop the leading www. and merge duplicates; traffic from both hosts is still covered. Changes are reversible by sending the old values. Recurring scans use billed AI credits, so more engines or languages, or a shorter interval, raise spend. Use engine IDs from list_geo_engines. Returns the saved settings, configured, the organization, and a warning if a submitted www. host was normalized.",
       annotations: {
         title: "Update GEO Settings",
         readOnlyHint: false,
@@ -58,12 +60,25 @@ export function registerGeoSettingsTools(server: ToolRegistry, client: NotraClie
         idempotentHint: true,
       },
       inputSchema: shareJsonSchema(updateGeoSettingsSchema),
-      outputSchema: shareJsonSchema(apiOutputSchema("updateGeoSettings")),
+      outputSchema: shareJsonSchema(
+        apiObjectOutputSchema("updateGeoSettings").extend({
+          warnings: z.array(z.string()).optional().describe("Notes about domain normalization applied to this update."),
+        }),
+      ),
     },
     ({ projectId, ...patch }) =>
       handleError(async () => {
         const { settings } = await client.getGeoSettings(projectId);
-        return client.updateGeoSettings(projectId, mergeGeoSettings(settings, patch));
+        const saved = await client.updateGeoSettings(projectId, mergeGeoSettings(settings, patch));
+        if (!patch.domains || !saved.settings || !hasNormalizedWwwDomain(patch.domains, saved.settings.domains)) {
+          return saved;
+        }
+        return {
+          ...saved,
+          warnings: [
+            "Tracked domains drop the leading www. and merge duplicates. Traffic from www. hosts is still covered.",
+          ],
+        };
       }),
   );
 }

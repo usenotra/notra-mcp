@@ -223,7 +223,7 @@ https://mcp.usenotra.com/mcp?toolsets=geo
 | `whoami`          | Show the current workspace and authenticated account information            |
 | `list_workspaces` | List accepted and pending workspaces available to the authenticated account |
 
-Each MCP connection operates in the workspace bound to its bearer token, or for account API keys the workspace selected with `NOTRA_ORGANIZATION_ID` or the `X-Notra-Organization-Id` header. To act in another workspace, authorize or configure a separate connection for that workspace; `list_workspaces` discovers access but does not switch workspaces.
+On `/mcp`, an account key can use one connection for several workspaces: send `X-Notra-Organization-Id: <id-or-slug>` on each request and change it on the next call. If your client cannot vary headers, pin the workspace with [`/mcp/<slug>`](#workspace-scoped-url) or `NOTRA_ORGANIZATION_ID` (stdio). OAuth tokens stay in their consent workspace.
 
 ### Autopilot
 
@@ -471,15 +471,15 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 
 ### AI traffic
 
-| Tool                            | Description                                                  |
-| ------------------------------- | ------------------------------------------------------------ |
-| `get_geo_traffic_overview`      | Crawler and AI-referral totals, sources and daily timeseries |
-| `get_geo_traffic_log`           | Most recent individual AI crawler/referral requests          |
-| `list_geo_traffic_journeys`     | Sessions grouped by journey                                  |
-| `get_geo_traffic_journey`       | Every event in one journey                                   |
-| `list_geo_traffic_pages`        | Most visited pages by AI traffic                             |
-| `get_geo_traffic_journey_stats` | Journey counts per AI source and per page                    |
-| `get_geo_ingest_setup`          | Install snippets, log drain URLs and the notra.js web key    |
+| Tool                            | Description                                                                                                          |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `get_geo_traffic_overview`      | Crawler and AI-referral totals, daily visits and classification coverage (`classifiedShare` is null with no traffic) |
+| `get_geo_traffic_log`           | Most recent individual AI crawler/referral requests                                                                  |
+| `list_geo_traffic_journeys`     | Sessions grouped by journey                                                                                          |
+| `get_geo_traffic_journey`       | Every event in one journey                                                                                           |
+| `list_geo_traffic_pages`        | Most visited pages by AI traffic                                                                                     |
+| `get_geo_traffic_journey_stats` | Journey counts per AI source and per page                                                                            |
+| `get_geo_ingest_setup`          | Install snippets, log drain URLs and the notra.js web key                                                            |
 
 ### Website analytics
 
@@ -496,10 +496,10 @@ Page views and outbound link clicks from the notra.js script, plus history impor
 
 Usage of your own MCP server, reported by the `@usenotra/geo` SDK. Captured arguments, responses and end-user IDs stay in the dashboard.
 
-| Tool                         | Description                                                                        |
-| ---------------------------- | ---------------------------------------------------------------------------------- |
-| `get_geo_mcp_analytics`      | Calls, errors, latency, clients, models, intents, recent failures and unused tools |
-| `get_geo_mcp_tool_analytics` | One tool's failures and the tools agents call right before and after it            |
+| Tool                         | Description                                                                                                                                                     |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_geo_mcp_analytics`      | Reporting status (`not_configured`, `no_requests_in_window` or `reporting`), calls, errors, latency, clients, models, intents, recent failures and unused tools |
+| `get_geo_mcp_tool_analytics` | One tool's failures and the tools agents call right before and after it                                                                                         |
 
 ### Feedback
 

@@ -70,6 +70,17 @@ server.get("/.well-known/ai-catalog.json", (c) =>
 for (const path of [MCP_BASE_PATH, `${MCP_BASE_PATH}/*`] as const) {
   server.use(path, limitBody, validateToolsets);
 }
+server.use(MCP_BASE_PATH, async (c, next) => {
+  await next();
+  if (c.req.method !== "GET" || c.res.status !== 204) return;
+  const acceptsSse = c.req
+    .header("accept")
+    ?.split(",")
+    .some((value) => value.split(";", 1)[0].trim().toLowerCase() === "text/event-stream");
+  if (acceptsSse) {
+    c.res = c.body(null, 405, { Allow: "POST" });
+  }
+});
 server.use(MCP_BASE_PATH, trackInitialize({ name: "notra", version: SERVER_VERSION }));
 
 // Account API keys pick their workspace from the scoped URL. OAuth tokens are
