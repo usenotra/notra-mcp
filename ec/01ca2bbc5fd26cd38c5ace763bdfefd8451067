@@ -1,0 +1,19 @@
+src/tools/autopilot-outreach-tools.ts
+  s_132943ef969675::t_a61c4527839ba3 1-68,70-130,132-189
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "ec01ca2bbc5fd26cd38c5ace763bdfefd8451067",
+  "prompts": {},
+  "sessions": {
+    "s_132943ef969675": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "1f8737e7-be0f-4f4c-8c61-a70dec4a2530",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Jan Burzinski <156842394+janburzinski@users.noreply.github.com>"
+    }
+  }
+}
