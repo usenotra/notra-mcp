@@ -249,6 +249,7 @@ Autopilot drafts pitches to pages that AI answers cite without your brand. Pitch
 | `cancel_outreach_pitch`         | Take back a scheduled pitch; it becomes a draft again                            |
 | `mark_outreach_pitch_sent`      | Record a pitch sent by hand through a form or another mail app                   |
 | `mark_outreach_pitch_listed`    | Record that the page now lists the brand                                         |
+| `set_outreach_pitch_later`      | Put a draft off until the next daily brief, or undo that                         |
 | `update_outreach_pitch_details` | Correct the stage, follow-up time or deal                                        |
 | `delete_outreach_pitch`         | Drop a pitch; the page isn't pitched again                                       |
 | `get_outreach_mailbox`          | Show the connected mailbox and the link to connect one in a browser              |

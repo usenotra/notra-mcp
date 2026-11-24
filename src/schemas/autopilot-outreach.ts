@@ -61,6 +61,10 @@ export const sendOutreachPitchSchema = z.strictObject({
 export const cancelOutreachPitchSchema = pitchSchema;
 export const markOutreachPitchSentSchema = pitchSchema;
 export const markOutreachPitchListedSchema = pitchSchema;
+export const setOutreachPitchLaterSchema = z.strictObject({
+  pitchId: pitchIdSchema,
+  later: z.boolean().default(true).describe("true puts the draft off until the next daily brief; false undoes it."),
+});
 export const deleteOutreachPitchSchema = pitchSchema;
 
 export const updateOutreachPitchDetailsSchema = z

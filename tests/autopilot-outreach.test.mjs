@@ -18,6 +18,7 @@ const summary = {
   followUpDue: false,
   lastActivityAt: "2026-11-20T09:00:00Z",
   replyCount: 0,
+  later: false,
   deal: null,
 };
 const pitch = {
@@ -67,6 +68,8 @@ before(async () => {
       [`POST ${pitchPath}/cancel`]: [200, { pitch }],
       [`POST ${pitchPath}/mark-sent`]: [200, { pitch: { ...pitch, status: "sent", stage: "sent" } }],
       [`POST ${pitchPath}/mark-listed`]: [200, { pitch: { ...pitch, status: "listed" } }],
+      [`POST ${pitchPath}/later`]: [200, { pitch: { ...pitch, later: true } }],
+      [`DELETE ${pitchPath}/later`]: [200, { pitch }],
       [`PATCH ${pitchPath}/details`]: [200, { pitch }],
       "GET /v1/autopilot/outreach/mailbox": [200, mailbox],
       "DELETE /v1/autopilot/outreach/mailbox": [200, { disconnected: true }],
@@ -136,6 +139,7 @@ const TOOL_NAMES = [
   "edit_outreach_pitch",
   "mark_outreach_pitch_listed",
   "mark_outreach_pitch_sent",
+  "set_outreach_pitch_later",
   "update_outreach_pitch_details",
 ].sort();
 
@@ -242,6 +246,20 @@ test("forwards every outreach tool to the right route and body, and outputs matc
       { pitch: { ...pitch, status: "listed" } },
     ],
     [
+      "set_outreach_pitch_later",
+      { pitchId: "pitch-1" },
+      `POST ${pitchPath}/later`,
+      undefined,
+      { pitch: { ...pitch, later: true } },
+    ],
+    [
+      "set_outreach_pitch_later",
+      { pitchId: "pitch-1", later: false },
+      `DELETE ${pitchPath}/later`,
+      undefined,
+      { pitch },
+    ],
+    [
       "update_outreach_pitch_details",
       { pitchId: "pitch-1", stage: "negotiating", followUpAt: "2026-11-27T09:00:00Z", deal },
       `PATCH ${pitchPath}/details`,
@@ -326,6 +344,7 @@ test("a read-only key can read outreach but every write reports the API's 403", 
     ["cancel_outreach_pitch", { pitchId: "pitch-1" }],
     ["mark_outreach_pitch_sent", { pitchId: "pitch-1" }],
     ["mark_outreach_pitch_listed", { pitchId: "pitch-1" }],
+    ["set_outreach_pitch_later", { pitchId: "pitch-1" }],
     ["update_outreach_pitch_details", { pitchId: "pitch-1", followUpAt: null }],
     ["delete_outreach_pitch", { pitchId: "pitch-1" }],
     ["disconnect_outreach_mailbox", {}],

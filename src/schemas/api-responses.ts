@@ -99,6 +99,7 @@ export type ApiOperationId =
   | "importGeoPrompts"
   | "importSiteAuthors"
   | "issueGeoIngestToken"
+  | "laterOutreachPitch"
   | "listAgentChats"
   | "listBrandColors"
   | "listBrandIdentities"
@@ -161,6 +162,7 @@ export type ApiOperationId =
   | "submitFeedback"
   | "submitOrganizationFeedback"
   | "suggestGeoCompetitors"
+  | "undoLaterOutreachPitch"
   | "updateBrandColor"
   | "updateBrandIdentity"
   | "updateEventTrigger"
@@ -498,6 +500,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           followUpDue: { type: "boolean" },
           lastActivityAt: { type: "string", format: "date-time" },
           replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
           deal: {
             type: ["object", "null"],
             properties: {
@@ -569,6 +572,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "followUpDue",
           "lastActivityAt",
           "replyCount",
+          "later",
           "deal",
           "body",
           "from",
@@ -1670,17 +1674,52 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             type: "object",
             properties: {
               status: { type: "string", description: "Status of the preview's latest build." },
-              live: { type: "boolean", description: "The preview is being served and has not expired." },
+              live: {
+                type: "boolean",
+                description:
+                  "The preview is being served and has not expired. During a rebuild this is the previous build.",
+              },
+              latestLive: {
+                type: "boolean",
+                description:
+                  "The latest build is the one being served: the url shows the saved post. Share the link once this is true.",
+              },
               deleting: { type: "boolean", description: "The preview is being removed." },
               errorMessage: { type: ["string", "null"], description: "Why the latest build failed or stopped." },
               expiresAt: { type: "string", description: "When the preview stops being served." },
+              lifetime: {
+                type: "string",
+                enum: ["1h", "1d", "3d", "7d"],
+                description:
+                  "How long the preview stays open after each build; rebuilds keep it unless a new one is passed.",
+              },
               hasPassword: {
                 type: "boolean",
                 description: "People outside the workspace can open it with a password.",
               },
-              url: { type: "string", description: "The post's page on the preview." },
+              url: {
+                type: "string",
+                description:
+                  "The post's page on the preview. Opens it for readers outside the workspace with the password, or for anyone when the site allows that.",
+              },
+              reviewUrl: {
+                type: "string",
+                description:
+                  "The link to give teammates: it signs them in with Notra and opens the page with the review toolbar, where they can comment.",
+              },
             },
-            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+            required: [
+              "status",
+              "live",
+              "latestLive",
+              "deleting",
+              "errorMessage",
+              "expiresAt",
+              "lifetime",
+              "hasPassword",
+              "url",
+              "reviewUrl",
+            ],
           },
           { type: "null" },
         ],
@@ -2408,6 +2447,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           followUpDue: { type: "boolean" },
           lastActivityAt: { type: "string", format: "date-time" },
           replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
           deal: {
             type: ["object", "null"],
             properties: {
@@ -2479,6 +2519,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "followUpDue",
           "lastActivityAt",
           "replyCount",
+          "later",
           "deal",
           "body",
           "from",
@@ -6890,6 +6931,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           followUpDue: { type: "boolean" },
           lastActivityAt: { type: "string", format: "date-time" },
           replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
           deal: {
             type: ["object", "null"],
             properties: {
@@ -6961,6 +7003,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "followUpDue",
           "lastActivityAt",
           "replyCount",
+          "later",
           "deal",
           "body",
           "from",
@@ -8093,17 +8136,52 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             type: "object",
             properties: {
               status: { type: "string", description: "Status of the preview's latest build." },
-              live: { type: "boolean", description: "The preview is being served and has not expired." },
+              live: {
+                type: "boolean",
+                description:
+                  "The preview is being served and has not expired. During a rebuild this is the previous build.",
+              },
+              latestLive: {
+                type: "boolean",
+                description:
+                  "The latest build is the one being served: the url shows the saved post. Share the link once this is true.",
+              },
               deleting: { type: "boolean", description: "The preview is being removed." },
               errorMessage: { type: ["string", "null"], description: "Why the latest build failed or stopped." },
               expiresAt: { type: "string", description: "When the preview stops being served." },
+              lifetime: {
+                type: "string",
+                enum: ["1h", "1d", "3d", "7d"],
+                description:
+                  "How long the preview stays open after each build; rebuilds keep it unless a new one is passed.",
+              },
               hasPassword: {
                 type: "boolean",
                 description: "People outside the workspace can open it with a password.",
               },
-              url: { type: "string", description: "The post's page on the preview." },
+              url: {
+                type: "string",
+                description:
+                  "The post's page on the preview. Opens it for readers outside the workspace with the password, or for anyone when the site allows that.",
+              },
+              reviewUrl: {
+                type: "string",
+                description:
+                  "The link to give teammates: it signs them in with Notra and opens the page with the review toolbar, where they can comment.",
+              },
             },
-            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+            required: [
+              "status",
+              "live",
+              "latestLive",
+              "deleting",
+              "errorMessage",
+              "expiresAt",
+              "lifetime",
+              "hasPassword",
+              "url",
+              "reviewUrl",
+            ],
           },
           { type: "null" },
         ],
@@ -8692,6 +8770,143 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization", "token"],
     description: "A newly issued tracking token with its install instructions.",
+  },
+  laterOutreachPitch: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "body",
+          "from",
+          "reason",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+    },
+    required: ["pitch"],
   },
   listAgentChats: {
     type: "object",
@@ -9609,7 +9824,8 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             competitors: {
               type: "array",
               items: { type: "string" },
-              description: "Tracked competitors named in answers that left out the brand.",
+              description:
+                "Tracked competitors named in answers that left out the brand, or whose website an engine searched directly for them.",
             },
             discoveredCompetitors: {
               type: "array",
@@ -9619,7 +9835,19 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             searchQueries: {
               type: "array",
               items: { type: "string" },
-              description: "Web searches AI engines ran while answering this prompt.",
+              description:
+                "Web searches AI engines ran while answering this prompt. Searches restricted to one website with `site:` are left out and reported in `siteSearches`.",
+            },
+            siteSearches: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Other websites AI engines searched directly with a `site:` search in answers that left out the brand.",
+            },
+            ownSiteSearched: {
+              type: "boolean",
+              description:
+                "True when an engine searched the brand's own website with a `site:` search and still left the brand out of its answer.",
             },
             ownMentionRate: {
               type: "number",
@@ -11325,6 +11553,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             followUpDue: { type: "boolean" },
             lastActivityAt: { type: "string", format: "date-time" },
             replyCount: { type: "integer" },
+            later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
             deal: {
               type: ["object", "null"],
               properties: {
@@ -11352,6 +11581,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             "followUpDue",
             "lastActivityAt",
             "replyCount",
+            "later",
             "deal",
           ],
         },
@@ -12426,6 +12656,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           followUpDue: { type: "boolean" },
           lastActivityAt: { type: "string", format: "date-time" },
           replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
           deal: {
             type: ["object", "null"],
             properties: {
@@ -12497,6 +12728,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "followUpDue",
           "lastActivityAt",
           "replyCount",
+          "later",
           "deal",
           "body",
           "from",
@@ -12561,6 +12793,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           followUpDue: { type: "boolean" },
           lastActivityAt: { type: "string", format: "date-time" },
           replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
           deal: {
             type: ["object", "null"],
             properties: {
@@ -12632,6 +12865,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "followUpDue",
           "lastActivityAt",
           "replyCount",
+          "later",
           "deal",
           "body",
           "from",
@@ -13679,6 +13913,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           followUpDue: { type: "boolean" },
           lastActivityAt: { type: "string", format: "date-time" },
           replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
           deal: {
             type: ["object", "null"],
             properties: {
@@ -13750,6 +13985,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "followUpDue",
           "lastActivityAt",
           "replyCount",
+          "later",
           "deal",
           "body",
           "from",
@@ -14217,6 +14453,143 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["domain", "field", "competitors", "organization"],
     description: "Competitors suggested for a website domain, which Notra does not save.",
+  },
+  undoLaterOutreachPitch: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "body",
+          "from",
+          "reason",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+    },
+    required: ["pitch"],
   },
   updateBrandColor: {
     type: "object",
@@ -15243,6 +15616,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           followUpDue: { type: "boolean" },
           lastActivityAt: { type: "string", format: "date-time" },
           replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
           deal: {
             type: ["object", "null"],
             properties: {
@@ -15314,6 +15688,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "followUpDue",
           "lastActivityAt",
           "replyCount",
+          "later",
           "deal",
           "body",
           "from",

@@ -397,6 +397,14 @@ export class NotraClient {
     return this.request<OutreachPitchResponse>("POST", outreachPitchPath(pitchId, "/mark-listed"));
   }
 
+  async laterOutreachPitch(pitchId: string): Promise<OutreachPitchResponse> {
+    return this.request<OutreachPitchResponse>("POST", outreachPitchPath(pitchId, "/later"));
+  }
+
+  async undoLaterOutreachPitch(pitchId: string): Promise<OutreachPitchResponse> {
+    return this.request<OutreachPitchResponse>("DELETE", outreachPitchPath(pitchId, "/later"));
+  }
+
   async updateOutreachPitchDetails(
     pitchId: string,
     body: UpdateOutreachPitchDetailsRequest,

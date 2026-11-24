@@ -10,6 +10,7 @@ import {
   markOutreachPitchListedSchema,
   markOutreachPitchSentSchema,
   sendOutreachPitchSchema,
+  setOutreachPitchLaterSchema,
   updateOutreachPitchDetailsSchema,
 } from "../schemas/autopilot-outreach.js";
 import type { ToolRegistry } from "../types/server.js";
@@ -138,6 +139,24 @@ export function registerAutopilotOutreachTools(server: ToolRegistry, client: Not
       outputSchema: shareJsonSchema(apiOutputSchema("markOutreachPitchListed")),
     },
     ({ pitchId }) => handleError(() => client.markOutreachPitchListed(pitchId)),
+  );
+
+  server.tool(
+    {
+      name: "set_outreach_pitch_later",
+      description: `Put a draft pitch off until the next daily brief (later: true), like Later in the dashboard, or undo that (later: false). Only drafts can be put off. ${WRITE_ACCESS} Returns the updated pitch; its later field says whether it is put off.`,
+      annotations: {
+        title: "Put Outreach Pitch Off",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(setOutreachPitchLaterSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("laterOutreachPitch")),
+    },
+    ({ pitchId, later }) =>
+      handleError(() => (later ? client.laterOutreachPitch(pitchId) : client.undoLaterOutreachPitch(pitchId))),
   );
 
   server.tool(

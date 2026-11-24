@@ -28,6 +28,8 @@ export interface OutreachPitchSummary {
   followUpDue: boolean;
   lastActivityAt: string;
   replyCount: number;
+  /** A draft put off with Later: back in the next daily brief. */
+  later: boolean;
   deal: {
     decision: "free" | "paid" | "declined" | "undecided";
     amount: number | null;
