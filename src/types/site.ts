@@ -140,11 +140,17 @@ export interface SiteDeployment {
 export interface SitePostPreview {
   status: string;
   live: boolean;
+  /** The latest build is the one being served: the url shows the saved post. */
+  latestLive: boolean;
   deleting: boolean;
   errorMessage: string | null;
   expiresAt: string;
+  /** How long the preview stays open after each build. */
+  lifetime: "1h" | "1d" | "3d" | "7d";
   hasPassword: boolean;
   url: string;
+  /** Signs teammates in and opens the page with the review toolbar. */
+  reviewUrl: string;
 }
 
 export interface GetSiteResponse {

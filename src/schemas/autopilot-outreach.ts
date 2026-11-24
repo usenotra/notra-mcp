@@ -26,13 +26,14 @@ export const listOutreachPitchesSchema = z.strictObject({
 
 export const getOutreachPitchSchema = pitchSchema;
 
+/** ISO 4217 codes the runtime knows; anything else is a typo. */
+const CURRENCY_CODES = new Set(Intl.supportedValuesOf("currency"));
+
 export const editOutreachPitchSchema = z
   .strictObject({
     pitchId: pitchIdSchema,
     to: z
-      .string()
-      .trim()
-      .max(254)
+      .union([z.literal(""), z.email().max(254)])
       .optional()
       .describe("One email address to send to. Empty sends to the address found on the page."),
     subject: z.string().trim().min(1).max(200).optional(),
@@ -89,6 +90,7 @@ export const updateOutreachPitchDetailsSchema = z
         currency: z
           .string()
           .regex(/^[A-Za-z]{3}$/)
+          .refine((code) => CURRENCY_CODES.has(code.toUpperCase()), "Use an ISO 4217 currency code, e.g. USD")
           .nullable()
           .describe("ISO 4217, e.g. USD; either case"),
         terms: z.string().trim().max(500).nullable(),

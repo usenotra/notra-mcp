@@ -298,6 +298,14 @@ test("rejects invalid inputs before calling the API", async () => {
     ["list_outreach_pitches", { followUpDue: "yes" }],
     ["list_outreach_pitches", { search: "x".repeat(201) }],
     ["list_outreach_pitches", { organizationId: "other" }],
+    ["edit_outreach_pitch", { pitchId: "pitch-1", to: "abc" }],
+    [
+      "update_outreach_pitch_details",
+      {
+        pitchId: "pitch-1",
+        deal: { decision: "paid", amount: 100, currency: "ZZZ", terms: null, placementUrl: null },
+      },
+    ],
     ["get_outreach_pitch", { pitchId: "../escape" }],
     ["get_outreach_pitch", {}],
     ["edit_outreach_pitch", { pitchId: "pitch-1" }],
