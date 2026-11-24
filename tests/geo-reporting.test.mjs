@@ -90,6 +90,30 @@ after(async () => {
   await new Promise((resolve) => api?.close(resolve));
 });
 
+test("declines standalone SSE without breaking OAuth discovery or stateless POSTs", async () => {
+  for (const path of ["", "/alpha"]) {
+    const url = `${endpoint}${path}`;
+    const accept = { Accept: "text/event-stream", "MCP-Protocol-Version": "2025-06-18" };
+    const challenge = await fetch(url, { headers: accept, signal: AbortSignal.timeout(5000) });
+    assert.equal(challenge.status, 401);
+    assert.match(challenge.headers.get("www-authenticate"), /Bearer .*resource_metadata=/);
+    await challenge.body?.cancel();
+
+    for (const Accept of ["text/event-stream", "application/json, Text/Event-Stream; q=0.9"]) {
+      const res = await fetch(url, {
+        headers: { ...accept, Accept, Authorization: "Bearer fixture-key" },
+        signal: AbortSignal.timeout(5000),
+      });
+      assert.equal(res.status, 405, Accept);
+      assert.equal(res.headers.get("allow"), "POST");
+      await res.body?.cancel();
+    }
+
+    const { tools } = await rpc("tools/list", undefined, "alpha", path);
+    assert.ok(tools.some((tool) => tool.name === "get_geo_snapshot"));
+  }
+});
+
 async function rpc(method, params, workspace = "alpha", path = "") {
   const res = await fetch(`${endpoint}${path}?toolsets=geo`, {
     method: "POST",
