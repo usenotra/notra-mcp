@@ -112,8 +112,8 @@ export function registerAutopilotTools(server: ToolRegistry, client: NotraClient
       annotations: {
         title: "Update Autopilot Settings",
         readOnlyHint: false,
-        openWorldHint: false,
-        destructiveHint: false,
+        openWorldHint: true,
+        destructiveHint: true,
         idempotentHint: true,
       },
       inputSchema: shareJsonSchema(updateAutopilotSettingsSchema),
@@ -181,7 +181,7 @@ export function registerAutopilotTools(server: ToolRegistry, client: NotraClient
   server.tool(
     {
       name: "merge_autopilot_finding",
-      description: `Merge a finding's open pull request on GitHub, which publishes the change. Pass headSha from get_autopilot_finding so a newer, unread commit is never merged. Get explicit user confirmation first. ${WRITE}`,
+      description: `Merge a finding's open pull request on GitHub, which publishes the change. headSha from get_autopilot_finding is required, so a newer, unread commit is never merged. Get explicit user confirmation first. ${WRITE}`,
       annotations: {
         title: "Merge Autopilot Finding",
         readOnlyHint: false,
@@ -266,12 +266,12 @@ export function registerAutopilotTools(server: ToolRegistry, client: NotraClient
   server.tool(
     {
       name: "set_autopilot_workflow_enabled",
-      description: `Turn a saved custom workflow on or off. Off stops its schedule; it can still be run with run_autopilot_workflow. ${WRITE}`,
+      description: `Turn a saved custom workflow on or off. On resumes its schedule, and each scheduled run can spend AI credits and change connected services such as GitHub or Slack; off stops the schedule. Get explicit user confirmation before turning one on. ${WRITE}`,
       annotations: {
         title: "Turn Autopilot Workflow On or Off",
         readOnlyHint: false,
-        openWorldHint: false,
-        destructiveHint: false,
+        openWorldHint: true,
+        destructiveHint: true,
         idempotentHint: true,
       },
       inputSchema: shareJsonSchema(setAutopilotWorkflowEnabledSchema),

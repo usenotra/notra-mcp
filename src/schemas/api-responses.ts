@@ -2701,7 +2701,10 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           repository: { type: ["string", "null"] },
           pullRequestNumber: { type: ["integer", "null"] },
           branch: { type: ["string", "null"] },
-          headSha: { type: ["string", "null"], description: "The commit the pull request is at; pass it to merge" },
+          headSha: {
+            type: ["string", "null"],
+            description: "The commit an open pull request is on now, read from GitHub; pass it to merge",
+          },
           postId: { type: ["string", "null"] },
           runId: { type: ["string", "null"] },
           error: { type: ["string", "null"], description: "Why writing it failed, if it did" },
@@ -2836,28 +2839,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           releaseFilters: {
             type: "object",
             properties: {
-              excludedAuthors: {
-                type: "array",
-                items: { type: "string", pattern: "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:\\[bot\\])?$" },
-                maxItems: 50,
-                description: "GitHub logins whose pull requests are never written about",
-              },
-              paths: {
-                type: "object",
-                additionalProperties: {
-                  type: "array",
-                  items: { type: "string", minLength: 1, maxLength: 200 },
-                  maxItems: 20,
-                },
-                description:
-                  "Per repository (owner/name), only pull requests touching these paths or globs count, e.g. apps/web or docs/**",
-              },
-              repositories: {
-                type: "array",
-                items: { type: "string", maxLength: 201, pattern: "^[A-Za-z0-9_.-]+\\/[A-Za-z0-9_.-]+$" },
-                maxItems: 15,
-                description: "Repositories (owner/name) whose releases are read; empty picks them automatically",
-              },
+              excludedAuthors: { type: "array", items: { type: "string" } },
+              paths: { type: "object", additionalProperties: { type: "array", items: { type: "string" } } },
+              repositories: { type: "array", items: { type: "string" } },
             },
             required: ["excludedAuthors", "paths", "repositories"],
           },

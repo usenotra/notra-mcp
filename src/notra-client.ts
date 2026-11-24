@@ -389,7 +389,7 @@ export class NotraClient {
 
   async mergeAutopilotFinding(
     findingId: string,
-    body: { method?: "squash" | "merge" | "rebase"; headSha?: string },
+    body: { method?: "squash" | "merge" | "rebase"; headSha: string },
   ): Promise<AutopilotApiObject> {
     return this.request<AutopilotApiObject, typeof body>("POST", `${autopilotFindingPath(findingId)}/merge`, { body });
   }

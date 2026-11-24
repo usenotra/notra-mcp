@@ -45,7 +45,7 @@ const JOB_KINDS = [
   "outreach",
 ] as const;
 const JOB_KIND_DESCRIPTION =
-  "readiness: Agent Readiness fixes. keywords: posts for AI search gaps. commits: posts about shipped releases. prompts: suggests prompts to pause. competitors: a competitor line in the brief. refresh: updates stale pages. comparisons: comparison pages. rendering: makes pages readable by AI crawlers. links: internal links. landing: landing page copy. outreach: pitches to pages AI cites.";
+  "readiness: Agent Readiness fixes. keywords: posts for AI search gaps. commits: posts about shipped releases. prompts: suggests prompts to pause. refresh: updates stale pages. comparisons: comparison pages. rendering: makes pages readable by AI crawlers. links: internal links. landing: landing page copy. outreach: pitches to pages AI cites.";
 const approvalModeSchema = z
   .enum(["ask", "auto"])
   .describe("ask: a person merges it. auto: Autopilot publishes it on its own.");
@@ -70,7 +70,7 @@ export const updateAutopilotSettingsSchema = z
       .describe("Hour of day (0-23) the daily run and brief happen."),
     timezone: z.string().trim().min(1).max(64).optional().describe("IANA timezone such as Europe/Berlin."),
     jobs: z
-      .partialRecord(z.enum(JOB_KINDS), z.boolean())
+      .partialRecord(z.enum(JOB_KINDS.filter((kind) => kind !== "competitors") as [string, ...string[]]), z.boolean())
       .optional()
       .describe(
         `Automations to turn on (true) or off (false); omitted ones keep their setting. ${JOB_KIND_DESCRIPTION}`,
@@ -168,8 +168,9 @@ export const mergeAutopilotFindingSchema = autopilotFindingSchema.extend({
     .trim()
     .min(7)
     .max(64)
-    .optional()
-    .describe("headSha from get_autopilot_finding; the merge is refused if the branch moved past it."),
+    .describe(
+      "headSha from get_autopilot_finding, the commit you reviewed. The merge is refused if the branch moved past it.",
+    ),
 });
 
 export const requestAutopilotChangesSchema = autopilotFindingSchema.extend({
