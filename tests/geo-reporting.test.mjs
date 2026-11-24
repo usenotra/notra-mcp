@@ -99,13 +99,15 @@ test("declines standalone SSE without breaking OAuth discovery or stateless POST
     assert.match(challenge.headers.get("www-authenticate"), /Bearer .*resource_metadata=/);
     await challenge.body?.cancel();
 
-    const res = await fetch(url, {
-      headers: { ...accept, Authorization: "Bearer fixture-key" },
-      signal: AbortSignal.timeout(5000),
-    });
-    assert.equal(res.status, 405);
-    assert.equal(res.headers.get("allow"), "POST");
-    await res.body?.cancel();
+    for (const Accept of ["text/event-stream", "application/json, Text/Event-Stream; q=0.9"]) {
+      const res = await fetch(url, {
+        headers: { ...accept, Accept, Authorization: "Bearer fixture-key" },
+        signal: AbortSignal.timeout(5000),
+      });
+      assert.equal(res.status, 405, Accept);
+      assert.equal(res.headers.get("allow"), "POST");
+      await res.body?.cancel();
+    }
 
     const { tools } = await rpc("tools/list", undefined, "alpha", path);
     assert.ok(tools.some((tool) => tool.name === "get_geo_snapshot"));
