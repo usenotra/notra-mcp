@@ -195,6 +195,12 @@ import type {
   ProjectResponse,
   UpdateProjectRequest,
 } from "./types/project.js";
+import type {
+  CommentedPostsResponse,
+  PostCommentsResponse,
+  ReplyToPostCommentResponse,
+  ResolvePostCommentsResponse,
+} from "./types/post-comment.js";
 import type { RequestOptions, RequestTimeoutOptions } from "./types/request.js";
 import type {
   CreateSitePostPreviewRequest,
@@ -397,6 +403,32 @@ export class NotraClient {
       "POST",
       sitePath(siteId, "/post-previews"),
       { body, timeoutMs: SITE_WRITE_TIMEOUT_MS },
+    );
+  }
+
+  async listCommentedPosts(params: { link?: string; page?: number }): Promise<CommentedPostsResponse> {
+    return this.request<CommentedPostsResponse>("GET", "/v1/post-comments", { params });
+  }
+
+  async listPostComments(postId: string, status?: "open" | "all"): Promise<PostCommentsResponse> {
+    return this.request<PostCommentsResponse>("GET", `/v1/posts/${encodeURIComponent(postId)}/comments`, {
+      params: status ? { status } : undefined,
+    });
+  }
+
+  async resolvePostComments(postId: string, threadIds: string[]): Promise<ResolvePostCommentsResponse> {
+    return this.request<ResolvePostCommentsResponse, { threadIds: string[] }>(
+      "POST",
+      `/v1/posts/${encodeURIComponent(postId)}/comments/resolve`,
+      { body: { threadIds } },
+    );
+  }
+
+  async replyToPostComment(postId: string, threadId: string, body: string): Promise<ReplyToPostCommentResponse> {
+    return this.request<ReplyToPostCommentResponse, { body: string }>(
+      "POST",
+      `/v1/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(threadId)}/replies`,
+      { body: { body } },
     );
   }
 

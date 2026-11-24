@@ -1,12 +1,18 @@
 import * as z from "zod";
 import {
+  POST_PREVIEW_MAX_WAIT_SECONDS,
   SITE_AUTHOR_AVATAR_PATTERN,
   SITE_AUTHOR_ID_PATTERN,
   SITE_AUTHOR_PAGE_LAYOUT_VALUES,
   SITE_PATH_PATTERN,
 } from "../constants/site.js";
 
-const siteIdSchema = z.string().min(1).describe("ID of the Notra Site, as returned by list_sites");
+const siteIdSchema = z
+  .string()
+  .min(1)
+  .describe(
+    "ID of the Notra Site: the siteId list_commented_posts returned for a preview link (no need to look it up again), otherwise from list_sites",
+  );
 
 const siteAuthorIdSchema = z
   .string()
@@ -165,7 +171,30 @@ export const createSitePostPreviewSchema = z.object({
   lifetime: z
     .enum(["1h", "1d", "3d", "7d"])
     .optional()
-    .describe("How long the preview stays available before it expires. Defaults to 1d."),
+    .describe(
+      "How long the preview stays available. Leave out to keep the current preview's lifetime when rebuilding, or 1d for a first preview.",
+    ),
+  password: z
+    .string()
+    .min(8)
+    .max(128)
+    .nullable()
+    .optional()
+    .describe(
+      "Only when the user wants to share the preview outside the workspace: people with the password can read it but not comment. null removes the password. Leave out to keep the current protection.",
+    ),
 });
 
 export const sitePostSchema = z.object({ siteId: siteIdSchema, postId: postIdSchema });
+
+export const getSitePostPreviewSchema = sitePostSchema.extend({
+  waitSeconds: z
+    .number()
+    .int()
+    .min(0)
+    .max(POST_PREVIEW_MAX_WAIT_SECONDS)
+    .optional()
+    .describe(
+      `Wait up to this many seconds (max ${POST_PREVIEW_MAX_WAIT_SECONDS}) for the build to go live or fail before returning. Use 45 right after preview_post_on_site; builds usually take under a minute.`,
+    ),
+});

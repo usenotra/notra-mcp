@@ -97,6 +97,7 @@ export type ApiOperationId =
   | "listBrandColors"
   | "listBrandIdentities"
   | "listChats"
+  | "listCommentedPosts"
   | "listEventTriggers"
   | "listFeedback"
   | "listGeoAnalyticsImports"
@@ -118,6 +119,7 @@ export type ApiOperationId =
   | "listGeoTrafficPages"
   | "listIntegrations"
   | "listPostAuthors"
+  | "listPostComments"
   | "listPosts"
   | "listProjects"
   | "listScheduleRuns"
@@ -134,7 +136,9 @@ export type ApiOperationId =
   | "publishSite"
   | "redeploySiteDeployment"
   | "releaseGeoContentClaim"
+  | "replyToPostComment"
   | "reportGeoContentAgentFailure"
+  | "resolvePostComments"
   | "restoreGeoPersona"
   | "retryWebhookDelivery"
   | "rotateGeoIngestToken"
@@ -1524,17 +1528,52 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             type: "object",
             properties: {
               status: { type: "string", description: "Status of the preview's latest build." },
-              live: { type: "boolean", description: "The preview is being served and has not expired." },
+              live: {
+                type: "boolean",
+                description:
+                  "The preview is being served and has not expired. During a rebuild this is the previous build.",
+              },
+              latestLive: {
+                type: "boolean",
+                description:
+                  "The latest build is the one being served: the url shows the saved post. Share the link once this is true.",
+              },
               deleting: { type: "boolean", description: "The preview is being removed." },
               errorMessage: { type: ["string", "null"], description: "Why the latest build failed or stopped." },
               expiresAt: { type: "string", description: "When the preview stops being served." },
+              lifetime: {
+                type: "string",
+                enum: ["1h", "1d", "3d", "7d"],
+                description:
+                  "How long the preview stays open after each build; rebuilds keep it unless a new one is passed.",
+              },
               hasPassword: {
                 type: "boolean",
                 description: "People outside the workspace can open it with a password.",
               },
-              url: { type: "string", description: "The post's page on the preview." },
+              url: {
+                type: "string",
+                description:
+                  "The post's page on the preview. Opens it for readers outside the workspace with the password, or for anyone when the site allows that.",
+              },
+              reviewUrl: {
+                type: "string",
+                description:
+                  "The link to give teammates: it signs them in with Notra and opens the page with the review toolbar, where they can comment.",
+              },
             },
-            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+            required: [
+              "status",
+              "live",
+              "latestLive",
+              "deleting",
+              "errorMessage",
+              "expiresAt",
+              "lifetime",
+              "hasPassword",
+              "url",
+              "reviewUrl",
+            ],
           },
           { type: "null" },
         ],
@@ -7642,17 +7681,52 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             type: "object",
             properties: {
               status: { type: "string", description: "Status of the preview's latest build." },
-              live: { type: "boolean", description: "The preview is being served and has not expired." },
+              live: {
+                type: "boolean",
+                description:
+                  "The preview is being served and has not expired. During a rebuild this is the previous build.",
+              },
+              latestLive: {
+                type: "boolean",
+                description:
+                  "The latest build is the one being served: the url shows the saved post. Share the link once this is true.",
+              },
               deleting: { type: "boolean", description: "The preview is being removed." },
               errorMessage: { type: ["string", "null"], description: "Why the latest build failed or stopped." },
               expiresAt: { type: "string", description: "When the preview stops being served." },
+              lifetime: {
+                type: "string",
+                enum: ["1h", "1d", "3d", "7d"],
+                description:
+                  "How long the preview stays open after each build; rebuilds keep it unless a new one is passed.",
+              },
               hasPassword: {
                 type: "boolean",
                 description: "People outside the workspace can open it with a password.",
               },
-              url: { type: "string", description: "The post's page on the preview." },
+              url: {
+                type: "string",
+                description:
+                  "The post's page on the preview. Opens it for readers outside the workspace with the password, or for anyone when the site allows that.",
+              },
+              reviewUrl: {
+                type: "string",
+                description:
+                  "The link to give teammates: it signs them in with Notra and opens the page with the review toolbar, where they can comment.",
+              },
             },
-            required: ["status", "live", "deleting", "errorMessage", "expiresAt", "hasPassword", "url"],
+            required: [
+              "status",
+              "live",
+              "latestLive",
+              "deleting",
+              "errorMessage",
+              "expiresAt",
+              "lifetime",
+              "hasPassword",
+              "url",
+              "reviewUrl",
+            ],
           },
           { type: "null" },
         ],
@@ -8473,6 +8547,46 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["chats"],
     description: "The organization's chat sessions, without their messages.",
   },
+  listCommentedPosts: {
+    type: "object",
+    properties: {
+      posts: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            postId: { type: "string" },
+            title: { type: "string" },
+            openThreads: { type: "integer", description: "Unresolved threads on the post" },
+            lastCommentAt: { type: ["string", "null"], description: "When the newest open thread was started" },
+            siteId: {
+              type: "string",
+              description:
+                "The Site a preview link belongs to, to rebuild that preview after revising the post. Only set when looking up a preview link.",
+            },
+          },
+          required: ["postId", "title", "openThreads", "lastCommentAt"],
+        },
+      },
+      hasMore: { type: "boolean", description: "More posts with open comments are on the next page." },
+      total: { type: "integer", description: "Posts with open comments across all pages; 1 when looking up a link." },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["posts", "hasMore", "total", "organization"],
+  },
   listEventTriggers: {
     type: "object",
     properties: {
@@ -9158,7 +9272,8 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             competitors: {
               type: "array",
               items: { type: "string" },
-              description: "Tracked competitors named in answers that left out the brand.",
+              description:
+                "Tracked competitors named in answers that left out the brand, or whose website an engine searched directly for them.",
             },
             discoveredCompetitors: {
               type: "array",
@@ -9168,7 +9283,19 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             searchQueries: {
               type: "array",
               items: { type: "string" },
-              description: "Web searches AI engines ran while answering this prompt.",
+              description:
+                "Web searches AI engines ran while answering this prompt. Searches restricted to one website with `site:` are left out and reported in `siteSearches`.",
+            },
+            siteSearches: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Other websites AI engines searched directly with a `site:` search in answers that left out the brand.",
+            },
+            ownSiteSearched: {
+              type: "boolean",
+              description:
+                "True when an engine searched the brand's own website with a `site:` search and still left the brand out of its answer.",
             },
             ownMentionRate: {
               type: "number",
@@ -10885,6 +11012,64 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["organization", "authors"],
     description: "Authors that can be credited on posts.",
   },
+  listPostComments: {
+    type: "object",
+    properties: {
+      threads: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Thread ID, used to reply and resolve" },
+            quote: { type: ["string", "null"], description: "The passage of the post the thread is about" },
+            author: { type: "string" },
+            body: { type: "string" },
+            leftOn: {
+              type: "string",
+              enum: ["preview", "editor"],
+              description: "Whether it was left on the post's Notra Sites preview or in the editor",
+            },
+            resolved: { type: "boolean" },
+            deleted: {
+              type: "boolean",
+              description: "The thread's first comment was deleted; only its replies remain",
+            },
+            createdAt: { type: "string" },
+            replies: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string" },
+                  author: { type: "string" },
+                  body: { type: "string" },
+                  createdAt: { type: "string" },
+                },
+                required: ["id", "author", "body", "createdAt"],
+              },
+            },
+          },
+          required: ["id", "quote", "author", "body", "leftOn", "resolved", "deleted", "createdAt", "replies"],
+        },
+      },
+      openThreads: { type: "integer" },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["threads", "openThreads", "organization"],
+  },
   listPosts: {
     type: "object",
     properties: {
@@ -12298,6 +12483,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["sourceKind", "sourceId", "released", "organization"],
   },
+  replyToPostComment: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
   reportGeoContentAgentFailure: {
     type: "object",
     properties: {
@@ -12327,6 +12513,18 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["sourceKind", "sourceId", "released", "organization"],
+  },
+  resolvePostComments: {
+    type: "object",
+    properties: {
+      resolved: { type: "array", items: { type: "string" } },
+      skipped: {
+        type: "array",
+        items: { type: "string" },
+        description: "Threads that were already resolved, replies or not on this post",
+      },
+    },
+    required: ["resolved", "skipped"],
   },
   restoreGeoPersona: {
     type: "object",

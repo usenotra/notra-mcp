@@ -140,11 +140,14 @@ export interface SiteDeployment {
 export interface SitePostPreview {
   status: string;
   live: boolean;
+  latestLive: boolean;
   deleting: boolean;
   errorMessage: string | null;
   expiresAt: string;
   hasPassword: boolean;
   url: string;
+  /** For teammates: signs them in, so they see the comment toolbar. */
+  reviewUrl: string;
 }
 
 export interface GetSiteResponse {
@@ -197,6 +200,7 @@ export interface SitePostPreviewResponse {
 export interface CreateSitePostPreviewRequest {
   postId: string;
   lifetime?: "1h" | "1d" | "3d" | "7d";
+  password?: string | null;
 }
 
 export interface PublishSitePostResponse {

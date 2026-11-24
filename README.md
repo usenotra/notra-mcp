@@ -270,7 +270,11 @@ Notra Sites are hosted blogs and changelogs built from a GitHub repository. Sett
 | `deploy_site`              | Build and publish the newest commit on the production branch                                      |
 | `redeploy_site_deployment` | Rebuild the same commit, for example to retry a failed build                                      |
 | `preview_post_on_site`     | Build a private preview of a Site with a saved post added, without touching the repository        |
-| `get_site_post_preview`    | Get the status and URL of a post's preview                                                        |
+| `get_site_post_preview`    | Get the status and URL of a post's preview; `waitSeconds` waits for the build                     |
+| `list_commented_posts`     | Find posts with open comments, or the one a preview or post link points at                        |
+| `list_post_comments`       | Read a post's comment threads from the editor and its site preview                                |
+| `reply_to_post_comment`    | Answer a comment thread as the signed-in user                                                     |
+| `resolve_post_comments`    | Mark threads done after your edit addressed them                                                  |
 | `publish_post_to_site`     | Open or update a pull request that adds a post to the Site's repository; it goes live once merged |
 | `list_site_authors`        | List a site's blog.json authors, unpublished changes included, with post usage                    |
 | `upsert_site_author`       | Create or replace a site author, or rename one with `previousId`                                  |
