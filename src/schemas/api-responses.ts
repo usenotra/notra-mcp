@@ -9272,7 +9272,8 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             competitors: {
               type: "array",
               items: { type: "string" },
-              description: "Tracked competitors named in answers that left out the brand.",
+              description:
+                "Tracked competitors named in answers that left out the brand, or whose website an engine searched directly for them.",
             },
             discoveredCompetitors: {
               type: "array",
@@ -9282,7 +9283,19 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             searchQueries: {
               type: "array",
               items: { type: "string" },
-              description: "Web searches AI engines ran while answering this prompt.",
+              description:
+                "Web searches AI engines ran while answering this prompt. Searches restricted to one website with `site:` are left out and reported in `siteSearches`.",
+            },
+            siteSearches: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Other websites AI engines searched directly with a `site:` search in answers that left out the brand.",
+            },
+            ownSiteSearched: {
+              type: "boolean",
+              description:
+                "True when an engine searched the brand's own website with a `site:` search and still left the brand out of its answer.",
             },
             ownMentionRate: {
               type: "number",
