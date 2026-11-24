@@ -1,5 +1,14 @@
 import type { GeoSettings, GeoSettingsPatch, UpdateGeoSettingsRequest } from "../types/geo-settings.js";
 
+export function hasNormalizedWwwDomain(requested: readonly string[], saved: readonly string[]): boolean {
+  return requested.some((domain) => {
+    const input = /^[a-z][a-z0-9+.-]*:\/\//i.test(domain) ? domain : `https://${domain}`;
+    if (!URL.canParse(input)) return false;
+    const host = new URL(input).hostname.toLowerCase().replace(/\.$/, "");
+    return host.startsWith("www.") && saved.includes(host.slice(4)) && !saved.includes(host);
+  });
+}
+
 /** Fields the API requires on every write; the rest keep their stored value when omitted. */
 const REQUIRED_FIELDS = [
   "companyName",

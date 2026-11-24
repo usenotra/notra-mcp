@@ -22,14 +22,49 @@ const totals = Object.fromEntries(
 
 before(
   async () => {
-    api = createServer((req, res) => {
+    api = createServer(async (req, res) => {
       const path = new URL(req.url, "http://localhost").pathname;
       const slug = req.headers["x-notra-organization-id"];
       const organization = { id: `org_${slug}`, slug, name: slug, logo: null };
       const configured = !path.includes("/disabled/");
       const active = path.includes("/active/");
       let data;
-      if (path.endsWith("/traffic/mcp")) {
+      if (path.endsWith("/settings")) {
+        const settings = {
+          id: "settings-id",
+          organizationId: organization.id,
+          projectId: "active",
+          companyName: "Example",
+          aliases: [],
+          conversionPaths: [],
+          domains: ["example.com"],
+          competitors: ["Other", "Scrunch"],
+          languages: ["English"],
+          engines: ["google/ai-overview"],
+          enforceZdr: false,
+          nonZdrApprovedEngines: [],
+          trackWithoutSearch: false,
+          pausedAutoPromptIds: [],
+          removedAutoPromptIds: [],
+          enabled: false,
+          scanIntervalHours: 24,
+          nextScanAt: null,
+          scanStartedAt: null,
+          lastScanAt: null,
+          isScanning: false,
+          createdAt: day,
+          updatedAt: day,
+        };
+        if (req.method === "PATCH") {
+          const chunks = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const { domains } = JSON.parse(Buffer.concat(chunks));
+          if (domains) {
+            settings.domains = [...new Set(domains.map((domain) => domain.replace(/^www\./, "")))];
+          }
+        }
+        data = { configured, organization, settings };
+      } else if (path.endsWith("/traffic/mcp")) {
         data = {
           configured,
           organization,
@@ -146,6 +181,32 @@ async function call(name, projectId, workspace, path) {
   assert.deepEqual(JSON.parse(content[0].text), structuredContent);
   return structuredContent;
 }
+
+test("updating GEO domains explains when www hosts are saved without the prefix", async () => {
+  const name = "update_geo_settings";
+  const { tools } = await rpc("tools/list", {});
+  assert.match(tools.find((tool) => tool.name === name).description, /drop the leading www\./);
+
+  for (const [domains, expectWarning] of [
+    [["example.com", "www.example.com"], true],
+    [["www.example.com", "example.com"], true],
+    [["www.example.com"], true],
+    [["example.com"], false],
+    [undefined, false],
+  ]) {
+    const { content, structuredContent } = await rpc("tools/call", {
+      name,
+      arguments: { projectId: "active", ...(domains ? { domains } : { enabled: false }) },
+    });
+    assert.deepEqual(JSON.parse(content[0].text), structuredContent);
+    assert.deepEqual(structuredContent.settings.domains, ["example.com"]);
+    if (expectWarning) {
+      assert.match(structuredContent.warnings[0], /Traffic from www\. hosts is still covered/);
+    } else {
+      assert.equal(structuredContent.warnings, undefined);
+    }
+  }
+});
 
 test("a single MCP endpoint scopes parallel calls by header; a scoped URL wins", async () => {
   const workspaces = await Promise.all(
