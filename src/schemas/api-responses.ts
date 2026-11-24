@@ -3,9 +3,11 @@ import type { JSONSchema } from "zod/v4/core";
 export type ApiOperationId =
   | "acceptGeoNameCollision"
   | "acceptGeoPromptSuggestion"
+  | "addAutopilotRule"
   | "addGeoNameCollision"
   | "approveGeoContentBrief"
   | "archiveGeoPersona"
+  | "cancelOutreachPitch"
   | "cancelPostSchedule"
   | "claimGeoContent"
   | "createAgentSession"
@@ -25,6 +27,8 @@ export type ApiOperationId =
   | "createSitePostPreview"
   | "createSkill"
   | "createWebhookEndpoint"
+  | "deleteAutopilotRule"
+  | "deleteAutopilotWorkflow"
   | "deleteBrandColor"
   | "deleteBrandIdentity"
   | "deleteEventTrigger"
@@ -32,15 +36,22 @@ export type ApiOperationId =
   | "deleteGeoPrompt"
   | "deleteGeoSequence"
   | "deleteIntegration"
+  | "deleteOutreachPitch"
   | "deletePost"
   | "deleteProject"
   | "deleteSchedule"
   | "deleteSiteAuthor"
   | "deleteSkill"
   | "deleteWebhookEndpoint"
+  | "disconnectOutreachMailbox"
+  | "dismissAutopilotFinding"
   | "dismissGeoNameCollision"
   | "dismissGeoPromptSuggestion"
+  | "editOutreachPitch"
   | "generateGeoPersonas"
+  | "getAutopilotBrief"
+  | "getAutopilotFinding"
+  | "getAutopilotRun"
   | "getAutopilotStatus"
   | "getBrandIdentity"
   | "getBrandIdentityGeneration"
@@ -76,6 +87,8 @@ export type ApiOperationId =
   | "getGeoWebAnalyticsBreakdowns"
   | "getGeoWebAnalyticsUtm"
   | "getGitHubActivity"
+  | "getOutreachMailbox"
+  | "getOutreachPitch"
   | "getPost"
   | "getPostAgentReach"
   | "getPostGeneration"
@@ -89,11 +102,15 @@ export type ApiOperationId =
   | "getSkill"
   | "getWebhookDelivery"
   | "getWorkspaces"
+  | "holdAutopilotFinding"
   | "importGeoCompetitors"
   | "importGeoPrompts"
   | "importSiteAuthors"
   | "issueGeoIngestToken"
+  | "laterOutreachPitch"
   | "listAgentChats"
+  | "listAutopilotFindings"
+  | "listAutopilotRuns"
   | "listBrandColors"
   | "listBrandIdentities"
   | "listChats"
@@ -118,6 +135,7 @@ export type ApiOperationId =
   | "listGeoTrafficJourneys"
   | "listGeoTrafficPages"
   | "listIntegrations"
+  | "listOutreachPitches"
   | "listPostAuthors"
   | "listPostComments"
   | "listPosts"
@@ -130,6 +148,9 @@ export type ApiOperationId =
   | "listSkills"
   | "listWebhookDeliveries"
   | "listWebhookEndpoints"
+  | "markOutreachPitchListed"
+  | "markOutreachPitchSent"
+  | "mergeAutopilotFinding"
   | "patchSkill"
   | "planGeoContentBrief"
   | "publishPostToSite"
@@ -138,6 +159,7 @@ export type ApiOperationId =
   | "releaseGeoContentClaim"
   | "replyToPostComment"
   | "reportGeoContentAgentFailure"
+  | "requestAutopilotChanges"
   | "resolvePostComments"
   | "restoreGeoPersona"
   | "retryWebhookDelivery"
@@ -147,6 +169,8 @@ export type ApiOperationId =
   | "runSchedule"
   | "schedulePost"
   | "sendAgentSessionMessage"
+  | "sendOutreachPitch"
+  | "setAutopilotWorkflowEnabled"
   | "startAutopilotRun"
   | "startAutopilotWorkflowRun"
   | "startGeoAgentReadinessScan"
@@ -155,6 +179,8 @@ export type ApiOperationId =
   | "submitFeedback"
   | "submitOrganizationFeedback"
   | "suggestGeoCompetitors"
+  | "undoLaterOutreachPitch"
+  | "updateAutopilotSettings"
   | "updateBrandColor"
   | "updateBrandIdentity"
   | "updateEventTrigger"
@@ -165,13 +191,15 @@ export type ApiOperationId =
   | "updateGeoPrompt"
   | "updateGeoSequence"
   | "updateGeoSettings"
+  | "updateOutreachPitchDetails"
   | "updatePost"
   | "updateProject"
   | "updateSchedule"
   | "updateSiteAuthorPage"
   | "updateSiteSections"
   | "upsertGeoCompetitor"
-  | "upsertSiteAuthor";
+  | "upsertSiteAuthor"
+  | "writeAutopilotFinding";
 
 export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema> = {
   acceptGeoNameCollision: {
@@ -310,6 +338,18 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["prompt", "organization"],
     description: "The created, updated or accepted prompt and the workspace it belongs to.",
   },
+  addAutopilotRule: {
+    type: "object",
+    properties: {
+      status: {
+        type: "string",
+        enum: ["added", "duplicate"],
+        description: "duplicate: an equal rule was already there",
+      },
+      ruleId: { type: ["string", "null"] },
+    },
+    required: ["status", "ruleId"],
+  },
   addGeoNameCollision: {
     type: "object",
     properties: {
@@ -441,6 +481,143 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["id", "organization"],
     description: "Confirmation of the archived persona and the workspace it belongs to.",
+  },
+  cancelOutreachPitch: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "body",
+          "from",
+          "reason",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+    },
+    required: ["pitch"],
   },
   cancelPostSchedule: {
     type: "object",
@@ -1682,6 +1859,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["endpoint", "secret"],
     description: "The new webhook endpoint and its signing secret.",
   },
+  deleteAutopilotRule: {
+    type: "object",
+    properties: { success: { type: "boolean", enum: [true] } },
+    required: ["success"],
+  },
+  deleteAutopilotWorkflow: {
+    type: "object",
+    properties: { deleted: { type: "boolean", enum: [true] } },
+    required: ["deleted"],
+  },
   deleteBrandColor: {
     type: "object",
     properties: {
@@ -1935,6 +2122,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["id", "organization", "disabledSchedules", "disabledEvents"],
     description: "The deleted integration and the automations that were disabled because they used it.",
   },
+  deleteOutreachPitch: {
+    type: "object",
+    properties: { deleted: { type: "boolean", enum: [true] } },
+    required: ["deleted"],
+  },
   deletePost: {
     type: "object",
     properties: {
@@ -2131,6 +2323,26 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["id"],
     description: "Confirms which resource the request acted on.",
   },
+  disconnectOutreachMailbox: {
+    type: "object",
+    properties: { disconnected: { type: "boolean", enum: [true] } },
+    required: ["disconnected"],
+  },
+  dismissAutopilotFinding: {
+    type: "object",
+    properties: {
+      status: {
+        anyOf: [
+          { type: "string", enum: ["suggested", "open", "proposed", "merged", "dismissed", "expired", "failed"] },
+          { type: "string", enum: ["writing"] },
+        ],
+      },
+      runId: { type: ["string", "null"], description: "The run writing it, after write" },
+      pullRequestUrl: { type: ["string", "null"] },
+      rule: { type: ["string", "null"], description: "The standing rule learned from a dismissal reason" },
+    },
+    required: ["status"],
+  },
   dismissGeoNameCollision: {
     type: "object",
     properties: {
@@ -2242,6 +2454,143 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["id", "dismissed", "organization"],
     description: "Confirmation of the dismissed suggestion and the workspace it belongs to.",
   },
+  editOutreachPitch: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "body",
+          "from",
+          "reason",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+    },
+    required: ["pitch"],
+  },
   generateGeoPersonas: {
     type: "object",
     properties: {
@@ -2286,6 +2635,168 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["job", "organization"],
     description: "The project's persona generation job and the workspace it belongs to.",
   },
+  getAutopilotBrief: {
+    type: "object",
+    properties: {
+      brief: {
+        type: ["object", "null"],
+        properties: {
+          id: { type: "string" },
+          headline: { type: "string" },
+          summary: { type: "string" },
+          sectionTitles: { type: "array", items: { type: "string" } },
+          createdAt: { type: "string", format: "date-time" },
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { id: { type: "string" }, title: { type: "string" }, status: { type: "string" } },
+              required: ["id", "title", "status"],
+            },
+          },
+        },
+        required: ["id", "headline", "summary", "sectionTitles", "createdAt", "items"],
+        description: "Today's daily brief, or null when none was written today or the brief is off",
+      },
+    },
+    required: ["brief"],
+  },
+  getAutopilotFinding: {
+    type: "object",
+    properties: {
+      finding: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          kind: {
+            type: "string",
+            enum: [
+              "readiness",
+              "keywords",
+              "commits",
+              "prompts",
+              "competitors",
+              "refresh",
+              "comparisons",
+              "rendering",
+              "links",
+              "landing",
+              "outreach",
+            ],
+          },
+          status: {
+            type: "string",
+            enum: ["suggested", "open", "proposed", "merged", "dismissed", "expired", "failed"],
+          },
+          title: { type: "string" },
+          pullRequestUrl: { type: ["string", "null"] },
+          publishAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description: "When Autopilot publishes it on its own, if it will",
+          },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+          summary: { type: "string", description: "Why Autopilot picked it" },
+          repository: { type: ["string", "null"] },
+          pullRequestNumber: { type: ["integer", "null"] },
+          branch: { type: ["string", "null"] },
+          headSha: { type: ["string", "null"], description: "The commit the pull request is at; pass it to merge" },
+          postId: { type: ["string", "null"] },
+          runId: { type: ["string", "null"] },
+          error: { type: ["string", "null"], description: "Why writing it failed, if it did" },
+          publishHoldReason: { type: ["string", "null"], description: "Why an automatic publish was held, if it was" },
+          sourceUrl: { type: ["string", "null"] },
+          keyword: { type: ["string", "null"] },
+          competitors: { type: "array", items: { type: "string" } },
+          confidence: { type: ["number", "null"] },
+          openedAt: { type: ["string", "null"], format: "date-time" },
+          mergedAt: { type: ["string", "null"], format: "date-time" },
+          dismissedAt: { type: ["string", "null"], format: "date-time" },
+        },
+        required: [
+          "id",
+          "kind",
+          "status",
+          "title",
+          "pullRequestUrl",
+          "publishAt",
+          "createdAt",
+          "updatedAt",
+          "summary",
+          "repository",
+          "pullRequestNumber",
+          "branch",
+          "headSha",
+          "postId",
+          "runId",
+          "error",
+          "publishHoldReason",
+          "sourceUrl",
+          "keyword",
+          "competitors",
+          "confidence",
+          "openedAt",
+          "mergedAt",
+          "dismissedAt",
+        ],
+      },
+    },
+    required: ["finding"],
+  },
+  getAutopilotRun: {
+    type: "object",
+    properties: {
+      run: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          trigger: { type: "string", enum: ["manual", "cron", "onboarding", "github", "suggestion"] },
+          status: { type: "string", enum: ["running", "completed", "failed", "stopped", "skipped"] },
+          workflowKey: { type: ["string", "null"] },
+          headline: { type: ["string", "null"], description: "What a single-item run was about" },
+          outcome: { type: ["string", "null"], description: "What it came to" },
+          findings: { type: ["integer", "null"] },
+          proposed: { type: ["integer", "null"] },
+          failed: { type: ["integer", "null"] },
+          insights: { type: "array", items: { type: "string" } },
+          error: { type: ["string", "null"] },
+          startedAt: { type: "string", format: "date-time" },
+          finishedAt: { type: ["string", "null"], format: "date-time" },
+        },
+        required: [
+          "id",
+          "trigger",
+          "status",
+          "workflowKey",
+          "headline",
+          "outcome",
+          "findings",
+          "proposed",
+          "failed",
+          "insights",
+          "error",
+          "startedAt",
+          "finishedAt",
+        ],
+      },
+      events: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            job: { type: ["string", "null"] },
+            level: { type: "string", enum: ["info", "skip", "decision", "action", "error"] },
+            message: { type: "string" },
+            at: { type: "string", format: "date-time" },
+          },
+          required: ["job", "level", "message", "at"],
+        },
+        description: "What it did, oldest first; the latest 300 at most",
+      },
+    },
+    required: ["run", "events"],
+  },
   getAutopilotStatus: {
     type: "object",
     properties: {
@@ -2302,6 +2813,56 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           slackChannelName: { type: ["string", "null"] },
           reviewers: { type: "array", items: { type: "string" } },
           lastRunAt: { type: ["string", "null"], format: "date-time" },
+          repositoryBranch: { type: ["string", "null"] },
+          contentPath: {
+            type: ["string", "null"],
+            description: "Folder new posts go into; null lets Autopilot find it",
+          },
+          approvals: {
+            type: "object",
+            properties: {
+              posts: { type: "string", enum: ["ask", "auto"], description: "New posts" },
+              updates: { type: "string", enum: ["ask", "auto"], description: "Updates to existing pages" },
+              fixes: { type: "string", enum: ["ask", "auto"], description: "Technical fixes" },
+            },
+            required: ["posts", "updates", "fixes"],
+          },
+          stalePullRequestDays: {
+            type: ["integer", "null"],
+            description: "Days before an untouched draft closes; null never",
+          },
+          maxOpenPullRequests: { type: "integer" },
+          draftEmails: { type: "string", enum: ["without_slack", "always"] },
+          releaseFilters: {
+            type: "object",
+            properties: {
+              excludedAuthors: {
+                type: "array",
+                items: { type: "string", pattern: "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:\\[bot\\])?$" },
+                maxItems: 50,
+                description: "GitHub logins whose pull requests are never written about",
+              },
+              paths: {
+                type: "object",
+                additionalProperties: {
+                  type: "array",
+                  items: { type: "string", minLength: 1, maxLength: 200 },
+                  maxItems: 20,
+                },
+                description:
+                  "Per repository (owner/name), only pull requests touching these paths or globs count, e.g. apps/web or docs/**",
+              },
+              repositories: {
+                type: "array",
+                items: { type: "string", maxLength: 201, pattern: "^[A-Za-z0-9_.-]+\\/[A-Za-z0-9_.-]+$" },
+                maxItems: 15,
+                description: "Repositories (owner/name) whose releases are read; empty picks them automatically",
+              },
+            },
+            required: ["excludedAuthors", "paths", "repositories"],
+          },
+          projectId: { type: ["string", "null"] },
+          siteId: { type: ["string", "null"] },
         },
         required: [
           "enabled",
@@ -6564,6 +7125,168 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["integration", "type", "since", "until", "items", "pagination", "organization"],
     description: "One page of GitHub activity for a connected repository.",
   },
+  getOutreachMailbox: {
+    type: "object",
+    properties: {
+      mailbox: {
+        type: ["object", "null"],
+        properties: {
+          email: { type: "string" },
+          provider: { type: "string", enum: ["google", "microsoft"] },
+          status: {
+            type: "string",
+            enum: ["active", "needs_reauth"],
+            description: "needs_reauth: connect it again before sending",
+          },
+          lastSentAt: { type: ["string", "null"], format: "date-time" },
+        },
+        required: ["email", "provider", "status", "lastSentAt"],
+        description: "Null when no mailbox is connected",
+      },
+      connectUrl: {
+        type: "string",
+        description: "Open in a browser to connect or reconnect Gmail or Outlook; it needs the person's sign-in",
+      },
+    },
+    required: ["mailbox", "connectUrl"],
+  },
+  getOutreachPitch: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "body",
+          "from",
+          "reason",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+    },
+    required: ["pitch"],
+  },
   getPost: {
     type: "object",
     properties: {
@@ -7979,6 +8702,21 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["currentWorkspace", "workspaces", "authentication"],
     description: "The workspaces the caller can act on and how the request was authenticated.",
   },
+  holdAutopilotFinding: {
+    type: "object",
+    properties: {
+      status: {
+        anyOf: [
+          { type: "string", enum: ["suggested", "open", "proposed", "merged", "dismissed", "expired", "failed"] },
+          { type: "string", enum: ["writing"] },
+        ],
+      },
+      runId: { type: ["string", "null"], description: "The run writing it, after write" },
+      pullRequestUrl: { type: ["string", "null"] },
+      rule: { type: ["string", "null"], description: "The standing rule learned from a dismissal reason" },
+    },
+    required: ["status"],
+  },
   importGeoCompetitors: {
     type: "object",
     properties: {
@@ -8316,6 +9054,143 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["ingestUrl", "snippet", "snippets", "drainUrls", "organization", "token"],
     description: "A newly issued tracking token with its install instructions.",
   },
+  laterOutreachPitch: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "body",
+          "from",
+          "reason",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+    },
+    required: ["pitch"],
+  },
   listAgentChats: {
     type: "object",
     properties: {
@@ -8355,6 +9230,93 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["sessions"],
     description: "Recent agent sessions in the workspace.",
+  },
+  listAutopilotFindings: {
+    type: "object",
+    properties: {
+      findings: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            kind: {
+              type: "string",
+              enum: [
+                "readiness",
+                "keywords",
+                "commits",
+                "prompts",
+                "competitors",
+                "refresh",
+                "comparisons",
+                "rendering",
+                "links",
+                "landing",
+                "outreach",
+              ],
+            },
+            status: {
+              type: "string",
+              enum: ["suggested", "open", "proposed", "merged", "dismissed", "expired", "failed"],
+            },
+            title: { type: "string" },
+            pullRequestUrl: { type: ["string", "null"] },
+            publishAt: {
+              type: ["string", "null"],
+              format: "date-time",
+              description: "When Autopilot publishes it on its own, if it will",
+            },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+          required: ["id", "kind", "status", "title", "pullRequestUrl", "publishAt", "createdAt", "updatedAt"],
+        },
+      },
+    },
+    required: ["findings"],
+  },
+  listAutopilotRuns: {
+    type: "object",
+    properties: {
+      runs: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            trigger: { type: "string", enum: ["manual", "cron", "onboarding", "github", "suggestion"] },
+            status: { type: "string", enum: ["running", "completed", "failed", "stopped", "skipped"] },
+            workflowKey: { type: ["string", "null"] },
+            headline: { type: ["string", "null"], description: "What a single-item run was about" },
+            outcome: { type: ["string", "null"], description: "What it came to" },
+            findings: { type: ["integer", "null"] },
+            proposed: { type: ["integer", "null"] },
+            failed: { type: ["integer", "null"] },
+            insights: { type: "array", items: { type: "string" } },
+            error: { type: ["string", "null"] },
+            startedAt: { type: "string", format: "date-time" },
+            finishedAt: { type: ["string", "null"], format: "date-time" },
+          },
+          required: [
+            "id",
+            "trigger",
+            "status",
+            "workflowKey",
+            "headline",
+            "outcome",
+            "findings",
+            "proposed",
+            "failed",
+            "insights",
+            "error",
+            "startedAt",
+            "finishedAt",
+          ],
+        },
+      },
+    },
+    required: ["runs"],
   },
   listBrandColors: {
     type: "object",
@@ -10947,6 +11909,96 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["github", "slack", "linear", "organization"],
     description: "The organization's connected integrations.",
   },
+  listOutreachPitches: {
+    type: "object",
+    properties: {
+      pitches: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: { type: "string" },
+            status: {
+              type: "string",
+              enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+              description:
+                "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+            },
+            stage: {
+              type: ["string", "null"],
+              enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+              description:
+                "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+            },
+            page: {
+              type: "object",
+              properties: {
+                url: { type: "string" },
+                domain: { type: "string" },
+                title: { type: "string" },
+                publisher: { type: "string" },
+              },
+              required: ["url", "domain", "title", "publisher"],
+            },
+            recipient: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                email: {
+                  type: ["string", "null"],
+                  description: "Null when the page offers only a form or contact page",
+                },
+              },
+              required: ["name", "email"],
+            },
+            subject: { type: "string" },
+            problem: {
+              type: ["string", "null"],
+              enum: ["bounced", "complained", "failed", null],
+              description: "Why the sent mail didn't arrive, if it didn't",
+            },
+            sentAt: { type: ["string", "null"], format: "date-time" },
+            scheduledAt: { type: ["string", "null"], format: "date-time" },
+            followUpAt: { type: ["string", "null"], format: "date-time" },
+            followUpDue: { type: "boolean" },
+            lastActivityAt: { type: "string", format: "date-time" },
+            replyCount: { type: "integer" },
+            later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+            deal: {
+              type: ["object", "null"],
+              properties: {
+                decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+                amount: { type: ["number", "null"] },
+                currency: { type: ["string", "null"] },
+                terms: { type: ["string", "null"] },
+                placementUrl: { type: ["string", "null"] },
+                summary: { type: "string", description: "What they said and what to do next" },
+              },
+              required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+            },
+          },
+          required: [
+            "id",
+            "status",
+            "stage",
+            "page",
+            "recipient",
+            "subject",
+            "problem",
+            "sentAt",
+            "scheduledAt",
+            "followUpAt",
+            "followUpDue",
+            "lastActivityAt",
+            "replyCount",
+            "later",
+            "deal",
+          ],
+        },
+      },
+    },
+    required: ["pitches"],
+  },
   listPostAuthors: {
     type: "object",
     properties: {
@@ -12023,6 +13075,295 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["endpoints"],
     description: "The workspace's webhook endpoints.",
   },
+  markOutreachPitchListed: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "body",
+          "from",
+          "reason",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+    },
+    required: ["pitch"],
+  },
+  markOutreachPitchSent: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "body",
+          "from",
+          "reason",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+    },
+    required: ["pitch"],
+  },
+  mergeAutopilotFinding: {
+    type: "object",
+    properties: {
+      status: {
+        anyOf: [
+          { type: "string", enum: ["suggested", "open", "proposed", "merged", "dismissed", "expired", "failed"] },
+          { type: "string", enum: ["writing"] },
+        ],
+      },
+      runId: { type: ["string", "null"], description: "The run writing it, after write" },
+      pullRequestUrl: { type: ["string", "null"] },
+      rule: { type: ["string", "null"], description: "The standing rule learned from a dismissal reason" },
+    },
+    required: ["status"],
+  },
   patchSkill: {
     type: "object",
     properties: {
@@ -12513,6 +13854,21 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       },
     },
     required: ["sourceKind", "sourceId", "released", "organization"],
+  },
+  requestAutopilotChanges: {
+    type: "object",
+    properties: {
+      status: {
+        anyOf: [
+          { type: "string", enum: ["suggested", "open", "proposed", "merged", "dismissed", "expired", "failed"] },
+          { type: "string", enum: ["writing"] },
+        ],
+      },
+      runId: { type: ["string", "null"], description: "The run writing it, after write" },
+      pullRequestUrl: { type: ["string", "null"] },
+      rule: { type: ["string", "null"], description: "The standing rule learned from a dismissal reason" },
+    },
+    required: ["status"],
   },
   resolvePostComments: {
     type: "object",
@@ -13019,6 +14375,153 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     type: "object",
     description: "The agent service's response to the message, passed through unchanged.",
   },
+  sendOutreachPitch: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "body",
+          "from",
+          "reason",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+      scheduledAt: {
+        type: ["string", "null"],
+        format: "date-time",
+        description: "When it goes out; null when it went out now",
+      },
+    },
+    required: ["pitch", "scheduledAt"],
+  },
+  setAutopilotWorkflowEnabled: {
+    type: "object",
+    properties: { enabled: { type: "boolean" }, warning: { type: ["string", "null"] } },
+    required: ["enabled"],
+  },
   startAutopilotRun: {
     type: "object",
     properties: { runId: { type: "string" }, alreadyRunning: { type: "boolean" } },
@@ -13466,6 +14969,151 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["domain", "field", "competitors", "organization"],
     description: "Competitors suggested for a website domain, which Notra does not save.",
+  },
+  undoLaterOutreachPitch: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "body",
+          "from",
+          "reason",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+    },
+    required: ["pitch"],
+  },
+  updateAutopilotSettings: {
+    type: "object",
+    properties: {
+      success: { type: "boolean", enum: [true] },
+      note: { type: "string", description: "Something the caller should tell the person" },
+    },
+    required: ["success"],
   },
   updateBrandColor: {
     type: "object",
@@ -14443,6 +16091,143 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["configured", "settings", "organization"],
     description: "The project's GEO settings and the workspace they belong to.",
   },
+  updateOutreachPitchDetails: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "body",
+          "from",
+          "reason",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+    },
+    required: ["pitch"],
+  },
   updatePost: {
     type: "object",
     properties: {
@@ -15168,5 +16953,20 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     required: ["site", "authors", "authorPage", "hasUnpublishedChanges"],
     description:
       "The Site's authors and author page layout in blog.json after the request, including unpublished changes.",
+  },
+  writeAutopilotFinding: {
+    type: "object",
+    properties: {
+      status: {
+        anyOf: [
+          { type: "string", enum: ["suggested", "open", "proposed", "merged", "dismissed", "expired", "failed"] },
+          { type: "string", enum: ["writing"] },
+        ],
+      },
+      runId: { type: ["string", "null"], description: "The run writing it, after write" },
+      pullRequestUrl: { type: ["string", "null"] },
+      rule: { type: ["string", "null"], description: "The standing rule learned from a dismissal reason" },
+    },
+    required: ["status"],
   },
 };

@@ -1,7 +1,22 @@
 import type { infer as Infer } from "zod";
-import type { runAutopilotSchema } from "../schemas/autopilot.js";
+import type {
+  editOutreachPitchSchema,
+  listAutopilotFindingsSchema,
+  listOutreachPitchesSchema,
+  runAutopilotSchema,
+  updateAutopilotSettingsSchema,
+  updateOutreachPitchDetailsSchema,
+} from "../schemas/autopilot.js";
 
 export type RunAutopilotRequest = Infer<typeof runAutopilotSchema>;
+export type UpdateAutopilotSettingsRequest = Infer<typeof updateAutopilotSettingsSchema>;
+export type ListAutopilotFindingsParams = Infer<typeof listAutopilotFindingsSchema>;
+export type ListOutreachPitchesParams = Infer<typeof listOutreachPitchesSchema>;
+export type EditOutreachPitchRequest = Omit<Infer<typeof editOutreachPitchSchema>, "pitchId">;
+export type UpdateOutreachPitchDetailsRequest = Omit<Infer<typeof updateOutreachPitchDetailsSchema>, "pitchId">;
+
+/** A JSON object response; its shape is checked by the tool's generated output schema. */
+export type AutopilotApiObject = Record<string, unknown>;
 
 export interface AutopilotStatusResponse {
   canManage: boolean;
