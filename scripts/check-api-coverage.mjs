@@ -57,7 +57,21 @@ const MANUAL_COVERAGE = {
 };
 
 /** Client routes the production API has not shipped yet. Remove entries once they appear in the spec. */
-const PENDING_API_ROUTES = {};
+const PENDING_API_ROUTES = {
+  "GET /v1/autopilot/outreach/pitches": "ships in usenotra/notra#2939; remove once deployed",
+  "GET /v1/autopilot/outreach/pitches/{pitchId}": "ships in usenotra/notra#2939; remove once deployed",
+  "PATCH /v1/autopilot/outreach/pitches/{pitchId}": "ships in usenotra/notra#2939; remove once deployed",
+  "DELETE /v1/autopilot/outreach/pitches/{pitchId}": "ships in usenotra/notra#2939; remove once deployed",
+  "POST /v1/autopilot/outreach/pitches/{pitchId}/send": "ships in usenotra/notra#2939; remove once deployed",
+  "POST /v1/autopilot/outreach/pitches/{pitchId}/cancel": "ships in usenotra/notra#2939; remove once deployed",
+  "POST /v1/autopilot/outreach/pitches/{pitchId}/mark-sent": "ships in usenotra/notra#2939; remove once deployed",
+  "POST /v1/autopilot/outreach/pitches/{pitchId}/mark-listed": "ships in usenotra/notra#2939; remove once deployed",
+  "POST /v1/autopilot/outreach/pitches/{pitchId}/later": "ships in usenotra/notra#2939; remove once deployed",
+  "DELETE /v1/autopilot/outreach/pitches/{pitchId}/later": "ships in usenotra/notra#2939; remove once deployed",
+  "PATCH /v1/autopilot/outreach/pitches/{pitchId}/details": "ships in usenotra/notra#2939; remove once deployed",
+  "GET /v1/autopilot/outreach/mailbox": "ships in usenotra/notra#2939; remove once deployed",
+  "DELETE /v1/autopilot/outreach/mailbox": "ships in usenotra/notra#2939; remove once deployed",
+};
 
 function normalizeSpecPath(specPath) {
   return specPath.replace(/\{[^}]+\}/g, PLACEHOLDER);
