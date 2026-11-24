@@ -49,8 +49,14 @@ import type {
 } from "./types/api.js";
 import type { AuthContext } from "./types/auth.js";
 import type {
+  AutopilotApiObject,
   AutopilotStatusResponse,
+  EditOutreachPitchRequest,
+  ListAutopilotFindingsParams,
+  ListOutreachPitchesParams,
   RunAutopilotRequest,
+  UpdateAutopilotSettingsRequest,
+  UpdateOutreachPitchDetailsRequest,
   StartAutopilotRunResponse,
   StartAutopilotWorkflowRunResponse,
   StopAutopilotRunResponse,
@@ -265,6 +271,14 @@ function requestHeaders(auth: AuthContext, accept: string, withoutOrganization =
   return headers;
 }
 
+function autopilotFindingPath(findingId: string) {
+  return `/v1/autopilot/findings/${encodeURIComponent(findingId)}`;
+}
+
+function outreachPitchPath(pitchId: string) {
+  return `/v1/autopilot/outreach/pitches/${encodeURIComponent(pitchId)}`;
+}
+
 export class NotraClient {
   private resolveAuth: () => AuthContext;
   private baseUrl: string;
@@ -347,6 +361,142 @@ export class NotraClient {
       "POST",
       `/v1/autopilot/workflows/${encodeURIComponent(workflowId)}/run`,
     );
+  }
+
+  async updateAutopilotSettings(body: UpdateAutopilotSettingsRequest): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject, UpdateAutopilotSettingsRequest>("PATCH", "/v1/autopilot/settings", {
+      body,
+    });
+  }
+
+  async listAutopilotFindings(params: ListAutopilotFindingsParams): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("GET", "/v1/autopilot/findings", { params });
+  }
+
+  async getAutopilotFinding(findingId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("GET", autopilotFindingPath(findingId));
+  }
+
+  async writeAutopilotFinding(findingId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("POST", `${autopilotFindingPath(findingId)}/write`);
+  }
+
+  async dismissAutopilotFinding(findingId: string, body: { reason?: string }): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject, { reason?: string }>("POST", `${autopilotFindingPath(findingId)}/dismiss`, {
+      body,
+    });
+  }
+
+  async mergeAutopilotFinding(
+    findingId: string,
+    body: { method?: "squash" | "merge" | "rebase"; headSha: string },
+  ): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject, typeof body>("POST", `${autopilotFindingPath(findingId)}/merge`, { body });
+  }
+
+  async holdAutopilotFinding(findingId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("POST", `${autopilotFindingPath(findingId)}/hold`);
+  }
+
+  async requestAutopilotChanges(findingId: string, body: { instruction: string }): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject, { instruction: string }>(
+      "POST",
+      `${autopilotFindingPath(findingId)}/request-changes`,
+      { body },
+    );
+  }
+
+  async addAutopilotRule(body: { text: string }): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject, { text: string }>("POST", "/v1/autopilot/rules", { body });
+  }
+
+  async deleteAutopilotRule(ruleId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("DELETE", `/v1/autopilot/rules/${encodeURIComponent(ruleId)}`);
+  }
+
+  async setAutopilotWorkflowEnabled(workflowId: string, enabled: boolean): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject, { enabled: boolean }>(
+      "PATCH",
+      `/v1/autopilot/workflows/${encodeURIComponent(workflowId)}`,
+      { body: { enabled } },
+    );
+  }
+
+  async deleteAutopilotWorkflow(workflowId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("DELETE", `/v1/autopilot/workflows/${encodeURIComponent(workflowId)}`);
+  }
+
+  async listAutopilotRuns(params: { limit?: number }): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("GET", "/v1/autopilot/runs", { params });
+  }
+
+  async getAutopilotRun(runId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("GET", `/v1/autopilot/runs/${encodeURIComponent(runId)}`);
+  }
+
+  async getAutopilotBrief(): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("GET", "/v1/autopilot/brief");
+  }
+
+  async listOutreachPitches(params: ListOutreachPitchesParams): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("GET", "/v1/autopilot/outreach/pitches", { params });
+  }
+
+  async getOutreachPitch(pitchId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("GET", outreachPitchPath(pitchId));
+  }
+
+  async editOutreachPitch(pitchId: string, body: EditOutreachPitchRequest): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject, EditOutreachPitchRequest>("PATCH", outreachPitchPath(pitchId), { body });
+  }
+
+  async sendOutreachPitch(pitchId: string, body: { sendAt?: string }): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject, { sendAt?: string }>("POST", `${outreachPitchPath(pitchId)}/send`, {
+      body,
+    });
+  }
+
+  async cancelOutreachPitch(pitchId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("POST", `${outreachPitchPath(pitchId)}/cancel`);
+  }
+
+  async markOutreachPitchSent(pitchId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("POST", `${outreachPitchPath(pitchId)}/mark-sent`);
+  }
+
+  async markOutreachPitchListed(pitchId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("POST", `${outreachPitchPath(pitchId)}/mark-listed`);
+  }
+
+  async laterOutreachPitch(pitchId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("POST", `${outreachPitchPath(pitchId)}/later`);
+  }
+
+  async undoLaterOutreachPitch(pitchId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("DELETE", `${outreachPitchPath(pitchId)}/later`);
+  }
+
+  async updateOutreachPitchDetails(
+    pitchId: string,
+    body: UpdateOutreachPitchDetailsRequest,
+  ): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject, UpdateOutreachPitchDetailsRequest>(
+      "PATCH",
+      `${outreachPitchPath(pitchId)}/details`,
+      { body },
+    );
+  }
+
+  async deleteOutreachPitch(pitchId: string): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("DELETE", outreachPitchPath(pitchId));
+  }
+
+  async getOutreachMailbox(): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("GET", "/v1/autopilot/outreach/mailbox");
+  }
+
+  async disconnectOutreachMailbox(): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject>("DELETE", "/v1/autopilot/outreach/mailbox");
   }
 
   async listPosts(params?: ListPostsParams): Promise<PostListResponse> {

@@ -202,7 +202,7 @@ All tools are exposed by default. The `geo` and `content` toolsets use about 13k
 | ----------- | --------------------------------------------------------------------------------------------------------- |
 | `content`   | Posts, Sites, brand identities, integrations, schedules, event triggers, webhooks, skills, feedback inbox |
 | `geo`       | Projects and every GEO tool                                                                               |
-| `autopilot` | Autopilot status, findings and run controls                                                               |
+| `autopilot` | Autopilot settings, findings, rules, workflows, runs, the daily brief and outreach pitches                |
 
 Workspace tools and `submit_feedback` are always available.
 
@@ -227,14 +227,41 @@ On `/mcp`, an account key can use one connection for several workspaces: send `X
 
 ### Autopilot
 
-| Tool                     | Description                                                                       |
-| ------------------------ | --------------------------------------------------------------------------------- |
-| `get_autopilot_status`   | Inspect settings, active runs, open findings, custom workflows and standing rules |
-| `run_autopilot`          | Start a full run or one built-in automation                                       |
-| `stop_autopilot_run`     | Stop an active run without undoing completed work                                 |
-| `run_autopilot_workflow` | Start a saved custom workflow                                                     |
+| Tool                             | Description                                                                                   |
+| -------------------------------- | --------------------------------------------------------------------------------------------- |
+| `get_autopilot_status`           | Inspect settings, active runs, open findings, custom workflows and standing rules             |
+| `update_autopilot_settings`      | Change automations, approvals, the daily brief, reviewers, release filters and other settings |
+| `run_autopilot`                  | Start a full run or one built-in automation                                                   |
+| `stop_autopilot_run`             | Stop an active run without undoing completed work                                             |
+| `list_autopilot_runs`            | List recent runs and what each came to                                                        |
+| `get_autopilot_run`              | Read a run and its step-by-step log                                                           |
+| `get_autopilot_brief`            | Read today's daily brief                                                                      |
+| `list_autopilot_findings`        | List ideas, drafts and pull requests by status or automation                                  |
+| `get_autopilot_finding`          | Read why a finding was picked, its pull request and publish time                              |
+| `write_autopilot_finding`        | Write a suggested idea now                                                                    |
+| `dismiss_autopilot_finding`      | Drop an idea or close its pull request, optionally teaching a rule                            |
+| `merge_autopilot_finding`        | Merge a finding's pull request                                                                |
+| `hold_autopilot_finding`         | Stop an automatic publish so a person decides                                                 |
+| `request_autopilot_changes`      | Ask Autopilot to change an open pull request                                                  |
+| `add_autopilot_rule`             | Add a standing rule                                                                           |
+| `delete_autopilot_rule`          | Delete a standing rule                                                                        |
+| `run_autopilot_workflow`         | Start a saved custom workflow                                                                 |
+| `set_autopilot_workflow_enabled` | Turn a custom workflow's schedule on or off                                                   |
+| `delete_autopilot_workflow`      | Delete a custom workflow                                                                      |
+| `list_outreach_pitches`          | List outreach pitches by status, stage or due follow-up                                       |
+| `get_outreach_pitch`             | Read a pitch, its reply thread and deal                                                       |
+| `edit_outreach_pitch`            | Edit a draft's recipient, subject or body                                                     |
+| `send_outreach_pitch`            | Send a pitch now, at a time or at its suggested morning                                       |
+| `cancel_outreach_pitch`          | Cancel a scheduled pitch                                                                      |
+| `mark_outreach_pitch_sent`       | Mark a pitch sent outside Notra                                                               |
+| `mark_outreach_pitch_listed`     | Mark a pitch listed                                                                           |
+| `set_outreach_pitch_later`       | Put a draft off until the next brief, or undo that                                            |
+| `update_outreach_pitch_details`  | Correct a pitch's stage, follow-up date or deal                                               |
+| `delete_outreach_pitch`          | Delete a pitch                                                                                |
+| `get_outreach_mailbox`           | Read the sending mailbox and its connect link                                                 |
+| `disconnect_outreach_mailbox`    | Disconnect the sending mailbox                                                                |
 
-Use OAuth or an account API key; organization API keys are not supported. Reading status requires `autopilot.read`; run controls require `autopilot.write` and a current workspace owner or admin. Confirm before starting or stopping a run. Runs can use AI credits and open or merge pull requests under the workspace's approval settings.
+Use OAuth or an account API key; organization API keys are not supported. Reading requires `autopilot.read`; every change requires `autopilot.write` and a current workspace owner or admin. Confirm before running, merging, dismissing, requesting changes, setting an approval to `auto`, deleting or sending a pitch: these can use AI credits, change GitHub or the live site, or email people outside the company. Connecting a repository, Slack channel, site or mailbox needs the person's own sign-in and stays in the dashboard.
 
 ### Posts
 
