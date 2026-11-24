@@ -38,6 +38,7 @@ const EXCLUDED_SPEC_ROUTES = {
   "POST /v1/geo/ingest/rotate-token": "credential rotation belongs in the dashboard",
   "GET /v1/posts/authors": "author assignment is not exposed through MCP; manage authors in the dashboard",
   "GET /v1/status": "unauthenticated reachability probe, no value inside an authenticated MCP session",
+  "GET /v1/pricing": "keyless plan estimates are available through the public API without an MCP connection",
   "POST /v1/feedback":
     "API-key variant; the spec directs agents to the organization feedback URL used by submit_feedback",
   "POST /v2/eve/v1/session":
@@ -56,14 +57,7 @@ const MANUAL_COVERAGE = {
 };
 
 /** Client routes the production API has not shipped yet. Remove entries once they appear in the spec. */
-const PENDING_API_ROUTES = {
-  "GET /v1/projects/{projectId}/geo/name-collisions": "ships in usenotra/notra#2830; remove once deployed",
-  "POST /v1/projects/{projectId}/geo/name-collisions": "ships in usenotra/notra#2830; remove once deployed",
-  "POST /v1/projects/{projectId}/geo/name-collisions/{collisionId}/accept":
-    "ships in usenotra/notra#2830; remove once deployed",
-  "POST /v1/projects/{projectId}/geo/name-collisions/{collisionId}/dismiss":
-    "ships in usenotra/notra#2830; remove once deployed",
-};
+const PENDING_API_ROUTES = {};
 
 function normalizeSpecPath(specPath) {
   return specPath.replace(/\{[^}]+\}/g, PLACEHOLDER);

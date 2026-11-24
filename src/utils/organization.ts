@@ -58,7 +58,7 @@ export function describeOrganizationError(message: string, auth: AuthContext): s
     return message;
   }
   if (message.startsWith(ORGANIZATION_SELECTION_REQUIRED_ERROR)) {
-    return `This Notra account API key can access several workspaces, so each request must name one. Call \`list_workspaces\` to find the workspace id, then set ${ORGANIZATION_ID_ENV} (stdio), or connect to /mcp/<workspace> or send the ${ORGANIZATION_ID_HEADER} header (HTTP), and reconnect.`;
+    return `Call \`list_workspaces\` for a workspace id or slug. On /mcp, send it in ${ORGANIZATION_ID_HEADER} on each request. For a fixed connection, use /mcp/<slug> (HTTP) or set ${ORGANIZATION_ID_ENV} and restart (stdio).`;
   }
   if (message === WORKSPACE_ACCESS_REVOKED_ERROR && auth.organizationId) {
     return `This API key cannot act in workspace "${auth.organizationId}": the account is not a member of it. Call \`list_workspaces\` to see the workspaces the key can use (on a /mcp/<workspace> URL it is hidden, so connect to /mcp for it), then fix ${ORGANIZATION_ID_ENV} (stdio, restart the server afterwards), the /mcp/<workspace> URL or the ${ORGANIZATION_ID_HEADER} header.`;

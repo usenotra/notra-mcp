@@ -5,7 +5,7 @@ export const SERVER_INSTRUCTIONS = [
   "Sites (hosted blogs and changelogs): start with `list_sites`. `preview_post_on_site` builds a private preview, `publish_post_to_site` opens a publishing pull request, `get_site_deployment` explains failed builds. Author edits stay unpublished until `publish_site_design`; credit an author with its `site:<id>` ref in `update_post`'s `authorIds`.",
   "Autopilot: start with `get_autopilot_status` for active runs, findings and custom workflows. Confirm with the user before starting or stopping a run. Runs can spend credits and make GitHub changes under existing approval settings. Outreach pitches: `list_outreach_pitches`; `send_outreach_pitch` emails a real person, so show the draft and confirm first.",
   "GEO: start with `list_projects`, then `get_geo_snapshot` for a diagnosis and next actions. `create_geo_scan` starts a scan; visibility tools return results. Prefer prompt-result summaries plus targeted detail. GEO needs an organization-scoped key and the GEO plan.",
-  "If a tool says a workspace must be selected, call `list_workspaces`, ask which one to use, and have the user set NOTRA_ORGANIZATION_ID (stdio), connect to /mcp/<workspace>, or send X-Notra-Organization-Id (HTTP).",
+  "Multi-workspace account keys: call `list_workspaces` on /mcp and ask which workspace to use. Send its id or slug in X-Notra-Organization-Id on each HTTP request; no second connection is needed. For fixed clients use /mcp/<slug> (HTTP) or NOTRA_ORGANIZATION_ID (stdio). `whoami` confirms the selected workspace.",
 ].join("\n\n");
 
 export const SERVER_TITLE = "Notra";

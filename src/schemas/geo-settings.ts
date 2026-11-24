@@ -35,7 +35,7 @@ export const updateGeoSettingsSchema = z.object({
     .max(GEO_MAX_DOMAINS)
     .optional()
     .describe(
-      "Extra hostnames that send AI traffic to this project, besides the brand website, e.g. docs.example.com. Replaces the whole list.",
+      "Extra hostnames that send AI traffic to this project, besides the brand website, e.g. docs.example.com. Replaces the whole list. A leading www. is removed and duplicate domains are merged; traffic from www. is still tracked.",
     ),
   conversionPaths: z
     .array(z.string().trim().min(1).max(GEO_CONVERSION_PATH_MAX_LENGTH).startsWith("/"))
