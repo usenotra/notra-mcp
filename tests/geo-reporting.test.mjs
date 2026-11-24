@@ -163,12 +163,12 @@ test("updating GEO domains explains when www hosts are saved without the prefix"
   const { tools } = await rpc("tools/list", {});
   assert.match(tools.find((tool) => tool.name === name).description, /drop the leading www\./);
 
-  for (const domains of [
-    ["example.com", "www.example.com"],
-    ["www.example.com", "example.com"],
-    ["www.example.com"],
-    ["example.com"],
-    undefined,
+  for (const [domains, expectWarning] of [
+    [["example.com", "www.example.com"], true],
+    [["www.example.com", "example.com"], true],
+    [["www.example.com"], true],
+    [["example.com"], false],
+    [undefined, false],
   ]) {
     const { content, structuredContent } = await rpc("tools/call", {
       name,
@@ -176,7 +176,7 @@ test("updating GEO domains explains when www hosts are saved without the prefix"
     });
     assert.deepEqual(JSON.parse(content[0].text), structuredContent);
     assert.deepEqual(structuredContent.settings.domains, ["example.com"]);
-    if (domains?.includes("www.example.com")) {
+    if (expectWarning) {
       assert.match(structuredContent.warnings[0], /Traffic from www\. hosts is still covered/);
     } else {
       assert.equal(structuredContent.warnings, undefined);
