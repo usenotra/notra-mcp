@@ -202,7 +202,7 @@ export function registerGeoVisibilityTools(server: ToolRegistry, client: NotraCl
     {
       name: "list_geo_pick_reason_evidence",
       description:
-        "List the AI answers that picked a brand for one reason, newest first, up to 20. Use brand names from get_geo_pick_reasons; your company name reads your own brand. Narrow to one engine ID or engine family with engine. Without days or from, it covers the last 30 days. Returns evidence (per answer: checkId, promptId, prompt, engine, capturedAt, pick and the quote that gives the reason) and the organization. Pass a checkId to get_geo_prompt_result_detail for the full answer.",
+        "List the AI answers that picked a brand for one reason, newest first, up to 20. Use brand names from get_geo_pick_reasons; your company name reads your own brand. Narrow to one engine ID or engine family with engine. Without days or from, it covers the last 30 days. Returns evidence (per answer: checkId, scanId, promptId, prompt, engine, capturedAt, pick and the quote that gives the reason) and the organization. Pass a checkId to get_geo_prompt_result_detail for the full answer.",
       annotations: {
         title: "List GEO Pick Reason Evidence",
         readOnlyHint: true,

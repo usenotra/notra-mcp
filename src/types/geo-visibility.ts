@@ -196,6 +196,7 @@ export interface GeoPickReasonEvidenceParams extends GeoWindowParams {
 export interface GeoPickReasonEvidenceResponse {
   evidence: Array<{
     checkId: string;
+    scanId: string;
     promptId: string;
     prompt: string;
     engine: string;

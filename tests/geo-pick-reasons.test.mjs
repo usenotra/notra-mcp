@@ -110,6 +110,7 @@ const FIXTURE = {
     evidence: [
       {
         checkId: "020fef2e-eac2-4973-a257-5993cbb2fc6f",
+        scanId: "scan-1",
         promptId: "custom-99b69110-e62d-43ee-8eae-04c2806e9125",
         prompt: "which platforms let me monitor my brand across multiple ai engines at once",
         engine: "anthropic/claude-sonnet-5",
@@ -120,6 +121,7 @@ const FIXTURE = {
       },
       {
         checkId: "8d7da7ef-b840-4ec1-bfcb-b94d6174d5fb",
+        scanId: "scan-2",
         promptId: "custom-a215254a-811c-45bb-884d-9dac32b4f75a",
         prompt: "how do I measure my share of voice across chatgpt claude and perplexity",
         engine: "anthropic/claude-sonnet-5",
