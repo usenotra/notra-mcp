@@ -3,6 +3,7 @@ import type {
   editOutreachPitchSchema,
   listAutopilotFindingsSchema,
   listOutreachPitchesSchema,
+  logOutreachContactSchema,
   runAutopilotSchema,
   updateAutopilotSettingsSchema,
   updateOutreachPitchDetailsSchema,
@@ -12,6 +13,7 @@ export type RunAutopilotRequest = Infer<typeof runAutopilotSchema>;
 export type UpdateAutopilotSettingsRequest = Infer<typeof updateAutopilotSettingsSchema>;
 export type ListAutopilotFindingsParams = Infer<typeof listAutopilotFindingsSchema>;
 export type ListOutreachPitchesParams = Infer<typeof listOutreachPitchesSchema>;
+export type LogOutreachContactRequest = Infer<typeof logOutreachContactSchema>;
 export type EditOutreachPitchRequest = Omit<Infer<typeof editOutreachPitchSchema>, "pitchId">;
 export type UpdateOutreachPitchDetailsRequest = Omit<Infer<typeof updateOutreachPitchDetailsSchema>, "pitchId">;
 

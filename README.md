@@ -252,13 +252,14 @@ Outreach pitch and mailbox tools are off by default. Set `NOTRA_MCP_ENABLE_OUTRE
 | `delete_autopilot_workflow`      | Delete a custom workflow                                                                      |
 | `list_outreach_pitches`          | List outreach pitches by status, stage or due follow-up                                       |
 | `get_outreach_pitch`             | Read a pitch, its reply thread and deal                                                       |
+| `log_outreach_contact`           | Log someone you contacted yourself, with stage, follow-up and notes                           |
 | `edit_outreach_pitch`            | Edit a draft's recipient, subject or body                                                     |
 | `send_outreach_pitch`            | Send a pitch now, at a time or at its suggested morning                                       |
 | `cancel_outreach_pitch`          | Cancel a scheduled pitch                                                                      |
 | `mark_outreach_pitch_sent`       | Mark a pitch sent outside Notra                                                               |
 | `mark_outreach_pitch_listed`     | Mark a pitch listed                                                                           |
 | `set_outreach_pitch_later`       | Put a draft off until the next brief, or undo that                                            |
-| `update_outreach_pitch_details`  | Correct a pitch's stage, follow-up date or deal                                               |
+| `update_outreach_pitch_details`  | Correct a pitch's stage, follow-up date, deal or notes                                        |
 | `delete_outreach_pitch`          | Delete a pitch                                                                                |
 | `get_outreach_mailbox`           | Read the sending mailbox and its connect link                                                 |
 | `disconnect_outreach_mailbox`    | Disconnect the sending mailbox                                                                |

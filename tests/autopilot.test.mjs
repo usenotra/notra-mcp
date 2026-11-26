@@ -114,6 +114,7 @@ const manageRoutes = {
   "GET /v1/autopilot/brief": { brief: null },
   "GET /v1/autopilot/outreach/pitches?status=draft&followUpDue=true": { pitches: [] },
   "GET /v1/autopilot/outreach/pitches/pitch-1": { pitch },
+  "POST /v1/autopilot/outreach/pitches": { pitch: { ...pitch, origin: "person", note: "Met at SaaStr" } },
   "PATCH /v1/autopilot/outreach/pitches/pitch-1": { pitch },
   "POST /v1/autopilot/outreach/pitches/pitch-1/send": { pitch, scheduledAt: null },
   "POST /v1/autopilot/outreach/pitches/pitch-1/cancel": { pitch },
@@ -240,6 +241,7 @@ const WRITE_TOOLS = [
   "dismiss_autopilot_finding",
   "edit_outreach_pitch",
   "hold_autopilot_finding",
+  "log_outreach_contact",
   "mark_outreach_pitch_listed",
   "mark_outreach_pitch_sent",
   "merge_autopilot_finding",
@@ -412,6 +414,12 @@ test("forwards settings, findings, rules, workflows, runs, the brief and outreac
     ],
     ["get_outreach_pitch", { pitchId: "pitch-1" }, "GET /v1/autopilot/outreach/pitches/pitch-1"],
     [
+      "log_outreach_contact",
+      { url: "https://example.com/list", name: "Liz", email: "liz@example.com", note: "Met at SaaStr" },
+      "POST /v1/autopilot/outreach/pitches",
+      { url: "https://example.com/list", name: "Liz", email: "liz@example.com", note: "Met at SaaStr" },
+    ],
+    [
       "edit_outreach_pitch",
       { pitchId: "pitch-1", subject: "your list" },
       "PATCH /v1/autopilot/outreach/pitches/pitch-1",
@@ -441,6 +449,12 @@ test("forwards settings, findings, rules, workflows, runs, the brief and outreac
       { pitchId: "pitch-1", stage: "negotiating", followUpAt: null },
       "PATCH /v1/autopilot/outreach/pitches/pitch-1/details",
       { stage: "negotiating", followUpAt: null },
+    ],
+    [
+      "update_outreach_pitch_details",
+      { pitchId: "pitch-1", note: "Prefers Tuesdays" },
+      "PATCH /v1/autopilot/outreach/pitches/pitch-1/details",
+      { note: "Prefers Tuesdays" },
     ],
     ["delete_outreach_pitch", { pitchId: "pitch-1" }, "DELETE /v1/autopilot/outreach/pitches/pitch-1"],
     ["get_outreach_mailbox", {}, "GET /v1/autopilot/outreach/mailbox"],
@@ -475,6 +489,9 @@ test("rejects invalid inputs before calling the API and reports an API permissio
     ["edit_outreach_pitch", { pitchId: "pitch-1", to: "liz at example" }],
     ["send_outreach_pitch", { pitchId: "pitch-1", sendAt: "tomorrow" }],
     ["update_outreach_pitch_details", { pitchId: "pitch-1", stage: "won" }],
+    ["log_outreach_contact", { name: "Liz" }],
+    ["log_outreach_contact", { url: "https://example.com", stage: "drafted" }],
+    ["log_outreach_contact", { url: "https://example.com", email: "liz at example" }],
   ]) {
     const reply = await callTool(name, args);
     assert.ok(reply.error || reply.result?.isError, JSON.stringify(reply));

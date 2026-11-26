@@ -243,6 +243,47 @@ export const listOutreachPitchesSchema = z.strictObject({
 
 export const outreachPitchSchema = z.strictObject({ pitchId: pitchIdSchema });
 
+const outreachNoteSchema = z
+  .string()
+  .trim()
+  .max(2000)
+  .describe("The team's own notes on the contact, like how they know them or what was said.");
+
+export const logOutreachContactSchema = z.strictObject({
+  url: z
+    .url({ protocol: /^https?$/ })
+    .max(2000)
+    .describe("The page the brand should be listed on, or the site's homepage when it's about the whole site."),
+  name: z.string().trim().min(1).max(200).optional().describe("Who was contacted, e.g. Jane Doe."),
+  email: z.email().max(254).optional().describe("Their email address."),
+  publisher: z
+    .string()
+    .trim()
+    .min(1)
+    .max(200)
+    .optional()
+    .describe("The site or company they're at, e.g. TechCrunch. Defaults to the page's domain."),
+  title: z.string().trim().min(1).max(300).optional().describe("The page's title."),
+  subject: z.string().trim().min(1).max(200).optional().describe("The subject of what was sent, if it was an email."),
+  message: z.string().trim().min(1).max(5000).optional().describe("What was sent, if the user wants it kept."),
+  sentAt: z.iso
+    .datetime({ offset: true })
+    .optional()
+    .describe("When they were contacted; omit for now. Can't be in the future."),
+  stage: stageSchema
+    .exclude(["drafted"])
+    .optional()
+    .describe(
+      "Where the conversation stands; omit for sent. replied, negotiating, accepted or declined if it went further.",
+    ),
+  followUpAt: z.iso
+    .datetime({ offset: true })
+    .nullable()
+    .optional()
+    .describe("When to follow up; null for never, omitted for a few days after sentAt."),
+  note: outreachNoteSchema.optional(),
+});
+
 export const editOutreachPitchSchema = outreachPitchSchema.extend({
   to: z
     .union([z.literal(""), z.email().max(254)])
@@ -297,6 +338,7 @@ export const updateOutreachPitchDetailsSchema = outreachPitchSchema.extend({
     .nullable()
     .optional()
     .describe("What they asked for in return."),
+  note: outreachNoteSchema.nullable().optional().describe("Replaces the contact's notes; null or empty clears them."),
 });
 
 export const getOutreachMailboxSchema = z.strictObject({});
