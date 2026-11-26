@@ -58,7 +58,9 @@ const MANUAL_COVERAGE = {
 };
 
 /** Client routes the production API has not shipped yet. Remove entries once they appear in the spec. */
-const PENDING_API_ROUTES = {};
+const PENDING_API_ROUTES = {
+  "POST /v1/autopilot/outreach/pitches": "ships in usenotra/notra#3134; remove once deployed",
+};
 
 function normalizeSpecPath(specPath) {
   return specPath.replace(/\{[^}]+\}/g, PLACEHOLDER);

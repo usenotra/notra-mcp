@@ -157,10 +157,20 @@ before(async () => {
       "POST /v1/autopilot/workflows/workflow-1/run": [202, { runId: "workflow-run-1" }],
       ...Object.fromEntries(Object.entries(manageRoutes).map(([key, data]) => [key, [200, data]])),
     };
+    const alreadyPitched =
+      route === "POST /v1/autopilot/outreach/pitches" && body.includes("already-pitched")
+        ? [
+            409,
+            {
+              error:
+                "This page already has a pitch (pitch-1). Mark that one sent or update its details instead of logging it again.",
+            },
+          ]
+        : null;
     const [code, data] =
       req.headers.authorization === "Bearer test-read-only-key" && req.method !== "GET"
         ? [403, { error: "Missing required scope: autopilot.write" }]
-        : (routes[route] ?? [404, { error: "Not found" }]);
+        : (alreadyPitched ?? routes[route] ?? [404, { error: "Not found" }]);
     res.writeHead(code, { "Content-Type": "application/json" }).end(JSON.stringify(data));
   }).listen(0, "127.0.0.1");
   await once(upstream, "listening");
@@ -466,6 +476,16 @@ test("forwards settings, findings, rules, workflows, runs, the brief and outreac
     assert.deepEqual(result.structuredContent, manageRoutes[route], tool);
     assert.deepEqual(requests.at(-1), { route, body, authorization: bearer, workspace }, tool);
   }
+});
+
+test("log_outreach_contact hands the existing pitch's id to the agent on a conflict", async () => {
+  const { result } = await callTool("log_outreach_contact", {
+    url: "https://example.com/already-pitched",
+    name: "Liz",
+  });
+  assert.equal(result.isError, true, JSON.stringify(result));
+  assert.match(result.content[0].text, /already has a pitch \(pitch-1\).*HTTP 409/s);
+  assert.deepEqual(requests.at(-1).route, "POST /v1/autopilot/outreach/pitches");
 });
 
 test("rejects invalid inputs before calling the API and reports an API permission denial", async () => {
