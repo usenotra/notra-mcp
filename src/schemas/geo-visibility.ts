@@ -130,3 +130,8 @@ export const listGeoPickReasonEvidenceSchema = z.object({
     .describe("Only answers from this engine ID or engine family, such as claude or chatgpt. Omit for all engines."),
   ...geoWindowShape,
 });
+
+export const getGeoPickRequestsSchema = z.object({
+  projectId: projectIdSchema,
+  ...geoWindowShape,
+});

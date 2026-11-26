@@ -475,6 +475,7 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `get_geo_competitor_detail`        | One competitor's mention history and the prompts driving it |
 | `get_geo_pick_reasons`             | Why AI answers pick each brand, overall and per engine      |
 | `list_geo_pick_reason_evidence`    | Answers and quotes behind one brand and reason              |
+| `get_geo_pick_requests`            | How the pick changes with budget, enterprise and other asks |
 
 ### GEO content briefs
 

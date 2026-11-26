@@ -174,16 +174,18 @@ export interface GeoPickReasonsParams extends GeoWindowParams {
   limit?: number;
 }
 
+export interface GeoPickReasonTotals {
+  picks: number;
+  reasons: GeoPickReasonShare[];
+  engines: Array<{ engine: string; picks: number; reasons: GeoPickReasonShare[] }>;
+}
+
 export interface GeoPickReasonsResponse {
   configured: boolean;
   pending: number;
-  brands: Array<{
-    brand: string;
-    own: boolean;
-    picks: number;
-    reasons: GeoPickReasonShare[];
-    engines: Array<{ engine: string; picks: number; reasons: GeoPickReasonShare[] }>;
-  }>;
+  answers: number;
+  category: GeoPickReasonTotals;
+  brands: Array<GeoPickReasonTotals & { brand: string; own: boolean }>;
   organization: Organization;
 }
 
@@ -197,6 +199,7 @@ export interface GeoPickReasonEvidenceResponse {
   evidence: Array<{
     checkId: string;
     scanId: string;
+    brand: string;
     promptId: string;
     prompt: string;
     engine: string;
@@ -204,5 +207,20 @@ export interface GeoPickReasonEvidenceResponse {
     pick: "top_pick" | "recommended";
     quote: string;
   }>;
+  organization: Organization;
+}
+
+export interface GeoPickRequestRow {
+  request: string;
+  answers: number;
+  noSingleChoice: number;
+  brands: Array<{ brand: string; own: boolean; picks: number; rate: number }>;
+}
+
+export interface GeoPickRequestsResponse {
+  configured: boolean;
+  unlabeledPrompts: number;
+  overall: GeoPickRequestRow;
+  requests: GeoPickRequestRow[];
   organization: Organization;
 }

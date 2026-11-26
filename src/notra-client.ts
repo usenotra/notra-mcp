@@ -188,6 +188,7 @@ import type {
   GeoPickReasonEvidenceResponse,
   GeoPickReasonsParams,
   GeoPickReasonsResponse,
+  GeoPickRequestsResponse,
   GeoPromptResultDetailResponse,
   GeoPromptResultSummariesResponse,
   GeoPromptResultSummaryParams,
@@ -1354,6 +1355,12 @@ export class NotraClient {
 
   async getGeoPickReasons(projectId: string, params?: GeoPickReasonsParams): Promise<GeoPickReasonsResponse> {
     return this.request<GeoPickReasonsResponse>("GET", this.geoPath(projectId, "/visibility/pick-reasons"), {
+      params,
+    });
+  }
+
+  async getGeoPickRequests(projectId: string, params?: GeoWindowParams): Promise<GeoPickRequestsResponse> {
+    return this.request<GeoPickRequestsResponse>("GET", this.geoPath(projectId, "/visibility/pick-reasons/requests"), {
       params,
     });
   }

@@ -10,6 +10,106 @@ const FIXTURE = {
   summary: {
     configured: true,
     pending: 0,
+    answers: 106,
+    category: {
+      picks: 495,
+      reasons: [
+        {
+          reason: "features",
+          count: 417,
+          share: 0.8424242424242424,
+        },
+        {
+          reason: "reviews",
+          count: 35,
+          share: 0.0707070707070707,
+        },
+        {
+          reason: "integrations",
+          count: 26,
+          share: 0.052525252525252523,
+        },
+        {
+          reason: "ease_of_use",
+          count: 19,
+          share: 0.03838383838383838,
+        },
+        {
+          reason: "price",
+          count: 19,
+          share: 0.03838383838383838,
+        },
+        {
+          reason: "performance",
+          count: 16,
+          share: 0.03232323232323232,
+        },
+        {
+          reason: "security",
+          count: 4,
+          share: 0.00808080808080808,
+        },
+      ],
+      engines: [
+        {
+          engine: "anthropic/claude-sonnet-5",
+          picks: 147,
+          reasons: [
+            {
+              reason: "features",
+              count: 129,
+              share: 0.8775510204081632,
+            },
+            {
+              reason: "reviews",
+              count: 14,
+              share: 0.09523809523809523,
+            },
+            {
+              reason: "price",
+              count: 7,
+              share: 0.047619047619047616,
+            },
+            {
+              reason: "integrations",
+              count: 1,
+              share: 0.006802721088435374,
+            },
+          ],
+        },
+        {
+          engine: "openai/gpt-5.6-sol",
+          picks: 139,
+          reasons: [
+            {
+              reason: "features",
+              count: 116,
+              share: 0.8345323741007195,
+            },
+            {
+              reason: "ease_of_use",
+              count: 8,
+              share: 0.05755395683453238,
+            },
+            {
+              reason: "price",
+              count: 8,
+              share: 0.05755395683453238,
+            },
+            {
+              reason: "reviews",
+              count: 5,
+              share: 0.03597122302158273,
+            },
+            {
+              reason: "integrations",
+              count: 4,
+              share: 0.02877697841726619,
+            },
+          ],
+        },
+      ],
+    },
     brands: [
       {
         brand: "Notra",
@@ -110,7 +210,8 @@ const FIXTURE = {
     evidence: [
       {
         checkId: "020fef2e-eac2-4973-a257-5993cbb2fc6f",
-        scanId: "scan-1",
+        scanId: "0dd75def-1e3c-4207-8d70-07ae656ab159",
+        brand: "Profound",
         promptId: "custom-99b69110-e62d-43ee-8eae-04c2806e9125",
         prompt: "which platforms let me monitor my brand across multiple ai engines at once",
         engine: "anthropic/claude-sonnet-5",
@@ -120,15 +221,16 @@ const FIXTURE = {
           "Tracks brand mentions, sentiment, and citations across ChatGPT, Perplexity, Gemini, and Copilot; popular with enterprise marketing teams",
       },
       {
-        checkId: "8d7da7ef-b840-4ec1-bfcb-b94d6174d5fb",
-        scanId: "scan-2",
-        promptId: "custom-a215254a-811c-45bb-884d-9dac32b4f75a",
-        prompt: "how do I measure my share of voice across chatgpt claude and perplexity",
+        checkId: "27d3d39e-8e80-4147-912b-aa40e16cbb01",
+        scanId: "0dd75def-1e3c-4207-8d70-07ae656ab159",
+        brand: "Profound",
+        promptId: "custom-01654f67-9c47-463f-9755-fa2f0850d2fd",
+        prompt: "what tools help me find content gaps for ai search visibility",
         engine: "anthropic/claude-sonnet-5",
         capturedAt: "2026-09-03T19:29:56.289Z",
         pick: "recommended",
         quote:
-          "Profound \u2014 tracks brand mentions across ChatGPT, Perplexity, Gemini, and others; built for marketing teams",
+          "Tracks how your brand appears in ChatGPT, Perplexity, and Google AI Overviews; identifies topics competitors get cited for that you don't",
       },
     ],
     organization: {
@@ -137,6 +239,94 @@ const FIXTURE = {
       name: "Alpha",
       logo: null,
     },
+  },
+};
+
+const REQUESTS = {
+  configured: true,
+  unlabeledPrompts: 0,
+  overall: {
+    request: "all",
+    answers: 86,
+    noSingleChoice: 73,
+    brands: [
+      {
+        brand: "Otterly.AI",
+        own: false,
+        picks: 57,
+        rate: 0.6627906976744186,
+      },
+      {
+        brand: "Peec AI",
+        own: false,
+        picks: 56,
+        rate: 0.6511627906976745,
+      },
+      {
+        brand: "Profound",
+        own: false,
+        picks: 55,
+        rate: 0.6395348837209303,
+      },
+    ],
+  },
+  requests: [
+    {
+      request: "none",
+      answers: 54,
+      noSingleChoice: 46,
+      brands: [
+        {
+          brand: "Otterly.AI",
+          own: false,
+          picks: 39,
+          rate: 0.7222222222222222,
+        },
+        {
+          brand: "Peec AI",
+          own: false,
+          picks: 39,
+          rate: 0.7222222222222222,
+        },
+        {
+          brand: "Profound",
+          own: false,
+          picks: 39,
+          rate: 0.7222222222222222,
+        },
+      ],
+    },
+    {
+      request: "integrations",
+      answers: 15,
+      noSingleChoice: 14,
+      brands: [
+        {
+          brand: "Otterly.AI",
+          own: false,
+          picks: 6,
+          rate: 0.4,
+        },
+        {
+          brand: "Peec AI",
+          own: false,
+          picks: 6,
+          rate: 0.4,
+        },
+        {
+          brand: "Profound",
+          own: false,
+          picks: 6,
+          rate: 0.4,
+        },
+      ],
+    },
+  ],
+  organization: {
+    id: "org_alpha",
+    slug: "alpha",
+    name: "Alpha",
+    logo: null,
   },
 };
 
@@ -151,6 +341,7 @@ before(
       let data;
       if (url.pathname.endsWith("/visibility/pick-reasons")) data = FIXTURE.summary;
       else if (url.pathname.endsWith("/visibility/pick-reasons/evidence")) data = FIXTURE.evidence;
+      else if (url.pathname.endsWith("/visibility/pick-reasons/requests")) data = REQUESTS;
       if (!data) {
         res.writeHead(404).end();
         return;
@@ -221,7 +412,7 @@ async function call(name, args) {
 
 test("pick reason tools are listed as read-only GEO tools", async () => {
   const { result } = await rpc("tools/list", {});
-  for (const name of ["get_geo_pick_reasons", "list_geo_pick_reason_evidence"]) {
+  for (const name of ["get_geo_pick_reasons", "list_geo_pick_reason_evidence", "get_geo_pick_requests"]) {
     const tool = result.tools.find((entry) => entry.name === name);
     assert.ok(tool, name);
     assert.equal(tool.annotations.readOnlyHint, true);
@@ -246,6 +437,8 @@ test("get_geo_pick_reasons forwards the filter and window and returns the brands
   ]);
   assert.equal(result.brands[0].own, true);
   assert.equal(result.brands[0].reasons[0].reason, "features");
+  assert.ok(result.category.picks >= result.brands[0].picks);
+  assert.ok(result.answers > 0);
 });
 
 test("list_geo_pick_reason_evidence forwards brand, reason and engine", async () => {
@@ -272,4 +465,15 @@ test("list_geo_pick_reason_evidence rejects an unknown reason", async () => {
     arguments: { projectId: "proj_1", brand: "Profound", reason: "vibes" },
   });
   assert.ok(message.error || message.result?.isError, JSON.stringify(message));
+});
+
+test("get_geo_pick_requests returns the overall row and one row per kind of request", async () => {
+  requests.length = 0;
+  const result = await call("get_geo_pick_requests", { projectId: "proj_1", days: 30 });
+  assert.deepEqual(requests, [
+    { path: "/v1/projects/proj_1/geo/visibility/pick-reasons/requests", query: { days: "30" } },
+  ]);
+  assert.equal(result.overall.request, "all");
+  assert.ok(result.requests.length > 0);
+  assert.ok(result.requests.every((row) => row.answers <= result.overall.answers));
 });
