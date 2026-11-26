@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { GEO_PICK_REASONS } from "../constants/geo-pick-reasons.js";
 import {
   GEO_COMPETITOR_SHARE_DEFAULT_LIMIT,
   GEO_COMPETITOR_SHARE_MAX_LIMIT,
@@ -98,5 +99,39 @@ export const getGeoLanguageShareSchema = z.object({
 export const getGeoCompetitorDetailSchema = z.object({
   projectId: projectIdSchema,
   brand: geoShortTextSchema.describe("Competitor brand name as reported by get_geo_competitor_share"),
+  ...geoWindowShape,
+});
+
+export const getGeoPickReasonsSchema = z.object({
+  projectId: projectIdSchema,
+  brand: geoShortTextSchema
+    .optional()
+    .describe(
+      "Only this brand. Your company name returns your own brand; a competitor name also matches its synonyms and spellings that differ only in punctuation.",
+    ),
+  limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(200)
+    .optional()
+    .describe("Most brands to return, your own included. Defaults to 25."),
+  ...geoWindowShape,
+});
+
+export const listGeoPickReasonEvidenceSchema = z.object({
+  projectId: projectIdSchema,
+  brand: geoShortTextSchema.describe(
+    "Brand as reported by get_geo_pick_reasons; your company name reads your own brand.",
+  ),
+  reason: z.enum(GEO_PICK_REASONS).describe("Reason to show answers for."),
+  engine: geoShortTextSchema
+    .optional()
+    .describe("Only answers from this engine ID or engine family, such as claude or chatgpt. Omit for all engines."),
+  ...geoWindowShape,
+});
+
+export const getGeoPickRequestsSchema = z.object({
+  projectId: projectIdSchema,
   ...geoWindowShape,
 });

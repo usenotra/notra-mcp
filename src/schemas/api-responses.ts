@@ -67,6 +67,8 @@ export type ApiOperationId =
   | "getGeoPersonaActivity"
   | "getGeoPersonaGeneration"
   | "getGeoPersonaResults"
+  | "getGeoPickReasons"
+  | "getGeoPickRequests"
   | "getGeoPromptHistory"
   | "getGeoPromptResultDetail"
   | "getGeoScan"
@@ -125,6 +127,7 @@ export type ApiOperationId =
   | "listGeoEngines"
   | "listGeoNameCollisions"
   | "listGeoPersonas"
+  | "listGeoPickReasonEvidence"
   | "listGeoPromptResultSummaries"
   | "listGeoPrompts"
   | "listGeoPromptSuggestions"
@@ -4749,6 +4752,349 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["results", "scans", "selectedScanId", "organization"],
     description: "A persona's conversation answers from one scan, the scans available to pick from and the workspace.",
+  },
+  getGeoPickReasons: {
+    type: "object",
+    properties: {
+      configured: { type: "boolean", description: "False when the request resolved to no GEO project." },
+      pending: {
+        type: "integer",
+        description:
+          "Answers in the window not analyzed yet. They are analyzed after each scan, up to 400 per project.",
+      },
+      answers: {
+        type: "integer",
+        description:
+          "Analyzed answers in the window, picks or not. Your brand's `picks` out of this is how often AI picks you.",
+      },
+      category: {
+        type: "object",
+        properties: {
+          picks: {
+            type: "integer",
+            description: "Answers that named the brand their top pick or recommended it. Shares divide by this.",
+          },
+          reasons: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                reason: {
+                  type: "string",
+                  enum: [
+                    "price",
+                    "reviews",
+                    "features",
+                    "integrations",
+                    "ease_of_use",
+                    "support",
+                    "security",
+                    "performance",
+                    "availability",
+                    "delivery",
+                    "trial_refunds",
+                    "brand",
+                  ],
+                  description:
+                    'Reason category: `price`, `reviews`, `features`, `integrations`, `ease_of_use`, `support`, `security`, `performance`, `availability`, `delivery`, `trial_refunds`, `brand`. "Fits the request" is left out because nearly every pick says it.',
+                },
+                count: { type: "integer", description: "Picks that cite this reason. One answer can cite up to 3." },
+                share: { type: "number", description: "count / picks, from 0 to 1." },
+              },
+              required: ["reason", "count", "share"],
+            },
+            description: "Reasons across all engines, most cited first.",
+          },
+          engines: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                engine: { type: "string", description: "Answer engine id, as listed by listGeoEngines." },
+                picks: { type: "integer", description: "Answers from this engine that picked the brand." },
+                reasons: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      reason: {
+                        type: "string",
+                        enum: [
+                          "price",
+                          "reviews",
+                          "features",
+                          "integrations",
+                          "ease_of_use",
+                          "support",
+                          "security",
+                          "performance",
+                          "availability",
+                          "delivery",
+                          "trial_refunds",
+                          "brand",
+                        ],
+                        description:
+                          'Reason category: `price`, `reviews`, `features`, `integrations`, `ease_of_use`, `support`, `security`, `performance`, `availability`, `delivery`, `trial_refunds`, `brand`. "Fits the request" is left out because nearly every pick says it.',
+                      },
+                      count: {
+                        type: "integer",
+                        description: "Picks that cite this reason. One answer can cite up to 3.",
+                      },
+                      share: { type: "number", description: "count / picks, from 0 to 1." },
+                    },
+                    required: ["reason", "count", "share"],
+                  },
+                  description: "Reasons on this engine, most cited first.",
+                },
+              },
+              required: ["engine", "picks", "reasons"],
+            },
+            description: "The same breakdown per engine, most picks first.",
+          },
+        },
+        required: ["picks", "reasons", "engines"],
+        description:
+          "Every brand's picks pooled: which reasons make AI pick a product at all, the way the a16z / Prompting Company study reports it. `picks` counts brand picks, so one answer that recommends three tools adds three.",
+      },
+      brands: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            brand: {
+              type: "string",
+              description:
+                "Your company name for your own brand, otherwise the tracked competitor name (synonyms and spellings that differ only in punctuation fold in) or the name as answers wrote it.",
+            },
+            own: { type: "boolean", description: "Whether this is your brand." },
+            picks: {
+              type: "integer",
+              description: "Answers that named the brand their top pick or recommended it. Shares divide by this.",
+            },
+            reasons: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  reason: {
+                    type: "string",
+                    enum: [
+                      "price",
+                      "reviews",
+                      "features",
+                      "integrations",
+                      "ease_of_use",
+                      "support",
+                      "security",
+                      "performance",
+                      "availability",
+                      "delivery",
+                      "trial_refunds",
+                      "brand",
+                    ],
+                    description:
+                      'Reason category: `price`, `reviews`, `features`, `integrations`, `ease_of_use`, `support`, `security`, `performance`, `availability`, `delivery`, `trial_refunds`, `brand`. "Fits the request" is left out because nearly every pick says it.',
+                  },
+                  count: { type: "integer", description: "Picks that cite this reason. One answer can cite up to 3." },
+                  share: { type: "number", description: "count / picks, from 0 to 1." },
+                },
+                required: ["reason", "count", "share"],
+              },
+              description: "Reasons across all engines, most cited first.",
+            },
+            engines: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  engine: { type: "string", description: "Answer engine id, as listed by listGeoEngines." },
+                  picks: { type: "integer", description: "Answers from this engine that picked the brand." },
+                  reasons: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        reason: {
+                          type: "string",
+                          enum: [
+                            "price",
+                            "reviews",
+                            "features",
+                            "integrations",
+                            "ease_of_use",
+                            "support",
+                            "security",
+                            "performance",
+                            "availability",
+                            "delivery",
+                            "trial_refunds",
+                            "brand",
+                          ],
+                          description:
+                            'Reason category: `price`, `reviews`, `features`, `integrations`, `ease_of_use`, `support`, `security`, `performance`, `availability`, `delivery`, `trial_refunds`, `brand`. "Fits the request" is left out because nearly every pick says it.',
+                        },
+                        count: {
+                          type: "integer",
+                          description: "Picks that cite this reason. One answer can cite up to 3.",
+                        },
+                        share: { type: "number", description: "count / picks, from 0 to 1." },
+                      },
+                      required: ["reason", "count", "share"],
+                    },
+                    description: "Reasons on this engine, most cited first.",
+                  },
+                },
+                required: ["engine", "picks", "reasons"],
+              },
+              description: "The same breakdown per engine, most picks first.",
+            },
+          },
+          required: ["brand", "own", "picks", "reasons", "engines"],
+        },
+        description:
+          "Your brand first, then the brands answers picked most. Brands that answers never picked are left out.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["configured", "pending", "answers", "category", "brands", "organization"],
+    description:
+      "Why AI answers pick each brand: the share of picks that cite each reason, overall and per engine. Only tracked prompts count, without sequences or personas.",
+  },
+  getGeoPickRequests: {
+    type: "object",
+    properties: {
+      configured: { type: "boolean", description: "False when the request resolved to no GEO project." },
+      unlabeledPrompts: {
+        type: "integer",
+        description: "Prompt texts in the window not labeled yet. They are labeled after each scan.",
+      },
+      overall: {
+        type: "object",
+        properties: {
+          request: {
+            type: "string",
+            enum: [
+              "budget",
+              "small_team",
+              "beginner",
+              "enterprise",
+              "pro",
+              "integrations",
+              "speed",
+              "industry",
+              "none",
+              "all",
+            ],
+            description:
+              "What the prompt asks for: `budget`, `small_team`, `beginner`, `enterprise`, `pro`, `integrations`, `speed`, `industry`, `none`. `all` is every labeled answer, the usual pick to compare with.",
+          },
+          answers: {
+            type: "integer",
+            description: "Analyzed answers to prompts with this label. Below 5 the rates are noise.",
+          },
+          noSingleChoice: { type: "integer", description: "Answers that didn't name a single best option." },
+          brands: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                brand: {
+                  type: "string",
+                  description:
+                    "Your company name for your own brand, otherwise the tracked competitor name or the name as answers wrote it.",
+                },
+                own: { type: "boolean", description: "Whether this is your brand." },
+                picks: { type: "integer", description: "Answers that picked the brand (top pick or recommended)." },
+                rate: { type: "number", description: "picks / answers, from 0 to 1." },
+              },
+              required: ["brand", "own", "picks", "rate"],
+            },
+            description: "Your brand first, then the most picked, up to 10.",
+          },
+        },
+        required: ["request", "answers", "noSingleChoice", "brands"],
+      },
+      requests: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            request: {
+              type: "string",
+              enum: [
+                "budget",
+                "small_team",
+                "beginner",
+                "enterprise",
+                "pro",
+                "integrations",
+                "speed",
+                "industry",
+                "none",
+                "all",
+              ],
+              description:
+                "What the prompt asks for: `budget`, `small_team`, `beginner`, `enterprise`, `pro`, `integrations`, `speed`, `industry`, `none`. `all` is every labeled answer, the usual pick to compare with.",
+            },
+            answers: {
+              type: "integer",
+              description: "Analyzed answers to prompts with this label. Below 5 the rates are noise.",
+            },
+            noSingleChoice: { type: "integer", description: "Answers that didn't name a single best option." },
+            brands: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  brand: {
+                    type: "string",
+                    description:
+                      "Your company name for your own brand, otherwise the tracked competitor name or the name as answers wrote it.",
+                  },
+                  own: { type: "boolean", description: "Whether this is your brand." },
+                  picks: { type: "integer", description: "Answers that picked the brand (top pick or recommended)." },
+                  rate: { type: "number", description: "picks / answers, from 0 to 1." },
+                },
+                required: ["brand", "own", "picks", "rate"],
+              },
+              description: "Your brand first, then the most picked, up to 10.",
+            },
+          },
+          required: ["request", "answers", "noSingleChoice", "brands"],
+        },
+        description: "One row per kind of request that has answers, most answers first.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["configured", "unlabeledPrompts", "overall", "requests", "organization"],
+    description:
+      "How the pick changes with what users ask for: each tracked prompt is labeled once with the buyer constraints it states (budget, enterprise, pro-level, …), and every row shows how often answers to those prompts pick each brand.",
   },
   getGeoPromptHistory: {
     type: "object",
@@ -10930,6 +11276,59 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["configured", "personas", "organization"],
     description: "The project's personas and the workspace they belong to.",
+  },
+  listGeoPickReasonEvidence: {
+    type: "object",
+    properties: {
+      evidence: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            checkId: {
+              type: "string",
+              description: "Check id of the answer; use it with getGeoPromptResultDetail for the full text.",
+            },
+            scanId: { type: "string", description: "Scan that captured the answer." },
+            brand: {
+              type: "string",
+              description: "Brand the answer picked, as it wrote it: your company name or a competitor's spelling.",
+            },
+            promptId: { type: "string", description: "Prompt id; use it with getGeoPromptHistory." },
+            prompt: { type: "string", description: "Prompt text." },
+            engine: { type: "string", description: "Answer engine id, as listed by listGeoEngines." },
+            capturedAt: { type: "string", description: "ISO timestamp when the answer was captured." },
+            pick: {
+              type: "string",
+              enum: ["top_pick", "recommended"],
+              description: "`top_pick` or `recommended`; evidence only lists picks.",
+            },
+            quote: {
+              type: "string",
+              description: "Sentence from the answer that gives the reason. Empty when no exact quote was found.",
+            },
+          },
+          required: ["checkId", "scanId", "brand", "promptId", "prompt", "engine", "capturedAt", "pick", "quote"],
+        },
+        description: "Up to 20 answers, newest first.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: ["evidence", "organization"],
+    description: "Answers that picked a brand for one reason.",
   },
   listGeoPromptResultSummaries: {
     type: "object",
