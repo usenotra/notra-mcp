@@ -1,0 +1,21 @@
+scripts/check-api-coverage.mjs
+  s_49803bda86e6af::t_37b34375574201 60-62
+tests/autopilot.test.mjs
+  s_49803bda86e6af::t_37b34375574201 158-167,171,429-436
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "eaa66e6dc0c65818d4ac68ea76525223bf1fd0dd",
+  "prompts": {},
+  "sessions": {
+    "s_49803bda86e6af": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a60e02d2-f41d-410c-a0a8-da31c830e442",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Jan Burzinski <156842394+janburzinski@users.noreply.github.com>"
+    }
+  }
+}
