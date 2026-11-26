@@ -1,4 +1,6 @@
+import type { GEO_PICK_REASONS } from "../constants/geo-pick-reasons.js";
 import type { Organization } from "./api.js";
+import type { GeoWindowParams } from "./geo-common.js";
 
 export interface GeoSparklinePoint {
   day: string;
@@ -156,5 +158,50 @@ export interface GeoCompetitorShareSummary {
   points: Array<GeoBrandShare & { brand: string; trend?: GeoSparklinePoint[] }>;
   otherBrands: GeoBrandShare & { count: number };
   timeseries?: GeoVisibilityCompetitorShareResponse["timeseries"];
+  organization: Organization;
+}
+
+export type GeoPickReason = (typeof GEO_PICK_REASONS)[number];
+
+export interface GeoPickReasonShare {
+  reason: GeoPickReason;
+  count: number;
+  share: number;
+}
+
+export interface GeoPickReasonsParams extends GeoWindowParams {
+  brand?: string;
+  limit?: number;
+}
+
+export interface GeoPickReasonsResponse {
+  configured: boolean;
+  pending: number;
+  brands: Array<{
+    brand: string;
+    own: boolean;
+    picks: number;
+    reasons: GeoPickReasonShare[];
+    engines: Array<{ engine: string; picks: number; reasons: GeoPickReasonShare[] }>;
+  }>;
+  organization: Organization;
+}
+
+export interface GeoPickReasonEvidenceParams extends GeoWindowParams {
+  brand: string;
+  reason: GeoPickReason;
+  engine?: string;
+}
+
+export interface GeoPickReasonEvidenceResponse {
+  evidence: Array<{
+    checkId: string;
+    promptId: string;
+    prompt: string;
+    engine: string;
+    capturedAt: string;
+    pick: "top_pick" | "recommended";
+    quote: string;
+  }>;
   organization: Organization;
 }

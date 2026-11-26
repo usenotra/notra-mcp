@@ -184,6 +184,10 @@ import type {
   GeoWebAnalyticsResponse,
 } from "./types/geo-web-analytics.js";
 import type {
+  GeoPickReasonEvidenceParams,
+  GeoPickReasonEvidenceResponse,
+  GeoPickReasonsParams,
+  GeoPickReasonsResponse,
   GeoPromptResultDetailResponse,
   GeoPromptResultSummariesResponse,
   GeoPromptResultSummaryParams,
@@ -1344,6 +1348,23 @@ export class NotraClient {
     return this.request<GeoVisibilityCompetitorDetailResponse>(
       "GET",
       this.geoPath(projectId, `/visibility/competitors/${encodeURIComponent(brand)}`),
+      { params },
+    );
+  }
+
+  async getGeoPickReasons(projectId: string, params?: GeoPickReasonsParams): Promise<GeoPickReasonsResponse> {
+    return this.request<GeoPickReasonsResponse>("GET", this.geoPath(projectId, "/visibility/pick-reasons"), {
+      params,
+    });
+  }
+
+  async listGeoPickReasonEvidence(
+    projectId: string,
+    params: GeoPickReasonEvidenceParams,
+  ): Promise<GeoPickReasonEvidenceResponse> {
+    return this.request<GeoPickReasonEvidenceResponse>(
+      "GET",
+      this.geoPath(projectId, "/visibility/pick-reasons/evidence"),
       { params },
     );
   }

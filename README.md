@@ -473,6 +473,8 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `get_geo_competitor_share`         | Top brands by share of voice, with brand filter and limit   |
 | `get_geo_language_share`           | Mention rates per tracked language                          |
 | `get_geo_competitor_detail`        | One competitor's mention history and the prompts driving it |
+| `get_geo_pick_reasons`             | Why AI answers pick each brand, overall and per engine      |
+| `list_geo_pick_reason_evidence`    | Answers and quotes behind one brand and reason              |
 
 ### GEO content briefs
 

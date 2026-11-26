@@ -7,6 +7,8 @@ import {
   getGeoLanguageShareSchema,
   getGeoCompetitorDetailSchema,
   listGeoPromptResultSummariesSchema,
+  getGeoPickReasonsSchema,
+  listGeoPickReasonEvidenceSchema,
 } from "../schemas/geo-visibility.js";
 import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
@@ -176,5 +178,41 @@ export function registerGeoVisibilityTools(server: ToolRegistry, client: NotraCl
     },
     ({ projectId, brand, ...params }) =>
       handleError(() => client.getGeoVisibilityCompetitorDetail(projectId, brand, params)),
+  );
+
+  server.tool(
+    {
+      name: "get_geo_pick_reasons",
+      description:
+        'Get why AI answers pick each brand. A pick is an answer that names the brand its top choice or recommends it; for each pick the answer\'s reasons are sorted into price, reviews, features, integrations, ease_of_use, support, security, performance, availability, delivery, trial_refunds and brand ("fits the request" is left out, since nearly every pick says it). Only tracked prompts count, not sequences or personas. Without days or from, it covers the last 30 days. Returns configured, pending (answers not analyzed yet), brands (your brand first, then the most picked: brand, own, picks, reasons with count and share of picks, and the same per engine) and the organization. Filter with brand, cap with limit (default 25). Pass a brand and reason to list_geo_pick_reason_evidence for the quotes behind a number.',
+      annotations: {
+        title: "Get GEO Pick Reasons",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(getGeoPickReasonsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoPickReasons")),
+    },
+    ({ projectId, ...params }) => handleError(() => client.getGeoPickReasons(projectId, params)),
+  );
+
+  server.tool(
+    {
+      name: "list_geo_pick_reason_evidence",
+      description:
+        "List the AI answers that picked a brand for one reason, newest first, up to 20. Use brand names from get_geo_pick_reasons; your company name reads your own brand. Narrow to one engine ID or engine family with engine. Without days or from, it covers the last 30 days. Returns evidence (per answer: checkId, promptId, prompt, engine, capturedAt, pick and the quote that gives the reason) and the organization. Pass a checkId to get_geo_prompt_result_detail for the full answer.",
+      annotations: {
+        title: "List GEO Pick Reason Evidence",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(listGeoPickReasonEvidenceSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("listGeoPickReasonEvidence")),
+    },
+    ({ projectId, ...params }) => handleError(() => client.listGeoPickReasonEvidence(projectId, params)),
   );
 }
