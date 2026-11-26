@@ -1,0 +1,36 @@
+src/constants/server.ts
+  s_49803bda86e6af::t_12cd199a975fc4 6
+src/notra-client.ts
+  s_49803bda86e6af::t_12cd199a975fc4 57,446-449
+src/schemas/autopilot.ts
+  s_49803bda86e6af::t_12cd199a975fc4 234-263,267-274,329
+  s_49803bda86e6af::t_0abfb11a634186 264-266
+tests/autopilot.test.mjs
+  s_49803bda86e6af::t_7bb83d28864d97 117,365-369,401-405
+  s_49803bda86e6af::t_e21bcfdb286fd4 85,89,237,440-442
+README.md
+  s_49803bda86e6af::t_7bb83d28864d97 260
+  s_49803bda86e6af::t_12cd199a975fc4 253
+src/tools/autopilot-outreach-tools.ts
+  s_49803bda86e6af::t_12cd199a975fc4 7,56-72,155
+src/schemas/api-responses.ts
+  s_49803bda86e6af::t_4ba677ccfeb148 151,548-553,556-557,616,620,1853,2530-2535,2538-2539,2598,2602,2827,2860-2870,7231-7236,7239-7240,7299,7303,7655-7657,8571,9146-9151,9154-9155,9214,9218,9945-9954,12024-12029,12047,13036,13116,13132-13277,13340-13345,13348-13349,13408,13412,13486-13491,13494-13495,13554,13558,14658-14663,14666-14667,14726,14730,15043,15047,15143,15147,15262-15267,15270-15271,15330,15334,16392-16397,16400-16401,16460,16464
+src/types/autopilot.ts
+  s_49803bda86e6af::t_12cd199a975fc4 6,16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "997fd6198fb7694e6f783648ffe4b8861290ef6c",
+  "prompts": {},
+  "sessions": {
+    "s_49803bda86e6af": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a60e02d2-f41d-410c-a0a8-da31c830e442",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Jan Burzinski <156842394+janburzinski@users.noreply.github.com>"
+    }
+  }
+}
