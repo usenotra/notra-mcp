@@ -17,13 +17,14 @@ import {
   setAutopilotWorkflowEnabledSchema,
   stopAutopilotRunSchema,
   updateAutopilotSettingsSchema,
+  updateAutopilotSettingsWithoutOutreachSchema,
 } from "../schemas/autopilot.js";
 import type { ToolRegistry } from "../types/server.js";
 import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
-export function registerAutopilotTools(server: ToolRegistry, client: NotraClient) {
+export function registerAutopilotTools(server: ToolRegistry, client: NotraClient, outreachEnabled: boolean) {
   server.tool(
     {
       name: "get_autopilot_status",
@@ -116,7 +117,9 @@ export function registerAutopilotTools(server: ToolRegistry, client: NotraClient
         destructiveHint: true,
         idempotentHint: true,
       },
-      inputSchema: shareJsonSchema(updateAutopilotSettingsSchema),
+      inputSchema: shareJsonSchema(
+        outreachEnabled ? updateAutopilotSettingsSchema : updateAutopilotSettingsWithoutOutreachSchema,
+      ),
       outputSchema: shareJsonSchema(apiOutputSchema("updateAutopilotSettings")),
     },
     (body) => handleError(() => client.updateAutopilotSettings(body)),
@@ -125,7 +128,7 @@ export function registerAutopilotTools(server: ToolRegistry, client: NotraClient
   server.tool(
     {
       name: "list_autopilot_findings",
-      description: `List what Autopilot found and made, newest first: ideas waiting to be written (suggested), drafts being written (open), pull requests waiting for review (proposed), and merged, dismissed, expired or failed ones. Filter by status or automation. Outreach pitches are listed by list_outreach_pitches. ${READ}`,
+      description: `List what Autopilot found and made, newest first: ideas waiting to be written (suggested), drafts being written (open), pull requests waiting for review (proposed), and merged, dismissed, expired or failed ones. Filter by status or automation. ${READ}`,
       annotations: { title: "List Autopilot Findings", ...readOnly },
       inputSchema: shareJsonSchema(listAutopilotFindingsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("listAutopilotFindings")),

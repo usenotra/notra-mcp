@@ -45,7 +45,20 @@ const JOB_KINDS = [
   "outreach",
 ] as const;
 const JOB_KIND_DESCRIPTION =
-  "readiness: Agent Readiness fixes. keywords: posts for AI search gaps. commits: posts about shipped releases. prompts: suggests prompts to pause. refresh: updates stale pages. comparisons: comparison pages. rendering: makes pages readable by AI crawlers. links: internal links. landing: landing page copy. outreach: pitches to pages AI cites.";
+  "readiness: Agent Readiness fixes. keywords: posts for AI search gaps. commits: posts about shipped releases. prompts: suggests prompts to pause. refresh: updates stale pages. comparisons: comparison pages. rendering: makes pages readable by AI crawlers. links: internal links. landing: landing page copy.";
+
+function autopilotJobsSchema(outreachEnabled: boolean) {
+  return z
+    .partialRecord(
+      z.enum(JOB_KINDS.filter((kind) => kind !== "competitors" && (outreachEnabled || kind !== "outreach"))),
+      z.boolean(),
+    )
+    .optional()
+    .describe(
+      `Automations to turn on (true) or off (false); omitted ones keep their setting. ${JOB_KIND_DESCRIPTION}${outreachEnabled ? " outreach: pitches to pages AI cites." : ""}`,
+    );
+}
+
 const approvalModeSchema = z
   .enum(["ask", "auto"])
   .describe("ask: a person merges it. auto: Autopilot publishes it on its own.");
@@ -69,12 +82,7 @@ export const updateAutopilotSettingsSchema = z
       .optional()
       .describe("Hour of day (0-23) the daily run and brief happen."),
     timezone: z.string().trim().min(1).max(64).optional().describe("IANA timezone such as Europe/Berlin."),
-    jobs: z
-      .partialRecord(z.enum(JOB_KINDS.filter((kind) => kind !== "competitors") as [string, ...string[]]), z.boolean())
-      .optional()
-      .describe(
-        `Automations to turn on (true) or off (false); omitted ones keep their setting. ${JOB_KIND_DESCRIPTION}`,
-      ),
+    jobs: autopilotJobsSchema(true),
     approvals: z
       .strictObject({
         posts: approvalModeSchema.optional().describe("New posts."),
@@ -134,6 +142,10 @@ export const updateAutopilotSettingsSchema = z
   })
   .refine((value) => Object.keys(value).length > 0, { message: "Change at least one setting" });
 
+export const updateAutopilotSettingsWithoutOutreachSchema = updateAutopilotSettingsSchema.safeExtend({
+  jobs: autopilotJobsSchema(false),
+});
+
 export const listAutopilotFindingsSchema = z.strictObject({
   status: z
     .enum(["suggested", "open", "proposed", "merged", "dismissed", "expired", "failed"])
@@ -144,7 +156,7 @@ export const listAutopilotFindingsSchema = z.strictObject({
   kind: z
     .enum(JOB_KINDS.filter((kind) => kind !== "outreach") as [string, ...string[]])
     .optional()
-    .describe("Only this automation's findings. Outreach pitches have their own tools."),
+    .describe("Only this automation's findings."),
   limit: z.number().int().min(1).max(100).optional().describe("Newest first; default 25, at most 100."),
 });
 

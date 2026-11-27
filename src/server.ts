@@ -4,6 +4,7 @@ import { MCPServer, registerViews } from "mcp-use";
 import type { OAuthAuthInfo } from "mcp-use/oauth";
 import { MCP_BASE_PATH } from "./constants/http.js";
 import {
+  OUTREACH_INSTRUCTIONS,
   SERVER_DESCRIPTION,
   SERVER_FAVICON_URL,
   SERVER_ICONS,
@@ -125,6 +126,7 @@ function requestAuth(authInfo: OAuthAuthInfo | undefined, headers: Headers | und
 }
 
 export function createServer(options: CreateServerOptions = {}): NotraMcpServer {
+  const outreachEnabled = process.env.NOTRA_MCP_ENABLE_OUTREACH === "true";
   const server = new MCPServer<AuthContext>({
     name: "notra",
     title: SERVER_TITLE,
@@ -133,7 +135,7 @@ export function createServer(options: CreateServerOptions = {}): NotraMcpServer 
     websiteUrl: SERVER_WEBSITE_URL,
     icons: SERVER_ICONS,
     favicon: SERVER_FAVICON_URL,
-    instructions: SERVER_INSTRUCTIONS,
+    instructions: outreachEnabled ? `${SERVER_INSTRUCTIONS}\n\n${OUTREACH_INSTRUCTIONS}` : SERVER_INSTRUCTIONS,
     basePath: MCP_BASE_PATH,
     oauth: createOAuthProvider(getOAuthConfig(), options.authorizationServerMetadata),
     publicLandingPage: true,
@@ -154,7 +156,8 @@ export function createServer(options: CreateServerOptions = {}): NotraMcpServer 
 
   register(CONTENT_REGISTRARS, "content");
   register(GEO_REGISTRARS, "geo");
-  register([registerAutopilotTools, registerAutopilotOutreachTools], "autopilot");
+  register([(registry, client) => registerAutopilotTools(registry, client, outreachEnabled)], "autopilot");
+  if (outreachEnabled) register([registerAutopilotOutreachTools], "autopilot");
   register(SHARED_REGISTRARS);
 
   const views = options.withoutViews ? undefined : loadViewsManifest();

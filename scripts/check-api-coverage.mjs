@@ -141,6 +141,7 @@ async function collectSourceFiles(dir) {
 /** Tool names the built server registers at runtime. */
 async function listRegisteredTools() {
   delete process.env.NOTRA_MCP_TOOLSETS;
+  process.env.NOTRA_MCP_ENABLE_OUTREACH = "true";
   const response = await createServer().fetch(
     new Request("http://localhost/mcp", {
       method: "POST",
