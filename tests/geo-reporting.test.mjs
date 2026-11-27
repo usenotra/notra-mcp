@@ -6,6 +6,7 @@ import { createInterface } from "node:readline";
 import { after, before, test } from "node:test";
 
 let api, mcp, endpoint;
+const apiRequests = [];
 const day = "2026-11-01";
 const points = [
   ["crawler", 2],
@@ -23,7 +24,9 @@ const totals = Object.fromEntries(
 before(
   async () => {
     api = createServer(async (req, res) => {
-      const path = new URL(req.url, "http://localhost").pathname;
+      const requestUrl = new URL(req.url, "http://localhost");
+      const path = requestUrl.pathname;
+      apiRequests.push(requestUrl);
       const slug = req.headers["x-notra-organization-id"];
       const organization = { id: `org_${slug}`, slug, name: slug, logo: null };
       const configured = !path.includes("/disabled/");
@@ -88,6 +91,49 @@ before(
           sources: [],
           points: active ? points : [],
           previousConversions: null,
+        };
+      } else if (path.endsWith("/visibility/content-citations")) {
+        data = {
+          configured,
+          organization,
+          from: "2026-10-03",
+          to: day,
+          published: 2,
+          cited: 1,
+          medianDaysToFirstCitation: 4,
+          impactMinAnswers: 8,
+          posts: [
+            {
+              postId: "post-uncited",
+              title: "Measuring AI referral traffic",
+              url: null,
+              publishedDay: "2026-10-28",
+              firstCitedDay: null,
+              daysToFirstCitation: null,
+              firstCitedBy: null,
+              impact: null,
+            },
+            {
+              postId: "post-cited",
+              title: "What is generative engine optimization?",
+              url: "https://example.com/blog/geo",
+              publishedDay: "2026-10-20",
+              firstCitedDay: "2026-10-24",
+              daysToFirstCitation: 4,
+              firstCitedBy: "openai/gpt-5.4-grounded",
+              impact: {
+                status: "ok",
+                windowDays: 14,
+                answersBefore: 28,
+                answersAfter: 28,
+                targetedBefore: 0.14,
+                targetedAfter: 0.61,
+                otherBefore: 0.28,
+                otherAfter: 0.3,
+                liftPts: 45,
+              },
+            },
+          ],
         };
       } else if (path.endsWith("/visibility/overview")) {
         data = { configured, organization, engines: [] };
@@ -257,4 +303,25 @@ test("classification counts requests, including humans and unknowns, across the 
     unknownRequests: 0,
     classifiedShare: null,
   });
+});
+
+test("content citations pass the window through and keep the API's posts and impact", async () => {
+  apiRequests.length = 0;
+  const { content, structuredContent } = await rpc("tools/call", {
+    name: "get_geo_content_citations",
+    arguments: { projectId: "active", days: 30 },
+  });
+  assert.deepEqual(JSON.parse(content[0].text), structuredContent);
+  const request = apiRequests.find((url) => url.pathname.endsWith("/visibility/content-citations"));
+  assert.ok(request, "content citations route was not called");
+  assert.match(request.pathname, /\/projects\/active\/geo\/visibility\/content-citations$/);
+  assert.equal(request.searchParams.get("days"), "30");
+  assert.equal(structuredContent.cited, 1);
+  assert.deepEqual(
+    structuredContent.posts.map((post) => [post.postId, post.impact?.liftPts ?? null]),
+    [
+      ["post-uncited", null],
+      ["post-cited", 45],
+    ],
+  );
 });

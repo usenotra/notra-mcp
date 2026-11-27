@@ -35,6 +35,39 @@ export interface GeoVisibilityTimeseriesResponse {
   organization: Organization;
 }
 
+export interface GeoContentImpact {
+  status: "ok" | "not_enough_data";
+  windowDays: number;
+  answersBefore: number;
+  answersAfter: number;
+  targetedBefore: number | null;
+  targetedAfter: number | null;
+  otherBefore: number | null;
+  otherAfter: number | null;
+  liftPts: number | null;
+}
+
+export interface GeoContentCitationsResponse {
+  configured: boolean;
+  from: string;
+  to: string;
+  published: number;
+  cited: number;
+  medianDaysToFirstCitation: number | null;
+  impactMinAnswers: number;
+  posts: Array<{
+    postId: string;
+    title: string;
+    url: string | null;
+    publishedDay: string;
+    firstCitedDay: string | null;
+    daysToFirstCitation: number | null;
+    firstCitedBy: string | null;
+    impact: GeoContentImpact | null;
+  }>;
+  organization: Organization;
+}
+
 export interface GeoVisibilityPromptResultsResponse {
   configured: boolean;
   results: Array<{

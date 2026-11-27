@@ -61,6 +61,7 @@ export type ApiOperationId =
   | "getFeedback"
   | "getGeoAgentReadiness"
   | "getGeoContentBrief"
+  | "getGeoContentCitations"
   | "getGeoIngestSetup"
   | "getGeoMcpAnalytics"
   | "getGeoMcpToolDetail"
@@ -4084,6 +4085,139 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["brief", "organization"],
     description: "The content brief and the workspace it belongs to.",
+  },
+  getGeoContentCitations: {
+    type: "object",
+    properties: {
+      configured: {
+        type: "boolean",
+        description: "Always true for visibility data, which is read from Notra's own database.",
+      },
+      from: { type: "string", description: "First UTC day of the range." },
+      to: { type: "string", description: "Last UTC day of the range." },
+      published: { type: "integer", description: "Posts published for the project in the range." },
+      cited: { type: "integer", description: "Of those, the ones an AI answer has cited since." },
+      medianDaysToFirstCitation: {
+        type: ["integer", "null"],
+        description: "Median days to the first citation of the cited ones.",
+      },
+      impactMinAnswers: {
+        type: "integer",
+        description: "Answers the targeted prompt needs on each side of the publish time for an impact read.",
+      },
+      posts: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            postId: { type: "string", description: "Post ID." },
+            title: { type: "string", description: "Post title." },
+            url: {
+              type: ["string", "null"],
+              description: "The live URL citations are matched against, or null when the post isn't live.",
+            },
+            publishedDay: { type: "string", description: "UTC day it was published." },
+            firstCitedDay: {
+              type: ["string", "null"],
+              description: "UTC day an AI answer first listed its URL as a source after publishing, or null.",
+            },
+            daysToFirstCitation: {
+              type: ["integer", "null"],
+              description: "Whole UTC days from publishing to that first citation.",
+            },
+            firstCitedBy: { type: ["string", "null"], description: "Engine of the first answer that cited it." },
+            impact: {
+              type: ["object", "null"],
+              properties: {
+                status: {
+                  type: "string",
+                  enum: ["ok", "not_enough_data"],
+                  description:
+                    "`not_enough_data` when the targeted prompt had fewer than `impactMinAnswers` answers on either side, or the other prompts had none; then only the answer counts are set.",
+                },
+                windowDays: { type: "integer", description: "Days compared on each side of the publish time." },
+                answersBefore: { type: "integer", description: "Answers to the targeted prompt before publishing." },
+                answersAfter: { type: "integer", description: "Answers to the targeted prompt after publishing." },
+                targetedBefore: {
+                  type: ["number", "null"],
+                  description:
+                    "Visibility rate of the targeted prompt before publishing, from 0 to 1: answers that mentioned the brand or cited its site.",
+                },
+                targetedAfter: {
+                  type: ["number", "null"],
+                  description: "Visibility rate of the targeted prompt after publishing, from 0 to 1.",
+                },
+                otherBefore: {
+                  type: ["number", "null"],
+                  description: "Visibility rate of every other prompt before publishing, from 0 to 1.",
+                },
+                otherAfter: {
+                  type: ["number", "null"],
+                  description: "Visibility rate of every other prompt after publishing, from 0 to 1.",
+                },
+                liftPts: {
+                  type: ["number", "null"],
+                  description:
+                    "Change on the targeted prompt minus the change on all other prompts, in percentage points. Positive means the targeted prompt rose more than the rest.",
+                },
+              },
+              required: [
+                "status",
+                "windowDays",
+                "answersBefore",
+                "answersAfter",
+                "targetedBefore",
+                "targetedAfter",
+                "otherBefore",
+                "otherAfter",
+                "liftPts",
+              ],
+              description:
+                "How the prompt its GEO brief targeted moved against all other prompts, before vs after publishing. Null when the brief targeted no tracked prompt or the post hasn't been cited.",
+            },
+          },
+          required: [
+            "postId",
+            "title",
+            "url",
+            "publishedDay",
+            "firstCitedDay",
+            "daysToFirstCitation",
+            "firstCitedBy",
+            "impact",
+          ],
+        },
+        description:
+          "Posts published in the range or first cited in it, newest first. A post belongs to the project through its GEO brief, its Site or its collection, else through its domain.",
+      },
+      organization: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Workspace ID. Account API keys can send it, or the slug, as X-Notra-Organization-Id.",
+          },
+          slug: { type: "string", description: "URL-safe workspace handle, unique across Notra." },
+          name: { type: "string", description: "Workspace display name." },
+          logo: { type: ["string", "null"], description: "Workspace logo image URL. Null when none is set." },
+        },
+        required: ["id", "slug", "name", "logo"],
+        description: "Workspace the request ran in.",
+      },
+    },
+    required: [
+      "configured",
+      "from",
+      "to",
+      "published",
+      "cited",
+      "medianDaysToFirstCitation",
+      "impactMinAnswers",
+      "posts",
+      "organization",
+    ],
+    description:
+      "Content published for the project and whether AI answers cite it: the green dots on the visibility chart.",
   },
   getGeoIngestSetup: {
     type: "object",
