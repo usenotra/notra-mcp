@@ -4,6 +4,7 @@ import {
   editOutreachPitchSchema,
   getOutreachMailboxSchema,
   listOutreachPitchesSchema,
+  logOutreachContactSchema,
   outreachPitchSchema,
   sendOutreachPitchSchema,
   setOutreachPitchLaterSchema,
@@ -50,6 +51,23 @@ export function registerAutopilotOutreachTools(server: ToolRegistry, client: Not
       outputSchema: shareJsonSchema(apiOutputSchema("getOutreachPitch")),
     },
     ({ pitchId }) => handleError(() => client.getOutreachPitch(pitchId)),
+  );
+
+  server.tool(
+    {
+      name: "log_outreach_contact",
+      description: `Record that the user contacted someone about listing the brand themselves, by email, a form, a call, a DM or in person, so it shows in Outreach with its stage, follow-up date and notes. Use it when they say something like "I emailed Jane at TechCrunch, note that down". Nothing is sent. Search list_outreach_pitches first: if the page already has a pitch, this answers 409 with its id, so use mark_outreach_pitch_sent or update_outreach_pitch_details on that one instead. Replies to mail sent outside Notra aren't read, so update the stage when the user says they answered. ${WRITE}`,
+      annotations: {
+        title: "Log Outreach Contact",
+        readOnlyHint: false,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+      },
+      inputSchema: shareJsonSchema(logOutreachContactSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("logOutreachPitch")),
+    },
+    (params) => handleError(() => client.logOutreachContact(params)),
   );
 
   server.tool(
@@ -134,7 +152,7 @@ export function registerAutopilotOutreachTools(server: ToolRegistry, client: Not
   server.tool(
     {
       name: "update_outreach_pitch_details",
-      description: `Correct a pitch's conversation stage, follow-up date or deal (free, paid with a price, declined) by hand. ${WRITE}`,
+      description: `Correct a pitch's conversation stage, follow-up date or deal (free, paid with a price, declined) by hand, or replace the team's notes on the contact. ${WRITE}`,
       annotations: { title: "Update Pitch Details", ...localWrite },
       inputSchema: shareJsonSchema(updateOutreachPitchDetailsSchema),
       outputSchema: shareJsonSchema(apiOutputSchema("updateOutreachPitchDetails")),

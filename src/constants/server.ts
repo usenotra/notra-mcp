@@ -9,7 +9,7 @@ export const SERVER_INSTRUCTIONS = [
 ].join("\n\n");
 
 export const OUTREACH_INSTRUCTIONS =
-  "Outreach: start with `list_outreach_pitches` to review pitches. Confirm with the user before sending a pitch: it emails someone outside the company.";
+  "Outreach: start with `list_outreach_pitches` to review pitches; `log_outreach_contact` records someone the user contacted themselves. Confirm with the user before sending a pitch: it emails someone outside the company.";
 
 export const SERVER_TITLE = "Notra";
 export const SERVER_DESCRIPTION =

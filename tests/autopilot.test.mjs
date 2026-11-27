@@ -114,6 +114,7 @@ const manageRoutes = {
   "GET /v1/autopilot/brief": { brief: null },
   "GET /v1/autopilot/outreach/pitches?status=draft&followUpDue=true": { pitches: [] },
   "GET /v1/autopilot/outreach/pitches/pitch-1": { pitch },
+  "POST /v1/autopilot/outreach/pitches": { pitch: { ...pitch, origin: "person", note: "Met at SaaStr" } },
   "PATCH /v1/autopilot/outreach/pitches/pitch-1": { pitch },
   "POST /v1/autopilot/outreach/pitches/pitch-1/send": { pitch, scheduledAt: null },
   "POST /v1/autopilot/outreach/pitches/pitch-1/cancel": { pitch },
@@ -156,10 +157,20 @@ before(async () => {
       "POST /v1/autopilot/workflows/workflow-1/run": [202, { runId: "workflow-run-1" }],
       ...Object.fromEntries(Object.entries(manageRoutes).map(([key, data]) => [key, [200, data]])),
     };
+    const alreadyPitched =
+      route === "POST /v1/autopilot/outreach/pitches" && body.includes("already-pitched")
+        ? [
+            409,
+            {
+              error:
+                "This page already has a pitch (pitch-1). Mark that one sent or update its details instead of logging it again.",
+            },
+          ]
+        : null;
     const [code, data] =
       req.headers.authorization === "Bearer test-read-only-key" && req.method !== "GET"
         ? [403, { error: "Missing required scope: autopilot.write" }]
-        : (routes[route] ?? [404, { error: "Not found" }]);
+        : (alreadyPitched ?? routes[route] ?? [404, { error: "Not found" }]);
     res.writeHead(code, { "Content-Type": "application/json" }).end(JSON.stringify(data));
   }).listen(0, "127.0.0.1");
   await once(upstream, "listening");
@@ -240,6 +251,7 @@ const WRITE_TOOLS = [
   "dismiss_autopilot_finding",
   "edit_outreach_pitch",
   "hold_autopilot_finding",
+  "log_outreach_contact",
   "mark_outreach_pitch_listed",
   "mark_outreach_pitch_sent",
   "merge_autopilot_finding",
@@ -412,6 +424,12 @@ test("forwards settings, findings, rules, workflows, runs, the brief and outreac
     ],
     ["get_outreach_pitch", { pitchId: "pitch-1" }, "GET /v1/autopilot/outreach/pitches/pitch-1"],
     [
+      "log_outreach_contact",
+      { url: "https://example.com/list", name: "Liz", email: "liz@example.com", note: "Met at SaaStr" },
+      "POST /v1/autopilot/outreach/pitches",
+      { url: "https://example.com/list", name: "Liz", email: "liz@example.com", note: "Met at SaaStr" },
+    ],
+    [
       "edit_outreach_pitch",
       { pitchId: "pitch-1", subject: "your list" },
       "PATCH /v1/autopilot/outreach/pitches/pitch-1",
@@ -442,6 +460,12 @@ test("forwards settings, findings, rules, workflows, runs, the brief and outreac
       "PATCH /v1/autopilot/outreach/pitches/pitch-1/details",
       { stage: "negotiating", followUpAt: null },
     ],
+    [
+      "update_outreach_pitch_details",
+      { pitchId: "pitch-1", note: "Prefers Tuesdays" },
+      "PATCH /v1/autopilot/outreach/pitches/pitch-1/details",
+      { note: "Prefers Tuesdays" },
+    ],
     ["delete_outreach_pitch", { pitchId: "pitch-1" }, "DELETE /v1/autopilot/outreach/pitches/pitch-1"],
     ["get_outreach_mailbox", {}, "GET /v1/autopilot/outreach/mailbox"],
     ["disconnect_outreach_mailbox", {}, "DELETE /v1/autopilot/outreach/mailbox"],
@@ -452,6 +476,16 @@ test("forwards settings, findings, rules, workflows, runs, the brief and outreac
     assert.deepEqual(result.structuredContent, manageRoutes[route], tool);
     assert.deepEqual(requests.at(-1), { route, body, authorization: bearer, workspace }, tool);
   }
+});
+
+test("log_outreach_contact hands the existing pitch's id to the agent on a conflict", async () => {
+  const { result } = await callTool("log_outreach_contact", {
+    url: "https://example.com/already-pitched",
+    name: "Liz",
+  });
+  assert.equal(result.isError, true, JSON.stringify(result));
+  assert.match(result.content[0].text, /already has a pitch \(pitch-1\).*HTTP 409/s);
+  assert.deepEqual(requests.at(-1).route, "POST /v1/autopilot/outreach/pitches");
 });
 
 test("rejects invalid inputs before calling the API and reports an API permission denial", async () => {
@@ -475,6 +509,9 @@ test("rejects invalid inputs before calling the API and reports an API permissio
     ["edit_outreach_pitch", { pitchId: "pitch-1", to: "liz at example" }],
     ["send_outreach_pitch", { pitchId: "pitch-1", sendAt: "tomorrow" }],
     ["update_outreach_pitch_details", { pitchId: "pitch-1", stage: "won" }],
+    ["log_outreach_contact", { name: "Liz" }],
+    ["log_outreach_contact", { url: "https://example.com", stage: "drafted" }],
+    ["log_outreach_contact", { url: "https://example.com", email: "liz at example" }],
   ]) {
     const reply = await callTool(name, args);
     assert.ok(reply.error || reply.result?.isError, JSON.stringify(reply));

@@ -49,7 +49,6 @@ const EXCLUDED_SPEC_ROUTES = {
     "unbounded full answers; list_geo_prompt_result_summaries and get_geo_prompt_result_detail cover it",
   "GET /v2/eve/v1/session/{sessionId}/stream":
     "NDJSON event stream, cannot be surfaced through a request/response tool",
-  "POST /v1/autopilot/outreach/pitches": "log_outreach_contact lands in #111; remove this entry when it merges",
 };
 
 /** Routes covered by code that does not go through NotraClient. */

@@ -54,6 +54,7 @@ import type {
   EditOutreachPitchRequest,
   ListAutopilotFindingsParams,
   ListOutreachPitchesParams,
+  LogOutreachContactRequest,
   RunAutopilotRequest,
   UpdateAutopilotSettingsRequest,
   UpdateOutreachPitchDetailsRequest,
@@ -441,6 +442,12 @@ export class NotraClient {
 
   async listOutreachPitches(params: ListOutreachPitchesParams): Promise<AutopilotApiObject> {
     return this.request<AutopilotApiObject>("GET", "/v1/autopilot/outreach/pitches", { params });
+  }
+
+  async logOutreachContact(body: LogOutreachContactRequest): Promise<AutopilotApiObject> {
+    return this.request<AutopilotApiObject, LogOutreachContactRequest>("POST", "/v1/autopilot/outreach/pitches", {
+      body,
+    });
   }
 
   async getOutreachPitch(pitchId: string): Promise<AutopilotApiObject> {
