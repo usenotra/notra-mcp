@@ -132,6 +132,8 @@ const authkitDomain = "autopilot-test.authkit.example";
 const resource = "https://notra-mcp.example/mcp";
 const requests = [];
 let upstream;
+let defaultServer;
+let defaultUrl;
 let server;
 let url;
 let nextId = 1;
@@ -167,20 +169,25 @@ before(async () => {
   process.env.NOTRA_MCP_RESOURCE = resource;
 
   const { createServer } = await import("../build/server.js");
+  delete process.env.NOTRA_MCP_ENABLE_OUTREACH;
+  defaultServer = createServer();
+  ({ url: defaultUrl } = await defaultServer.listen(0, { host: "127.0.0.1" }));
+
+  process.env.NOTRA_MCP_ENABLE_OUTREACH = "true";
   server = createServer();
   ({ url } = await server.listen(0, { host: "127.0.0.1" }));
 });
 
 after(async () => {
   try {
-    await server?.close();
+    await Promise.all([server?.close(), defaultServer?.close()]);
   } finally {
     if (upstream) await new Promise((resolve) => upstream.close(resolve));
   }
 });
 
-async function rpc(method, params, { toolsets, authorization = bearer } = {}) {
-  const endpoint = new URL(url);
+async function rpc(method, params, { toolsets, authorization = bearer, endpointUrl = url } = {}) {
+  const endpoint = new URL(endpointUrl);
   if (toolsets) endpoint.searchParams.set("toolsets", toolsets);
   const id = nextId++;
   const response = await fetch(endpoint, {
@@ -248,6 +255,11 @@ const WRITE_TOOLS = [
   "write_autopilot_finding",
 ];
 const isAutopilotTool = (name) => READ_ONLY_TOOLS.includes(name) || WRITE_TOOLS.includes(name);
+const initializeParams = {
+  protocolVersion: "2025-06-18",
+  capabilities: {},
+  clientInfo: { name: "test", version: "1" },
+};
 
 test("discovers the Autopilot tools and enforces toolset filtering", async () => {
   const names = [...READ_ONLY_TOOLS, ...WRITE_TOOLS].sort();
@@ -267,9 +279,49 @@ test("discovers the Autopilot tools and enforces toolset filtering", async () =>
   assert.ok(autopilot.result.tools.some((tool) => tool.name === "whoami"));
   assert.ok(!autopilot.result.tools.some((tool) => tool.name === "list_posts"));
   assert.ok(!geo.result.tools.some((tool) => isAutopilotTool(tool.name)));
+  const settings = autopilot.result.tools.find((tool) => tool.name === "update_autopilot_settings");
+  assert.ok(settings.inputSchema.properties.jobs.propertyNames.enum.includes("outreach"));
+  const { result: initialized } = await rpc("initialize", initializeParams);
+  assert.match(initialized.instructions, /list_outreach_pitches/);
   const hidden = await callTool("get_autopilot_status", {}, { toolsets: "geo" });
   assert.equal(hidden.result.isError, true);
   assert.equal(requests.length, 0);
+});
+
+test("does not advertise or dispatch outreach by default, even with the Autopilot toolset selected", async () => {
+  const options = { endpointUrl: defaultUrl, toolsets: "autopilot" };
+  const {
+    result: { tools },
+  } = await rpc("tools/list", undefined, options);
+  const autopilotTools = tools.filter((tool) => isAutopilotTool(tool.name));
+  const names = [...READ_ONLY_TOOLS, ...WRITE_TOOLS].filter((name) => !name.includes("_outreach_")).sort();
+  assert.deepEqual(autopilotTools.map((tool) => tool.name).sort(), names);
+  const settings = autopilotTools.find((tool) => tool.name === "update_autopilot_settings");
+  assert.ok(!settings.inputSchema.properties.jobs.propertyNames.enum.includes("outreach"));
+  assert.doesNotMatch(JSON.stringify(settings.inputSchema), /outreach/i);
+
+  const { result: initialized } = await rpc("initialize", initializeParams, options);
+  assert.doesNotMatch(initialized.instructions, /outreach/i);
+
+  const requestCount = requests.length;
+  for (const [name, args] of [
+    ["list_outreach_pitches", {}],
+    ["send_outreach_pitch", { pitchId: "pitch-1" }],
+    ["update_autopilot_settings", { jobs: { outreach: true } }],
+  ]) {
+    const reply = await callTool(name, args, options);
+    assert.ok(reply.error || reply.result?.isError, JSON.stringify(reply));
+  }
+  assert.equal(requests.length, requestCount);
+
+  const { result } = await callTool("update_autopilot_settings", { jobs: { links: false } }, options);
+  assert.deepEqual(result.structuredContent, manageRoutes["PATCH /v1/autopilot/settings"]);
+  assert.deepEqual(requests.at(-1), {
+    route: "PATCH /v1/autopilot/settings",
+    body: { jobs: { links: false } },
+    authorization: bearer,
+    workspace,
+  });
 });
 
 test("forwards status and run controls with the request's workspace and account key", async () => {
@@ -310,9 +362,9 @@ test("forwards settings, findings, rules, workflows, runs, the brief and outreac
   const calls = [
     [
       "update_autopilot_settings",
-      { approvals: { posts: "auto" }, jobs: { refresh: false }, releaseFilters: { repositories: [] } },
+      { approvals: { posts: "auto" }, jobs: { refresh: false, outreach: true }, releaseFilters: { repositories: [] } },
       "PATCH /v1/autopilot/settings",
-      { approvals: { posts: "auto" }, jobs: { refresh: false }, releaseFilters: { repositories: [] } },
+      { approvals: { posts: "auto" }, jobs: { refresh: false, outreach: true }, releaseFilters: { repositories: [] } },
     ],
     ["list_autopilot_findings", { status: "proposed", limit: 5 }, "GET /v1/autopilot/findings?status=proposed&limit=5"],
     ["get_autopilot_finding", { findingId: "finding-1" }, "GET /v1/autopilot/findings/finding-1"],

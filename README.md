@@ -196,13 +196,13 @@ Without a token, tracking is disabled. OAuth calls are attributed to the WorkOS 
 
 ## Toolsets
 
-All tools are exposed by default. The `geo` and `content` toolsets use about 13k and 11k tokens of agent context, respectively. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
+All toolsets are exposed by default. The [Autopilot outreach tools](#autopilot) require an opt-in. The `geo` and `content` toolsets use about 13k and 11k tokens of agent context, respectively. To load only what you need, pick toolsets with `NOTRA_MCP_TOOLSETS` (stdio and HTTP) or the `toolsets` query parameter on the remote endpoint:
 
 | Toolset     | Tools                                                                                                     |
 | ----------- | --------------------------------------------------------------------------------------------------------- |
 | `content`   | Posts, Sites, brand identities, integrations, schedules, event triggers, webhooks, skills, feedback inbox |
 | `geo`       | Projects and every GEO tool                                                                               |
-| `autopilot` | Autopilot settings, findings, rules, workflows, runs, the daily brief and outreach pitches                |
+| `autopilot` | Autopilot settings, findings, rules, workflows, runs, the daily brief and opt-in outreach                 |
 
 Workspace tools and `submit_feedback` are always available.
 
@@ -226,6 +226,8 @@ https://mcp.usenotra.com/mcp?toolsets=geo
 On `/mcp`, an account key can use one connection for several workspaces: send `X-Notra-Organization-Id: <id-or-slug>` on each request and change it on the next call. If your client cannot vary headers, pin the workspace with [`/mcp/<slug>`](#workspace-scoped-url) or `NOTRA_ORGANIZATION_ID` (stdio). OAuth tokens stay in their consent workspace.
 
 ### Autopilot
+
+Outreach pitch and mailbox tools are off by default. Set `NOTRA_MCP_ENABLE_OUTREACH=true` in the stdio process or HTTP server environment before starting it to expose them and allow changes to `jobs.outreach` through `update_autopilot_settings`. The flag changes the MCP interface only; it doesn't change existing Notra workspace settings or stop scheduled outreach.
 
 | Tool                             | Description                                                                                   |
 | -------------------------------- | --------------------------------------------------------------------------------------------- |
