@@ -184,6 +184,7 @@ import type {
   GeoWebAnalyticsResponse,
 } from "./types/geo-web-analytics.js";
 import type {
+  GeoContentCitationsResponse,
   GeoPromptResultDetailResponse,
   GeoPromptResultSummariesResponse,
   GeoPromptResultSummaryParams,
@@ -1242,6 +1243,12 @@ export class NotraClient {
     params?: GeoWindowParams,
   ): Promise<GeoVisibilityTimeseriesResponse> {
     return this.request<GeoVisibilityTimeseriesResponse>("GET", this.geoPath(projectId, "/visibility/timeseries"), {
+      params,
+    });
+  }
+
+  async getGeoContentCitations(projectId: string, params?: GeoWindowParams): Promise<GeoContentCitationsResponse> {
+    return this.request<GeoContentCitationsResponse>("GET", this.geoPath(projectId, "/visibility/content-citations"), {
       params,
     });
   }

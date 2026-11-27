@@ -463,6 +463,7 @@ GEO features are scoped to a project. Most GEO tools take a `projectId`; call `l
 | `get_geo_changes`                  | Changes between the two latest scans                        |
 | `get_geo_visibility_overview`      | Mention rates per answer engine                             |
 | `get_geo_visibility_timeseries`    | Daily mention counts per engine                             |
+| `get_geo_content_citations`        | Published posts, their first AI citation and prompt lift    |
 | `list_geo_prompt_result_summaries` | Filtered, paginated results without full answers or URLs    |
 | `get_geo_prompt_result_detail`     | Full answer and sources for one check                       |
 | `get_geo_prompt_history`           | Compact historical checks for one prompt                    |

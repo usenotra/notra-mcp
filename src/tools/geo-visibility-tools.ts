@@ -1,6 +1,7 @@
 import {
   getGeoVisibilityOverviewSchema,
   getGeoVisibilityTimeseriesSchema,
+  getGeoContentCitationsSchema,
   getGeoPromptResultDetailSchema,
   getGeoCompetitorShareSchema,
   geoCompetitorShareOutputSchema,
@@ -65,6 +66,24 @@ export function registerGeoVisibilityTools(server: ToolRegistry, client: NotraCl
       ),
     },
     ({ projectId, ...params }) => handleError(() => client.getGeoVisibilityTimeseries(projectId, params)),
+  );
+
+  server.tool(
+    {
+      name: "get_geo_content_citations",
+      description:
+        "Get the project's published posts and whether AI answers cite them: the first-cited dots on the dashboard's visibility chart. Covers posts published in the window or first cited in it; without days or from, the last 30 days. Returns configured, from, to, published (posts published in the window), cited (of those, the ones an AI answer has cited since), medianDaysToFirstCitation, impactMinAnswers, posts (newest first, per post: postId, title, url, publishedDay, firstCitedDay, daysToFirstCitation, firstCitedBy engine and impact) and the organization. impact compares the prompt the post's GEO brief targeted with all other prompts in the 14 days before and after publishing: liftPts is the targeted prompt's change minus the others' change in percentage points; status not_enough_data means fewer than impactMinAnswers answers on a side. impact is null when the brief targeted no tracked prompt or the post hasn't been cited.",
+      annotations: {
+        title: "Get GEO Content Citations",
+        readOnlyHint: true,
+        openWorldHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+      },
+      inputSchema: shareJsonSchema(getGeoContentCitationsSchema),
+      outputSchema: shareJsonSchema(apiOutputSchema("getGeoContentCitations")),
+    },
+    ({ projectId, ...params }) => handleError(() => client.getGeoContentCitations(projectId, params)),
   );
 
   server.tool(

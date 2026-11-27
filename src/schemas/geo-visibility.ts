@@ -17,6 +17,11 @@ export const getGeoVisibilityTimeseriesSchema = z.object({
   ...geoWindowShape,
 });
 
+export const getGeoContentCitationsSchema = z.object({
+  projectId: projectIdSchema,
+  ...geoWindowShape,
+});
+
 export const listGeoPromptResultSummariesSchema = z.object({
   projectId: projectIdSchema,
   ...geoWindowShape,
