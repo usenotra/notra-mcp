@@ -93,8 +93,13 @@ async function main() {
   const spec = await loadSpec();
   let schemas = collectResponseSchemas(spec);
   const pending = JSON.parse(await readFile(PENDING_SCHEMAS_FILE, "utf8"));
+  const specOperationIds = new Set(
+    Object.values(spec.paths ?? {}).flatMap((item) =>
+      HTTP_METHODS.map((method) => item[method]?.operationId).filter(Boolean),
+    ),
+  );
   for (const [operationId, schema] of Object.entries(pending)) {
-    if (schemas.has(operationId)) {
+    if (specOperationIds.has(operationId)) {
       throw new Error(
         `${operationId} is in the spec now; remove it from ${path.relative(ROOT, PENDING_SCHEMAS_FILE)}.`,
       );
