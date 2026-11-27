@@ -149,6 +149,7 @@ export type ApiOperationId =
   | "listSkills"
   | "listWebhookDeliveries"
   | "listWebhookEndpoints"
+  | "logOutreachPitch"
   | "markOutreachPitchListed"
   | "markOutreachPitchSent"
   | "mergeAutopilotFinding"
@@ -545,9 +546,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
             required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
           },
+          origin: {
+            type: "string",
+            enum: ["autopilot", "person"],
+            description:
+              "autopilot: Autopilot found the page and drafted the pitch. person: someone logged the contact themselves",
+          },
           body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
           from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
-          reason: { type: "string", description: "Why Autopilot picked this page" },
+          reason: { type: "string", description: "Why Autopilot picked this page; empty for a logged contact" },
+          note: { type: ["string", "null"], description: "The team's own notes on the contact" },
           citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
           competitorsListed: {
             type: "array",
@@ -606,9 +614,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "replyCount",
           "later",
           "deal",
+          "origin",
           "body",
           "from",
           "reason",
+          "note",
           "citedFor",
           "competitorsListed",
           "contactRoutes",
@@ -1841,6 +1851,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 "geo.scan.completed",
                 "geo.scan.failed",
                 "geo.alert.triggered",
+                "autopilot.run.finished",
               ],
             },
             description: "Event types delivered to this endpoint.",
@@ -2517,9 +2528,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
             required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
           },
+          origin: {
+            type: "string",
+            enum: ["autopilot", "person"],
+            description:
+              "autopilot: Autopilot found the page and drafted the pitch. person: someone logged the contact themselves",
+          },
           body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
           from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
-          reason: { type: "string", description: "Why Autopilot picked this page" },
+          reason: { type: "string", description: "Why Autopilot picked this page; empty for a logged contact" },
+          note: { type: ["string", "null"], description: "The team's own notes on the contact" },
           citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
           competitorsListed: {
             type: "array",
@@ -2578,9 +2596,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "replyCount",
           "later",
           "deal",
+          "origin",
           "body",
           "from",
           "reason",
+          "note",
           "citedFor",
           "competitorsListed",
           "contactRoutes",
@@ -2805,6 +2825,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     type: "object",
     properties: {
       canManage: { type: "boolean" },
+      outreachAvailable: { type: "boolean", description: "Whether the workspace has rollout access to Outreach" },
       settings: {
         type: ["object", "null"],
         properties: {
@@ -2837,6 +2858,17 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           },
           maxOpenPullRequests: { type: "integer" },
           draftEmails: { type: "string", enum: ["without_slack", "always"] },
+          slackBriefStyle: {
+            type: "string",
+            enum: ["daily", "single"],
+            description: "daily: a new Slack message each day. single: one message edited each day",
+          },
+          slackBriefMentions: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Who the brief mentions when something needs a decision: here, channel, Slack member or user group ids",
+          },
           releaseFilters: {
             type: "object",
             properties: {
@@ -7330,9 +7362,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
             required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
           },
+          origin: {
+            type: "string",
+            enum: ["autopilot", "person"],
+            description:
+              "autopilot: Autopilot found the page and drafted the pitch. person: someone logged the contact themselves",
+          },
           body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
           from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
-          reason: { type: "string", description: "Why Autopilot picked this page" },
+          reason: { type: "string", description: "Why Autopilot picked this page; empty for a logged contact" },
+          note: { type: ["string", "null"], description: "The team's own notes on the contact" },
           citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
           competitorsListed: {
             type: "array",
@@ -7391,9 +7430,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "replyCount",
           "later",
           "deal",
+          "origin",
           "body",
           "from",
           "reason",
+          "note",
           "citedFor",
           "competitorsListed",
           "contactRoutes",
@@ -7745,8 +7786,9 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           organizationId: { type: "string", description: "Workspace the job runs in." },
           status: {
             type: "string",
-            enum: ["queued", "running", "completed", "failed", "skipped"],
-            description: "Job state. Terminal states are completed, failed, and skipped.",
+            enum: ["queued", "running", "completed", "failed", "skipped", "start_unconfirmed"],
+            description:
+              "Job state. start_unconfirmed means there is no record that the workflow started yet; the workflow may still run. Don't automatically resubmit. Terminal states are completed, failed, and skipped.",
           },
           contentType: {
             type: "string",
@@ -8660,6 +8702,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               "geo.scan.completed",
               "geo.scan.failed",
               "geo.alert.triggered",
+              "autopilot.run.finished",
             ],
             description: "Type of event the delivery carries.",
           },
@@ -9234,9 +9277,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
             required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
           },
+          origin: {
+            type: "string",
+            enum: ["autopilot", "person"],
+            description:
+              "autopilot: Autopilot found the page and drafted the pitch. person: someone logged the contact themselves",
+          },
           body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
           from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
-          reason: { type: "string", description: "Why Autopilot picked this page" },
+          reason: { type: "string", description: "Why Autopilot picked this page; empty for a logged contact" },
+          note: { type: ["string", "null"], description: "The team's own notes on the contact" },
           citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
           competitorsListed: {
             type: "array",
@@ -9295,9 +9345,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "replyCount",
           "later",
           "deal",
+          "origin",
           "body",
           "from",
           "reason",
+          "note",
           "citedFor",
           "competitorsListed",
           "contactRoutes",
@@ -10024,7 +10076,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
             lastError: {
               type: ["string", "null"],
-              description: "Why the import failed or is waiting. Cleared when a chunk succeeds.",
+              enum: [
+                "The import stopped and could not be resumed",
+                "The import stopped before it finished reading the export",
+                "Waiting for the connection's request budget",
+                "Waiting for earlier imported rows to be removed",
+                "The import failed",
+                null,
+              ],
+              description:
+                "A fixed reason why an import failed or is waiting on Notra. Null for provider rate limits and other statuses. Provider diagnostics are not included.",
             },
             retryAt: {
               type: ["string", "null"],
@@ -12094,6 +12155,12 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
               },
               required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
             },
+            origin: {
+              type: "string",
+              enum: ["autopilot", "person"],
+              description:
+                "autopilot: Autopilot found the page and drafted the pitch. person: someone logged the contact themselves",
+            },
           },
           required: [
             "id",
@@ -12111,6 +12178,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             "replyCount",
             "later",
             "deal",
+            "origin",
           ],
         },
       },
@@ -13099,6 +13167,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                 "geo.scan.completed",
                 "geo.scan.failed",
                 "geo.alert.triggered",
+                "autopilot.run.finished",
               ],
               description: "Type of event the delivery carries.",
             },
@@ -13178,6 +13247,7 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
                   "geo.scan.completed",
                   "geo.scan.failed",
                   "geo.alert.triggered",
+                  "autopilot.run.finished",
                 ],
               },
               description: "Event types delivered to this endpoint.",
@@ -13192,6 +13262,152 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
     },
     required: ["endpoints"],
     description: "The workspace's webhook endpoints.",
+  },
+  logOutreachPitch: {
+    type: "object",
+    properties: {
+      pitch: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: {
+            type: "string",
+            enum: ["draft", "scheduled", "sent", "listed", "expired", "skipped"],
+            description:
+              "draft: waiting to be sent. scheduled: queued to send later. sent: out. listed: the page lists the brand. expired: no listing weeks after sending. skipped: deleted or passed on",
+          },
+          stage: {
+            type: ["string", "null"],
+            enum: ["drafted", "sent", "no_reply", "replied", "negotiating", "accepted", "declined", null],
+            description:
+              "Where the conversation stands: drafted, sent, no_reply, replied, negotiating (they want payment), accepted or declined",
+          },
+          page: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              domain: { type: "string" },
+              title: { type: "string" },
+              publisher: { type: "string" },
+            },
+            required: ["url", "domain", "title", "publisher"],
+          },
+          recipient: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              email: { type: ["string", "null"], description: "Null when the page offers only a form or contact page" },
+            },
+            required: ["name", "email"],
+          },
+          subject: { type: "string" },
+          problem: {
+            type: ["string", "null"],
+            enum: ["bounced", "complained", "failed", null],
+            description: "Why the sent mail didn't arrive, if it didn't",
+          },
+          sentAt: { type: ["string", "null"], format: "date-time" },
+          scheduledAt: { type: ["string", "null"], format: "date-time" },
+          followUpAt: { type: ["string", "null"], format: "date-time" },
+          followUpDue: { type: "boolean" },
+          lastActivityAt: { type: "string", format: "date-time" },
+          replyCount: { type: "integer" },
+          later: { type: "boolean", description: "A draft put off with Later: it is back in the next daily brief" },
+          deal: {
+            type: ["object", "null"],
+            properties: {
+              decision: { type: "string", enum: ["free", "paid", "declined", "undecided"] },
+              amount: { type: ["number", "null"] },
+              currency: { type: ["string", "null"] },
+              terms: { type: ["string", "null"] },
+              placementUrl: { type: ["string", "null"] },
+              summary: { type: "string", description: "What they said and what to do next" },
+            },
+            required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
+          },
+          origin: {
+            type: "string",
+            enum: ["autopilot", "person"],
+            description:
+              "autopilot: Autopilot found the page and drafted the pitch. person: someone logged the contact themselves",
+          },
+          body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
+          from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
+          reason: { type: "string", description: "Why Autopilot picked this page; empty for a logged contact" },
+          note: { type: ["string", "null"], description: "The team's own notes on the contact" },
+          citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
+          competitorsListed: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tracked competitors the page lists instead",
+          },
+          contactRoutes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { type: { type: "string" }, value: { type: "string" }, foundOn: { type: "string" } },
+              required: ["type", "value", "foundOn"],
+            },
+          },
+          suggestedSendAt: {
+            type: ["string", "null"],
+            format: "date-time",
+            description:
+              "For a draft: the next weekday morning in the recipient's time zone, or null when now is that morning",
+          },
+          optedOut: {
+            type: "boolean",
+            description: "They asked not to be emailed again; the site isn't pitched again",
+          },
+          thread: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                at: { type: "string", format: "date-time" },
+                from: { type: "string" },
+                kind: {
+                  type: "string",
+                  enum: ["answer", "stop", "autoreply", "unrelated"],
+                  description: "answer and stop move the pitch; autoreply and unrelated are kept but change nothing",
+                },
+                text: { type: "string" },
+              },
+              required: ["at", "from", "kind", "text"],
+            },
+          },
+        },
+        required: [
+          "id",
+          "status",
+          "stage",
+          "page",
+          "recipient",
+          "subject",
+          "problem",
+          "sentAt",
+          "scheduledAt",
+          "followUpAt",
+          "followUpDue",
+          "lastActivityAt",
+          "replyCount",
+          "later",
+          "deal",
+          "origin",
+          "body",
+          "from",
+          "reason",
+          "note",
+          "citedFor",
+          "competitorsListed",
+          "contactRoutes",
+          "suggestedSendAt",
+          "optedOut",
+          "thread",
+        ],
+      },
+    },
+    required: ["pitch"],
   },
   markOutreachPitchListed: {
     type: "object",
@@ -13255,9 +13471,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
             required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
           },
+          origin: {
+            type: "string",
+            enum: ["autopilot", "person"],
+            description:
+              "autopilot: Autopilot found the page and drafted the pitch. person: someone logged the contact themselves",
+          },
           body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
           from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
-          reason: { type: "string", description: "Why Autopilot picked this page" },
+          reason: { type: "string", description: "Why Autopilot picked this page; empty for a logged contact" },
+          note: { type: ["string", "null"], description: "The team's own notes on the contact" },
           citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
           competitorsListed: {
             type: "array",
@@ -13316,9 +13539,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "replyCount",
           "later",
           "deal",
+          "origin",
           "body",
           "from",
           "reason",
+          "note",
           "citedFor",
           "competitorsListed",
           "contactRoutes",
@@ -13392,9 +13617,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
             required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
           },
+          origin: {
+            type: "string",
+            enum: ["autopilot", "person"],
+            description:
+              "autopilot: Autopilot found the page and drafted the pitch. person: someone logged the contact themselves",
+          },
           body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
           from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
-          reason: { type: "string", description: "Why Autopilot picked this page" },
+          reason: { type: "string", description: "Why Autopilot picked this page; empty for a logged contact" },
+          note: { type: ["string", "null"], description: "The team's own notes on the contact" },
           citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
           competitorsListed: {
             type: "array",
@@ -13453,9 +13685,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "replyCount",
           "later",
           "deal",
+          "origin",
           "body",
           "from",
           "reason",
+          "note",
           "citedFor",
           "competitorsListed",
           "contactRoutes",
@@ -14555,9 +14789,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
             required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
           },
+          origin: {
+            type: "string",
+            enum: ["autopilot", "person"],
+            description:
+              "autopilot: Autopilot found the page and drafted the pitch. person: someone logged the contact themselves",
+          },
           body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
           from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
-          reason: { type: "string", description: "Why Autopilot picked this page" },
+          reason: { type: "string", description: "Why Autopilot picked this page; empty for a logged contact" },
+          note: { type: ["string", "null"], description: "The team's own notes on the contact" },
           citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
           competitorsListed: {
             type: "array",
@@ -14616,9 +14857,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "replyCount",
           "later",
           "deal",
+          "origin",
           "body",
           "from",
           "reason",
+          "note",
           "citedFor",
           "competitorsListed",
           "contactRoutes",
@@ -14931,11 +15174,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       deduplicated: {
         type: "boolean",
         description:
-          "True when an existing feedback was returned instead of a new one: same idempotencyKey, or without one, an identical submission within 10 minutes.",
+          "True when the same submission was acknowledged again instead of creating a new entry. The response does not show later triage changes.",
       },
     },
     required: ["feedback", "deduplicated"],
-    description: "The stored feedback and whether it matched an earlier submission.",
+    description: "Feedback as filed and whether it matched an earlier submission.",
   },
   submitOrganizationFeedback: {
     type: "object",
@@ -15031,11 +15274,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
       deduplicated: {
         type: "boolean",
         description:
-          "True when an existing feedback was returned instead of a new one: same idempotencyKey, or without one, an identical submission within 10 minutes.",
+          "True when the same submission was acknowledged again instead of creating a new entry. The response does not show later triage changes.",
       },
     },
     required: ["feedback", "deduplicated"],
-    description: "The stored feedback and whether it matched an earlier submission.",
+    description: "Feedback as filed and whether it matched an earlier submission.",
   },
   suggestGeoCompetitors: {
     type: "object",
@@ -15150,9 +15393,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
             required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
           },
+          origin: {
+            type: "string",
+            enum: ["autopilot", "person"],
+            description:
+              "autopilot: Autopilot found the page and drafted the pitch. person: someone logged the contact themselves",
+          },
           body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
           from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
-          reason: { type: "string", description: "Why Autopilot picked this page" },
+          reason: { type: "string", description: "Why Autopilot picked this page; empty for a logged contact" },
+          note: { type: ["string", "null"], description: "The team's own notes on the contact" },
           citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
           competitorsListed: {
             type: "array",
@@ -15211,9 +15461,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "replyCount",
           "later",
           "deal",
+          "origin",
           "body",
           "from",
           "reason",
+          "note",
           "citedFor",
           "competitorsListed",
           "contactRoutes",
@@ -16271,9 +16523,16 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
             },
             required: ["decision", "amount", "currency", "terms", "placementUrl", "summary"],
           },
+          origin: {
+            type: "string",
+            enum: ["autopilot", "person"],
+            description:
+              "autopilot: Autopilot found the page and drafted the pitch. person: someone logged the contact themselves",
+          },
           body: { type: "string", description: "Plain text; the unsubscribe line is added when it is sent" },
           from: { type: ["string", "null"], description: "The mailbox it went out from, or would go out from" },
-          reason: { type: "string", description: "Why Autopilot picked this page" },
+          reason: { type: "string", description: "Why Autopilot picked this page; empty for a logged contact" },
+          note: { type: ["string", "null"], description: "The team's own notes on the contact" },
           citedFor: { type: "array", items: { type: "string" }, description: "AI prompts whose answers cite the page" },
           competitorsListed: {
             type: "array",
@@ -16332,9 +16591,11 @@ export const API_RESPONSE_SCHEMAS: Record<ApiOperationId, JSONSchema.BaseSchema>
           "replyCount",
           "later",
           "deal",
+          "origin",
           "body",
           "from",
           "reason",
+          "note",
           "citedFor",
           "competitorsListed",
           "contactRoutes",

@@ -6,6 +6,12 @@ import { loadSpec } from "./load-openapi-spec.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUTPUT_FILE = path.join(ROOT, "src", "schemas", "api-responses.ts");
+/**
+ * Response schemas for operations the client already calls but the production
+ * spec does not have yet (see PENDING_API_ROUTES in check-api-coverage.mjs).
+ * Remove an entry once the operation appears in the spec.
+ */
+const PENDING_SCHEMAS_FILE = path.join(ROOT, "scripts", "pending-response-schemas.json");
 const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
 const SUCCESS_STATUSES = ["200", "201", "202"];
 const DROPPED_KEYWORDS = new Set(["example", "examples"]);
@@ -85,7 +91,17 @@ async function formatWithPrettier(source) {
 async function main() {
   const check = process.argv.includes("--check");
   const spec = await loadSpec();
-  const schemas = collectResponseSchemas(spec);
+  let schemas = collectResponseSchemas(spec);
+  const pending = JSON.parse(await readFile(PENDING_SCHEMAS_FILE, "utf8"));
+  for (const [operationId, schema] of Object.entries(pending)) {
+    if (schemas.has(operationId)) {
+      throw new Error(
+        `${operationId} is in the spec now; remove it from ${path.relative(ROOT, PENDING_SCHEMAS_FILE)}.`,
+      );
+    }
+    schemas.set(operationId, schema);
+  }
+  schemas = new Map([...schemas].sort(([left], [right]) => left.localeCompare(right)));
   const rendered = await formatWithPrettier(render(schemas));
 
   if (check) {
