@@ -1,0 +1,32 @@
+src/tools/autopilot-outreach-tools.ts
+  s_49803bda86e6af::t_12cd199a975fc4 7,56-72,155
+src/types/autopilot.ts
+  s_49803bda86e6af::t_12cd199a975fc4 6,16
+src/schemas/autopilot.ts
+  s_49803bda86e6af::t_12cd199a975fc4 246-275,279-286,341
+  s_49803bda86e6af::t_0abfb11a634186 276-278
+tests/autopilot.test.mjs
+  s_49803bda86e6af::t_e21bcfdb286fd4 85,89,244,492-494
+  s_49803bda86e6af::t_7bb83d28864d97 117,417-421,453-457
+README.md
+  s_49803bda86e6af::t_12cd199a975fc4 255
+  s_49803bda86e6af::t_7bb83d28864d97 262
+src/notra-client.ts
+  s_49803bda86e6af::t_12cd199a975fc4 57,447-450
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "b06a62f5da7f4afb0ad0fcc84fff72e709365356",
+  "prompts": {},
+  "sessions": {
+    "s_49803bda86e6af": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a60e02d2-f41d-410c-a0a8-da31c830e442",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Jan Burzinski <156842394+janburzinski@users.noreply.github.com>"
+    }
+  }
+}
