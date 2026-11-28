@@ -15,8 +15,10 @@ import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
-const READ = "Requires OAuth or an account API key with autopilot.read.";
-const WRITE = "Requires a workspace owner or admin with autopilot.write.";
+const READ =
+  "Requires OAuth, or an account API key with a selected workspace, and autopilot.read; organization API keys are refused.";
+const WRITE =
+  "Requires a workspace owner or admin, through OAuth or an account API key with a selected workspace, and autopilot.write; organization API keys are refused.";
 const readOnly = {
   readOnlyHint: true,
   openWorldHint: false,
