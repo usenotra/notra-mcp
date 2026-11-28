@@ -130,7 +130,7 @@ An account API key belongs to you rather than one workspace, so it works in ever
 }
 ```
 
-Without it, tools fail with a message asking you to pick a workspace. `list_workspaces` works without a selection and shows the ids. Organization API keys ignore `NOTRA_ORGANIZATION_ID`.
+Without it, tools fail with a message that names the workspaces the key can use and how to pick one. `list_workspaces` and `whoami` work without a selection: they return `selectionRequired: true` and no current workspace. Organization API keys ignore `NOTRA_ORGANIZATION_ID`.
 
 ## Remote MCP (OAuth)
 

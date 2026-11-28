@@ -9,7 +9,7 @@ import { apiErrorSchema } from "../schemas/api.js";
 export function describeApiError(response: Response, data: unknown, describeMessage: (message: string) => string) {
   const body = apiErrorSchema.safeParse(data).data;
   const fallback = `HTTP ${response.status}: ${response.statusText}`;
-  const message = body?.message ?? body?.error ?? fallback;
+  const message = readApiErrorMessage(data) ?? fallback;
   const described = describeMessage(message);
   // Workspace-selection errors are already rewritten into full instructions.
   if (described !== message) {
@@ -30,6 +30,12 @@ export function describeApiError(response: Response, data: unknown, describeMess
     parts.push(`Retry after ${retryAfter}s.`);
   }
   return parts.join(" ");
+}
+
+/** The API's own error message, if the body carries one. */
+export function readApiErrorMessage(data: unknown): string | undefined {
+  const body = apiErrorSchema.safeParse(data).data;
+  return body?.message ?? body?.error;
 }
 
 function retryAfterSeconds(value: string | null): number | undefined {

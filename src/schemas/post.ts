@@ -3,7 +3,11 @@ import {
   CONTENT_TYPE_VALUES,
   CREATABLE_CONTENT_TYPE_VALUES,
   GENERATABLE_CONTENT_TYPE_VALUES,
+  POST_MARKDOWN_MAX_LENGTH,
+  POST_SLUG_MAX_LENGTH,
+  POST_SLUG_PATTERN,
   POST_STATUS_VALUES,
+  POST_TITLE_MAX_LENGTH,
 } from "../constants/post.js";
 import { apiResponsePropertySchema } from "../utils/output-schema.js";
 import { geoWindowShape } from "./geo-fields.js";
@@ -55,6 +59,7 @@ export const createPostSchema = z.object({
     .string()
     .trim()
     .min(1)
+    .max(POST_TITLE_MAX_LENGTH)
     .describe("Headline of the post, shown as its title in Notra and on any site it publishes to."),
   contentType: z
     .enum(CREATABLE_CONTENT_TYPE_VALUES)
@@ -65,12 +70,17 @@ export const createPostSchema = z.object({
     .string()
     .trim()
     .min(1)
+    .max(POST_SLUG_MAX_LENGTH)
     .nullable()
     .optional()
     .describe(
       "Path segment the post uses in its URL, for blog posts and changelogs only. Notra normalizes it to lowercase letters, numbers and hyphens. Omit to let Notra derive one.",
     ),
-  markdown: z.string().optional().describe("Post body in Markdown. Omit for an empty draft."),
+  markdown: z
+    .string()
+    .max(POST_MARKDOWN_MAX_LENGTH)
+    .optional()
+    .describe("Post body in Markdown. Omit for an empty draft."),
   status: z
     .enum(POST_STATUS_VALUES)
     .optional()
@@ -83,15 +93,17 @@ export const updatePostSchema = z.object({
   postId: z.string().min(1).describe("ID of the post to change, as returned by list_posts or create_post."),
   title: z
     .string()
+    .trim()
     .min(1)
-    .max(120)
+    .max(POST_TITLE_MAX_LENGTH)
     .optional()
     .describe("Replacement headline for the post. Omit to keep the current title."),
   slug: z
     .string()
+    .trim()
     .min(1)
-    .max(160)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .max(POST_SLUG_MAX_LENGTH)
+    .regex(POST_SLUG_PATTERN)
     .optional()
     .nullable()
     .describe(
@@ -100,7 +112,7 @@ export const updatePostSchema = z.object({
   markdown: z
     .string()
     .min(1)
-    .max(100000)
+    .max(POST_MARKDOWN_MAX_LENGTH)
     .optional()
     .describe(
       "Full replacement body in Markdown. It overwrites the whole body, so send the complete text. Omit to keep the current content.",

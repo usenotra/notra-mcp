@@ -6,4 +6,7 @@ export const MCP_BASE_PATH = "/mcp";
 // UTF-8 (for example CJK text). Leave room for that plus the JSON-RPC envelope.
 export const MCP_JSON_BODY_LIMIT_BYTES = GEO_CSV_IMPORT_MAX_LENGTH * 4;
 
-export const MCP_STDIO_URL = "https://mcp.usenotra.com/mcp";
+/** Public URL of the hosted server; workspace-scoped connections append `/<workspace>`. */
+export const MCP_HOSTED_URL = "https://mcp.usenotra.com/mcp";
+
+export const MCP_STDIO_URL = MCP_HOSTED_URL;

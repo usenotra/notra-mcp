@@ -1,5 +1,9 @@
 import { GEO_LONG_RUNNING_TIMEOUT_MS } from "./constants/geo.js";
-import { ORGANIZATION_ID_HEADER } from "./constants/organization.js";
+import {
+  ORGANIZATION_ID_HEADER,
+  ORGANIZATION_SELECTION_REQUIRED_ERROR,
+  WORKSPACE_CHOICES_LOOKUP_TIMEOUT_MS,
+} from "./constants/organization.js";
 import { POST_PULL_REQUEST_TIMEOUT_MS } from "./constants/post.js";
 import { SITE_PUBLISH_TIMEOUT_MS, SITE_WRITE_TIMEOUT_MS } from "./constants/site.js";
 import type {
@@ -27,6 +31,7 @@ import type {
   ListPostsParams,
   ListScheduleRunsParams,
   ListSchedulesParams,
+  Organization,
   PostDeleteResponse,
   PostGenerationStatusResponse,
   CreatePostPullRequestRequest,
@@ -220,10 +225,15 @@ import type {
   StartSiteDeploymentResponse,
 } from "./types/site.js";
 import type { WorkspaceContextResponse } from "./types/workspace.js";
-import { describeApiError } from "./utils/api-error.js";
+import { describeApiError, readApiErrorMessage } from "./utils/api-error.js";
 import { withoutHiddenReadinessChecks } from "./utils/geo-agent-readiness.js";
 import { appendQueryParams } from "./utils/query-params.js";
-import { describeOrganizationError } from "./utils/organization.js";
+import {
+  activeWorkspaces,
+  describeOrganizationError,
+  InvalidWorkspaceSelectionError,
+  isInvalidSelectionError,
+} from "./utils/organization.js";
 import { createRequestSignal } from "./utils/request-scope.js";
 
 function sitePath(siteId: string, suffix: string): string {
@@ -279,6 +289,28 @@ function autopilotFindingPath(findingId: string) {
 
 function outreachPitchPath(pitchId: string) {
   return `/v1/autopilot/outreach/pitches/${encodeURIComponent(pitchId)}`;
+}
+
+/**
+ * The workspaces an account API key can pick from, when the API rejected a
+ * call because none is selected, so the error can name them. Undefined for
+ * every other failure, or when the lookup fails.
+ */
+async function workspaceChoices(
+  client: NotraClient,
+  auth: AuthContext,
+  data: unknown,
+): Promise<Organization[] | undefined> {
+  if (auth.kind !== "apiKey" || auth.organizationId) {
+    return undefined;
+  }
+  if (!readApiErrorMessage(data)?.startsWith(ORGANIZATION_SELECTION_REQUIRED_ERROR)) {
+    return undefined;
+  }
+  const context = await client
+    .getWorkspaceContext(false, true, WORKSPACE_CHOICES_LOOKUP_TIMEOUT_MS)
+    .catch(() => undefined);
+  return context ? activeWorkspaces(context) : undefined;
 }
 
 export class NotraClient {
@@ -340,7 +372,15 @@ export class NotraClient {
     }
 
     if (!response.ok) {
-      throw new Error(describeApiError(response, data, (message) => describeOrganizationError(message, this.auth)));
+      const auth = this.auth;
+      const workspaces = await workspaceChoices(this, auth, data);
+      const message = describeApiError(response, data, (apiMessage) =>
+        describeOrganizationError(apiMessage, auth, workspaces),
+      );
+      const apiMessage = readApiErrorMessage(data);
+      throw apiMessage && isInvalidSelectionError(apiMessage, auth)
+        ? new InvalidWorkspaceSelectionError(message)
+        : new Error(message);
     }
 
     return data as T;
