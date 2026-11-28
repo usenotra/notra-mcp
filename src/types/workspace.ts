@@ -18,6 +18,8 @@ export interface WorkspaceMembership extends Organization {
 
 export interface WorkspaceContextResponse {
   currentWorkspace: Organization;
+  /** Sent by APIs that report it themselves; older ones leave it out. */
+  selectionRequired?: boolean;
   workspaces: WorkspaceMembership[];
   authentication: AuthenticationIdentity;
 }
