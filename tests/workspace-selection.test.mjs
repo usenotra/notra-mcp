@@ -240,3 +240,19 @@ test("post schemas trim titles and reject what the API would reject", async () =
   assert.equal(update.slug, "ship-notes");
   assert.ok(!updatePostSchema.safeParse({ postId: "post_1", title: "x".repeat(121) }).success);
 });
+
+test("the API's own selectionRequired wins over the membership count", async () => {
+  const { isWorkspaceSelectionRequired } = await import("../build/utils/organization.js");
+  const auth = { kind: "apiKey", token: ACCOUNT_KEY };
+  const active = (workspace) => ({ ...workspace, role: "admin", status: "active", isCurrent: false });
+  const context = (selectionRequired) => ({
+    currentWorkspace: PERSONAL,
+    ...(selectionRequired === undefined ? {} : { selectionRequired }),
+    workspaces: [active(PERSONAL), active(BREW)],
+    authentication: { type: "apiKey" },
+  });
+
+  assert.equal(isWorkspaceSelectionRequired(context(undefined), auth), true, "older APIs: worked out from memberships");
+  assert.equal(isWorkspaceSelectionRequired(context(false), auth), false);
+  assert.equal(isWorkspaceSelectionRequired(context(true), { ...auth, organizationId: "brew" }), true);
+});

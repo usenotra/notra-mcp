@@ -82,9 +82,12 @@ export function activeWorkspaces(context: WorkspaceContextResponse): WorkspaceCo
  * reaches several workspaces and selected none of them. The API still answers
  * `/v1/me/workspaces` then, with its oldest membership as `currentWorkspace`,
  * but rejects every workspace endpoint, so that workspace must not be shown as
- * the current one.
+ * the current one. The API's own `selectionRequired` decides when it sends one.
  */
 export function isWorkspaceSelectionRequired(context: WorkspaceContextResponse, auth: AuthContext): boolean {
+  if (typeof context.selectionRequired === "boolean") {
+    return context.selectionRequired;
+  }
   return (
     auth.kind === "apiKey" &&
     !auth.organizationId &&
