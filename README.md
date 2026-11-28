@@ -385,7 +385,7 @@ Author changes are saved to the site's `blog.json` as unpublished Design changes
 
 ### Projects
 
-GEO features are scoped to a project. Most GEO tools take a `projectId`; call `list_projects` first to find it. GEO tools require an organization-scoped API key and the GEO plan.
+GEO features are scoped to a project. Most GEO tools take a `projectId`; call `list_projects` first to find it. GEO tools need a workspace to act in (OAuth, an organization API key, or an account API key with a selected workspace) and the GEO plan.
 
 | Tool             | Description                                          |
 | ---------------- | ---------------------------------------------------- |

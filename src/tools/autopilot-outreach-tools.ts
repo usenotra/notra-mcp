@@ -16,7 +16,8 @@ import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
 const READ = "Requires OAuth or an account API key with autopilot.read.";
-const WRITE = "Requires a workspace owner or admin with autopilot.write.";
+const WRITE =
+  "Requires OAuth or an account API key of a workspace owner or admin, with autopilot.write; organization API keys are refused.";
 const readOnly = {
   readOnlyHint: true,
   openWorldHint: false,

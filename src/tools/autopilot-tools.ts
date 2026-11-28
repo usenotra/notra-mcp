@@ -24,12 +24,15 @@ import { shareJsonSchema } from "../utils/json-schema-cache.js";
 import { handleError } from "../utils/mcp.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
+const READ = "Requires OAuth or an account API key with autopilot.read.";
+const WRITE =
+  "Requires OAuth or an account API key of a workspace owner or admin, with autopilot.write; organization API keys are refused.";
+
 export function registerAutopilotTools(server: ToolRegistry, client: NotraClient, outreachEnabled: boolean) {
   server.tool(
     {
       name: "get_autopilot_status",
-      description:
-        "Read Autopilot settings (automations, approvals, brief time, reviewers, release filters), active runs, recent open findings, custom workflows and standing rules in the current workspace. Use this first to find run, workflow and rule IDs, read current settings before changing them, and see whether the authenticated member can manage Autopilot. Requires OAuth or an account API key with autopilot.read.",
+      description: `Read Autopilot settings (automations, approvals, brief time, reviewers, release filters), active runs, recent open findings, custom workflows and standing rules in the current workspace. Use this first to find run, workflow and rule IDs, read current settings before changing them, and see whether the authenticated member can manage Autopilot. ${READ}`,
       annotations: {
         title: "Get Autopilot Status",
         readOnlyHint: true,
@@ -46,8 +49,7 @@ export function registerAutopilotTools(server: ToolRegistry, client: NotraClient
   server.tool(
     {
       name: "run_autopilot",
-      description:
-        "Start a full Autopilot run now, or run only the selected built-in automation. This can spend AI credits and open or merge GitHub pull requests according to the workspace's approval settings. Get explicit user confirmation first. Requires a workspace owner or admin with autopilot.write. Returns runId and alreadyRunning; if alreadyRunning is true, no new run started. Use get_autopilot_status to check active runs before retrying an uncertain request.",
+      description: `Start a full Autopilot run now, or run only the selected built-in automation. This can spend AI credits and open or merge GitHub pull requests according to the workspace's approval settings. Get explicit user confirmation first. ${WRITE} Returns runId and alreadyRunning; if alreadyRunning is true, no new run started. Use get_autopilot_status to check active runs before retrying an uncertain request.`,
       annotations: {
         title: "Run Autopilot",
         readOnlyHint: false,
@@ -64,8 +66,7 @@ export function registerAutopilotTools(server: ToolRegistry, client: NotraClient
   server.tool(
     {
       name: "stop_autopilot_run",
-      description:
-        "Stop an active Autopilot or custom workflow run using its runId from get_autopilot_status. This interrupts the run, but does not undo completed work. Get explicit user confirmation first. Requires a workspace owner or admin with autopilot.write.",
+      description: `Stop an active Autopilot or custom workflow run using its runId from get_autopilot_status. This interrupts the run, but does not undo completed work. Get explicit user confirmation first. ${WRITE}`,
       annotations: {
         title: "Stop Autopilot Run",
         readOnlyHint: false,
@@ -82,8 +83,7 @@ export function registerAutopilotTools(server: ToolRegistry, client: NotraClient
   server.tool(
     {
       name: "run_autopilot_workflow",
-      description:
-        "Start a saved custom Autopilot workflow now using its workflowId from get_autopilot_status. Its configured steps may spend AI credits or change external systems. Get explicit user confirmation first. Requires a workspace owner or admin with autopilot.write. Returns runId; use get_autopilot_status to check active runs before retrying an uncertain request.",
+      description: `Start a saved custom Autopilot workflow now using its workflowId from get_autopilot_status. Its configured steps may spend AI credits or change external systems. Get explicit user confirmation first. ${WRITE} Returns runId; use get_autopilot_status to check active runs before retrying an uncertain request.`,
       annotations: {
         title: "Run Autopilot Workflow",
         readOnlyHint: false,
@@ -97,8 +97,6 @@ export function registerAutopilotTools(server: ToolRegistry, client: NotraClient
     ({ workflowId }) => handleError(() => client.startAutopilotWorkflowRun(workflowId)),
   );
 
-  const READ = "Requires OAuth or an account API key with autopilot.read.";
-  const WRITE = "Requires a workspace owner or admin with autopilot.write.";
   const readOnly = {
     readOnlyHint: true,
     openWorldHint: false,
