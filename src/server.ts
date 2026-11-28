@@ -52,7 +52,7 @@ import { selectRequestOrganization } from "./utils/organization.js";
 import { getOrganizationScope, getRequestAuth, runInRequestScope } from "./utils/request-scope.js";
 import { loadViewsManifest } from "./utils/views.js";
 
-export const SERVER_VERSION = "1.5.0";
+export const SERVER_VERSION = "1.6.0";
 
 process.env.MCP_USE_ANONYMIZED_TELEMETRY ??= "false";
 
