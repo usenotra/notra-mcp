@@ -1,3 +1,4 @@
+import { MCP_HOSTED_URL } from "../constants/http.js";
 import {
   ORGANIZATION_ID_ENV,
   ORGANIZATION_ID_HEADER,
@@ -5,8 +6,11 @@ import {
   ORGANIZATION_SCOPE_PATTERN,
   ORGANIZATION_SELECTION_REQUIRED_ERROR,
   WORKSPACE_ACCESS_REVOKED_ERROR,
+  WORKSPACE_CHOICES_LISTED_MAX,
 } from "../constants/organization.js";
+import type { Organization } from "../types/api.js";
 import type { AuthContext } from "../types/auth.js";
+import type { WorkspaceContextResponse } from "../types/workspace.js";
 
 function normalizeOrganizationId(value: string | null | undefined): string | undefined {
   const trimmed = value?.trim();
@@ -49,16 +53,62 @@ export function readOrganizationIdEnv(): string | undefined {
   return normalizeOrganizationId(process.env[ORGANIZATION_ID_ENV]);
 }
 
+/** Workspaces the caller is a member of, leaving out pending invitations. */
+export function activeWorkspaces(context: WorkspaceContextResponse): WorkspaceContextResponse["workspaces"] {
+  return context.workspaces.filter((workspace) => workspace.status === "active");
+}
+
+/**
+ * Whether workspace tools have nothing to act on: an account API key that
+ * reaches several workspaces and selected none of them. The API still answers
+ * `/v1/me/workspaces` then, with its oldest membership as `currentWorkspace`,
+ * but rejects every workspace endpoint, so that workspace must not be shown as
+ * the current one.
+ */
+export function isWorkspaceSelectionRequired(context: WorkspaceContextResponse, auth: AuthContext): boolean {
+  return (
+    auth.kind === "apiKey" &&
+    !auth.organizationId &&
+    context.authentication.type === "apiKey" &&
+    activeWorkspaces(context).length > 1
+  );
+}
+
+function listWorkspaceChoices(workspaces: readonly Organization[]): string {
+  const named = workspaces
+    .slice(0, WORKSPACE_CHOICES_LISTED_MAX)
+    .map((workspace) => `${workspace.name} (${workspace.slug})`);
+  const more = workspaces.length - named.length;
+  return more > 0 ? `${named.join(", ")} and ${more} more (see \`list_workspaces\`)` : named.join(", ");
+}
+
+function describeSelectionRequired(workspaces: readonly Organization[] | undefined): string {
+  const choices =
+    workspaces && workspaces.length > 0
+      ? `this account API key can act in ${workspaces.length} workspaces: ${listWorkspaceChoices(workspaces)}.`
+      : "this account API key can act in more than one workspace. Call `list_workspaces` for their slugs.";
+  return [
+    `No workspace is selected, and ${choices}`,
+    "Ask the user which one to use; a tool call cannot choose it.",
+    `Then select it for this connection: connect to ${MCP_HOSTED_URL}/<slug> (works in clients that can't send headers), send the slug in ${ORGANIZATION_ID_HEADER} on each request to /mcp, or set ${ORGANIZATION_ID_ENV} and restart (stdio).`,
+  ].join(" ");
+}
+
 /**
  * Turns the API's workspace-selection failures for account API keys into
  * errors an agent can act on. Other messages pass through unchanged.
+ * `workspaces` are the ones the key can choose from, named in the error when known.
  */
-export function describeOrganizationError(message: string, auth: AuthContext): string {
+export function describeOrganizationError(
+  message: string,
+  auth: AuthContext,
+  workspaces?: readonly Organization[],
+): string {
   if (auth.kind !== "apiKey") {
     return message;
   }
   if (message.startsWith(ORGANIZATION_SELECTION_REQUIRED_ERROR)) {
-    return `Call \`list_workspaces\` for a workspace id or slug. On /mcp, send it in ${ORGANIZATION_ID_HEADER} on each request. For a fixed connection, use /mcp/<slug> (HTTP) or set ${ORGANIZATION_ID_ENV} and restart (stdio).`;
+    return describeSelectionRequired(workspaces);
   }
   if (message === WORKSPACE_ACCESS_REVOKED_ERROR && auth.organizationId) {
     return `This API key cannot act in workspace "${auth.organizationId}": the account is not a member of it. Call \`list_workspaces\` to see the workspaces the key can use (on a /mcp/<workspace> URL it is hidden, so connect to /mcp for it), then fix ${ORGANIZATION_ID_ENV} (stdio, restart the server afterwards), the /mcp/<workspace> URL or the ${ORGANIZATION_ID_HEADER} header.`;

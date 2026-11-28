@@ -15,6 +15,7 @@ import {
 } from "../schemas/feedback.js";
 import { FEEDBACK_SENDER_LOOKUP_TIMEOUT_MS } from "../constants/feedback.js";
 import { handleError } from "../utils/mcp.js";
+import { isWorkspaceSelectionRequired } from "../utils/organization.js";
 import { findRequestAuth } from "../utils/request-scope.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
@@ -35,7 +36,8 @@ async function senderMetadata(client: NotraClient): Promise<Record<string, strin
   const context = await client
     .getWorkspaceContext(false, false, FEEDBACK_SENDER_LOOKUP_TIMEOUT_MS)
     .catch(() => undefined);
-  if (context) {
+  // Without a selection the API's current workspace is only its fallback, so it says nothing about the sender.
+  if (context && !isWorkspaceSelectionRequired(context, auth)) {
     return { organizationId: context.currentWorkspace.id };
   }
   return auth.organizationId ? { workspace: auth.organizationId } : undefined;

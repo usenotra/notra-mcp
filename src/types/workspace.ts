@@ -22,7 +22,16 @@ export interface WorkspaceContextResponse {
   authentication: AuthenticationIdentity;
 }
 
+/** `list_workspaces` output: the API's workspace context, without a current workspace while none is selected. */
+export interface WorkspaceListResponse {
+  currentWorkspace: Organization | null;
+  selectionRequired: boolean;
+  workspaces: WorkspaceMembership[];
+  authentication: AuthenticationIdentity;
+}
+
 export interface WhoAmIResponse {
-  workspace: Organization;
+  workspace: Organization | null;
+  selectionRequired: boolean;
   authentication: AuthenticationIdentity;
 }
