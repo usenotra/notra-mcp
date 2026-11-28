@@ -3,6 +3,7 @@ import {
   ORGANIZATION_ID_ENV,
   ORGANIZATION_ID_HEADER,
   ORGANIZATION_ID_REQUEST_HEADERS,
+  ORGANIZATION_KEY_MISMATCH_ERROR,
   ORGANIZATION_SCOPE_PATTERN,
   ORGANIZATION_SELECTION_REQUIRED_ERROR,
   WORKSPACE_ACCESS_REVOKED_ERROR,
@@ -11,6 +12,24 @@ import {
 import type { Organization } from "../types/api.js";
 import type { AuthContext } from "../types/auth.js";
 import type { WorkspaceContextResponse } from "../types/workspace.js";
+
+/**
+ * The API rejected the workspace an API key selected: the account isn't a
+ * member of it, or an organization key named another workspace. Every
+ * workspace tool fails the same way until the selection is fixed.
+ */
+export class InvalidWorkspaceSelectionError extends Error {
+  override name = "InvalidWorkspaceSelectionError";
+}
+
+/** Whether an API error message means the API key's workspace selection is unusable. */
+export function isInvalidSelectionError(message: string, auth: AuthContext): boolean {
+  return (
+    auth.kind === "apiKey" &&
+    auth.organizationId !== undefined &&
+    (message === WORKSPACE_ACCESS_REVOKED_ERROR || message.startsWith(ORGANIZATION_KEY_MISMATCH_ERROR))
+  );
+}
 
 function normalizeOrganizationId(value: string | null | undefined): string | undefined {
   const trimmed = value?.trim();

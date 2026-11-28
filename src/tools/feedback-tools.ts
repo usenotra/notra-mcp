@@ -15,7 +15,7 @@ import {
 } from "../schemas/feedback.js";
 import { FEEDBACK_SENDER_LOOKUP_TIMEOUT_MS } from "../constants/feedback.js";
 import { handleError } from "../utils/mcp.js";
-import { isWorkspaceSelectionRequired } from "../utils/organization.js";
+import { InvalidWorkspaceSelectionError, isWorkspaceSelectionRequired } from "../utils/organization.js";
 import { findRequestAuth } from "../utils/request-scope.js";
 import { apiOutputSchema } from "../utils/output-schema.js";
 
@@ -33,14 +33,19 @@ async function senderMetadata(client: NotraClient): Promise<Record<string, strin
   if (auth.kind === "oauth") {
     return { organizationId: auth.organizationId, userId: auth.userId };
   }
+  let invalidSelection = false;
   const context = await client
     .getWorkspaceContext(false, false, FEEDBACK_SENDER_LOOKUP_TIMEOUT_MS)
-    .catch(() => undefined);
+    .catch((error: unknown) => {
+      invalidSelection = error instanceof InvalidWorkspaceSelectionError;
+      return undefined;
+    });
   // Without a selection the API's current workspace is only its fallback, so it says nothing about the sender.
   if (context && !isWorkspaceSelectionRequired(context, auth)) {
     return { organizationId: context.currentWorkspace.id };
   }
-  return auth.organizationId ? { workspace: auth.organizationId } : undefined;
+  // A selection the API rejected names a workspace this key can't act in, so it isn't credited either.
+  return auth.organizationId && !invalidSelection ? { workspace: auth.organizationId } : undefined;
 }
 
 /**

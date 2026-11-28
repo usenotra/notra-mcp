@@ -70,10 +70,11 @@ export const createPostSchema = z.object({
     .string()
     .trim()
     .min(1)
+    .max(POST_SLUG_MAX_LENGTH)
     .nullable()
     .optional()
     .describe(
-      `Path segment the post uses in its URL, for blog posts and changelogs only. Notra normalizes it to lowercase letters, numbers and hyphens, at most ${POST_SLUG_MAX_LENGTH} characters. Omit to let Notra derive one.`,
+      "Path segment the post uses in its URL, for blog posts and changelogs only. Notra normalizes it to lowercase letters, numbers and hyphens. Omit to let Notra derive one.",
     ),
   markdown: z
     .string()

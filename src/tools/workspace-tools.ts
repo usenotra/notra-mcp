@@ -10,7 +10,7 @@ import {
 import type { Organization } from "../types/api.js";
 import type { WorkspaceContextResponse, WorkspaceListResponse, WhoAmIResponse } from "../types/workspace.js";
 import { handleError } from "../utils/mcp.js";
-import { isWorkspaceSelectionRequired } from "../utils/organization.js";
+import { InvalidWorkspaceSelectionError, isWorkspaceSelectionRequired } from "../utils/organization.js";
 import { getRequestAuth } from "../utils/request-scope.js";
 
 function projectOrganization(organization: Organization): Organization {
@@ -98,13 +98,14 @@ export function registerListWorkspacesTool(server: ToolRegistry, client: NotraCl
           const context = await client.getWorkspaceContext(true);
           return projectWorkspaceContext(context, !isWorkspaceSelectionRequired(context, auth));
         } catch (error) {
+          if (!(error instanceof InvalidWorkspaceSelectionError)) {
+            throw error;
+          }
           // A stale workspace selection (e.g. NOTRA_ORGANIZATION_ID read at stdio startup) must not block the
-          // listing users need to pick a valid one; the endpoint works without the header. When a selection
-          // was dropped, the current workspace is the API's fallback, not one the tools can act in.
+          // listing users need to pick a valid one; the endpoint works without the header. Its current
+          // workspace is then the API's fallback, while the tools keep sending the rejected selection.
           try {
-            const context = await client.getWorkspaceContext(true, true);
-            const droppedSelection = auth.kind === "apiKey" && auth.organizationId !== undefined;
-            return projectWorkspaceContext(context, !droppedSelection && !isWorkspaceSelectionRequired(context, auth));
+            return projectWorkspaceContext(await client.getWorkspaceContext(true, true), false);
           } catch {
             throw error;
           }

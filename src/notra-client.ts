@@ -228,7 +228,12 @@ import type { WorkspaceContextResponse } from "./types/workspace.js";
 import { describeApiError, readApiErrorMessage } from "./utils/api-error.js";
 import { withoutHiddenReadinessChecks } from "./utils/geo-agent-readiness.js";
 import { appendQueryParams } from "./utils/query-params.js";
-import { activeWorkspaces, describeOrganizationError } from "./utils/organization.js";
+import {
+  activeWorkspaces,
+  describeOrganizationError,
+  InvalidWorkspaceSelectionError,
+  isInvalidSelectionError,
+} from "./utils/organization.js";
 import { createRequestSignal } from "./utils/request-scope.js";
 
 function sitePath(siteId: string, suffix: string): string {
@@ -367,10 +372,15 @@ export class NotraClient {
     }
 
     if (!response.ok) {
-      const workspaces = await workspaceChoices(this, this.auth, data);
-      throw new Error(
-        describeApiError(response, data, (message) => describeOrganizationError(message, this.auth, workspaces)),
+      const auth = this.auth;
+      const workspaces = await workspaceChoices(this, auth, data);
+      const message = describeApiError(response, data, (apiMessage) =>
+        describeOrganizationError(apiMessage, auth, workspaces),
       );
+      const apiMessage = readApiErrorMessage(data);
+      throw apiMessage && isInvalidSelectionError(apiMessage, auth)
+        ? new InvalidWorkspaceSelectionError(message)
+        : new Error(message);
     }
 
     return data as T;

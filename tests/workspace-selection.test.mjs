@@ -25,12 +25,20 @@ function serveNotraApi(req, res) {
   const target = new URL(req.url, "http://api.test");
   const token = req.headers.authorization?.replace(/^Bearer /, "");
   const requested = req.headers["x-notra-organization-id"];
+  if (requested === "flaky") {
+    return json(res, 503, { error: "Authentication service unavailable" });
+  }
   const memberships = token === ORGANIZATION_KEY ? [BREW] : [PERSONAL, BREW];
   const selected = requested
     ? memberships.find((workspace) => workspace.id === requested || workspace.slug === requested)
     : undefined;
   if (requested && !selected) {
-    return json(res, 403, { error: "Workspace access revoked" });
+    return json(res, 403, {
+      error:
+        token === ORGANIZATION_KEY
+          ? "This API key belongs to a different workspace than X-Notra-Organization-Id names"
+          : "Workspace access revoked",
+    });
   }
 
   if (target.pathname === "/v1/me/workspaces") {
@@ -155,6 +163,22 @@ test("list_workspaces does not present the API's fallback as current for a stale
   assert.ok(structuredContent.workspaces.every((workspace) => !workspace.isCurrent));
 });
 
+test("an organization key naming another workspace has no current workspace either", async () => {
+  const { structuredContent } = await callTool("list_workspaces", { token: ORGANIZATION_KEY, workspace: "personal" });
+  assert.equal(structuredContent.currentWorkspace, null);
+  assert.equal(structuredContent.selectionRequired, true);
+  assert.deepEqual(
+    structuredContent.workspaces.map(({ slug, isCurrent }) => [slug, isCurrent]),
+    [["brew", false]],
+  );
+});
+
+test("a failure that says nothing about the selection is returned, not reported as a missing selection", async () => {
+  const result = await callTool("list_workspaces", { workspace: "flaky" });
+  assert.equal(result.isError, true);
+  assert.match(result.content[0].text, /Authentication service unavailable \(HTTP 503\)/);
+});
+
 test("a workspace tool without a selection names the workspaces and how to pick one", async () => {
   const result = await callTool("list_sites");
   assert.equal(result.isError, true);
@@ -196,7 +220,10 @@ test("create_post and update_post advertise the same limits", async () => {
   assert.equal(create.title.maxLength, update.title.maxLength);
   assert.equal(create.markdown.maxLength, 100_000);
   assert.equal(create.markdown.maxLength, update.markdown.maxLength);
-  assert.match(create.slug.description, /at most 160 characters/);
+  // Both slugs are nullable, so the limit sits on the string branch.
+  const slugMax = (property) => property.anyOf.find((branch) => branch.type === "string").maxLength;
+  assert.equal(slugMax(create.slug), 160);
+  assert.equal(slugMax(create.slug), slugMax(update.slug));
 });
 
 test("post schemas trim titles and reject what the API would reject", async () => {
@@ -206,6 +233,7 @@ test("post schemas trim titles and reject what the API would reject", async () =
   assert.ok(createPostSchema.safeParse({ ...base, title: "x".repeat(120) }).success);
   assert.ok(!createPostSchema.safeParse({ ...base, title: "x".repeat(121) }).success);
   assert.ok(!createPostSchema.safeParse({ ...base, markdown: "x".repeat(100_001) }).success);
+  assert.ok(!createPostSchema.safeParse({ ...base, slug: "x".repeat(161) }).success);
 
   const update = updatePostSchema.parse({ postId: "post_1", title: `  ${"x".repeat(120)}  `, slug: " ship-notes " });
   assert.equal(update.title, "x".repeat(120));

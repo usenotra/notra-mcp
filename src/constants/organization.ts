@@ -7,6 +7,9 @@ export const ORGANIZATION_ID_ENV = "NOTRA_ORGANIZATION_ID";
 
 export const ORGANIZATION_SELECTION_REQUIRED_ERROR = "Organization selection required";
 export const WORKSPACE_ACCESS_REVOKED_ERROR = "Workspace access revoked";
+/** The API's answer when an organization key names another workspace than its own. */
+export const ORGANIZATION_KEY_MISMATCH_ERROR =
+  "This API key belongs to a different workspace than X-Notra-Organization-Id names";
 
 /** Most workspaces a selection-required error names before pointing to `list_workspaces`. */
 export const WORKSPACE_CHOICES_LISTED_MAX = 10;
